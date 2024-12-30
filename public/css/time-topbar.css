@@ -1,0 +1,12 @@
+@media (max-width: 460px) {
+    #realTimeClock {
+      font-size: 14px;
+      /* Ukuran kecil untuk layar mobile */
+    }
+  }
+
+  @media (max-width: 500px) {
+    #sidebarToggleTop {
+        display: none;
+    }
+}

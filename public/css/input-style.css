@@ -1,0 +1,24 @@
+.form-control.less-rounded, 
+    .form-check-input.less-rounded, 
+    select.less-rounded {
+        border-radius: 4px; /* Kurangi nilai border-radius agar lebih ideal */
+        padding: 8px; /* Atur padding untuk proporsi lebih baik */
+        border: 1px solid #ced4da; /* Sesuaikan dengan tema Bootstrap */
+        box-shadow: none; /* Hilangkan shadow default */
+    }
+
+    .form-control.less-rounded:focus, 
+    select.less-rounded:focus {
+        border-color: #80bdff; /* Warna border fokus */
+        outline: 0;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+
+    .form-group.row {
+        margin-bottom: 1rem; /* Atur jarak antar elemen */
+    }
+
+    .form-check-input.less-rounded {
+        width: auto; /* Sesuaikan ukuran input radio */
+        margin-top: 0;
+    }

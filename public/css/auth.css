@@ -1,0 +1,153 @@
+body {
+    background: linear-gradient(to right, #dceeff, #ffffff);
+}
+
+.card {
+    border-radius: 15px;
+    overflow: visible;
+}
+.form-group {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+.input-group {
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+}
+
+.input-group-prepend {
+    background-color: #f8f9fa;
+    border: 1px solid #ced4da;
+    border-right: none;
+    padding: 0 15px;
+    display: flex;
+    align-items: center;
+    border-radius: 10px 0 0 10px;
+    height: 45px;
+}
+
+.input-group-prepend .input-group-text {
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+}
+
+.input-group-prepend i {
+    font-size: 1.2rem;
+    color: #6c757d;
+}
+
+.form-control {
+    border: 1px solid #ced4da;
+    border-radius: 0 20px 20px 0; /* Membuat sisi kanan input melengkung */
+    height: 45px;
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+.text-danger {
+    margin-top: 0.5rem; 
+    font-size: 0.85rem;
+    color: #e74c3c;
+}
+
+.form-control:focus {
+    box-shadow: none;
+    border-color: #70a5df;
+}
+
+.input-group .form-control {
+    flex: 1;
+}
+
+.btn-user {
+    border-radius: 50px;
+    font-weight: bold;
+    background-color: #4e73df;
+    color: #fff;
+    font-size: 0.9rem;
+    transition: all 0.3s ease-in-out;
+}
+
+.btn-user:hover {
+    background-color: #6a11cb;  
+    color: #fff;
+}
+
+.logo-container {
+    background-color: rgba(255, 255, 255, 0.8);
+    border-radius: 50%;
+    padding: 10px;
+    display: inline-block;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-bottom: 15px;
+}
+
+.logo-container img {
+    width: 80px;
+    height: auto;
+    filter: drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.2));
+}
+
+@media (max-width: 768px) {
+    body {
+        padding: 0 15px;
+    }
+
+    .card {
+        margin: 10px auto;
+    }
+
+    .logo-container {
+        padding: 8px;
+    }
+
+    .logo-container img {
+        width: 70px;
+    }
+
+    .card-body {
+        padding: 20px;
+    }
+
+    h4 {
+        font-size: 1.2rem;
+    }
+    
+    p {
+        font-size: 1rem;
+    }
+
+    .form-control-user {
+        font-size: 0.9rem;
+        padding: 0.6rem 1.5rem;
+    }
+
+    .btn-user {
+        font-size: 0.9rem;
+        padding: 0.6rem 1rem;
+    }
+
+    .text-muted {
+        font-size: 0.75rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .form-control-user {
+        font-size: 0.85rem;
+        padding: 0.5rem 1rem;
+    }
+
+    .btn-user {
+        font-size: 0.85rem;
+        padding: 0.5rem 0.8rem;
+    }
+
+    .logo-container img {
+        width: 60px;
+    }
+}
