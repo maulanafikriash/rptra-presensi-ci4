@@ -7,10 +7,8 @@ class ShiftModel extends Model
 {
     protected $table = 'shift'; 
     protected $primaryKey = 'shift_id'; 
-
     protected $useAutoIncrement = true; 
     protected $allowedFields = ['start_time', 'end_time'];
-
     protected $returnType = 'array'; 
     protected $useTimestamps = false;
 

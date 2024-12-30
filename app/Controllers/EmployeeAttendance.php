@@ -17,8 +17,7 @@ class EmployeeAttendance extends BaseController
     {
         $this->authModel = new AuthModel();
         $this->attendanceModel = new AttendanceModel();
-        $this->shiftModel = new ShiftModel();
-        
+        $this->shiftModel = new ShiftModel();    
     }
 
     public function index()
