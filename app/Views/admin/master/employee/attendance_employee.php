@@ -112,7 +112,18 @@
 
                             // Tampilkan ikon edit dan lokasi hanya jika tanggal saat ini atau sebelumnya
                             if ($currentLoopDate <= $currentDate) {
-                                echo "<a href='#' class='float-right' data-target='#editAttendanceModal' data-toggle='modal' data-day='$dayCounter'><i class='fas fa-edit'></i></a><br>";
+                                // Cek presence_status
+                                $canEdit = true;
+                                if (isset($attendanceData[$dayCounter]['presence_status'])) {
+                                    $status = $attendanceData[$dayCounter]['presence_status'];
+                                    if (in_array($status, [4, 5])) {
+                                        $canEdit = false;
+                                    }
+                                }
+
+                                if ($canEdit) {
+                                    echo "<a href='#' class='float-right' data-target='#editAttendanceModal' data-toggle='modal' data-day='$dayCounter'><i class='fas fa-edit'></i></a><br>";
+                                }
 
                                 if (isset($attendanceData[$dayCounter]) && $attendanceData[$dayCounter]['presence_status'] == 1) {
 

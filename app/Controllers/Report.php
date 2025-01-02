@@ -8,6 +8,7 @@ use App\Models\AttendanceModel;
 use App\Models\EmployeeModel;
 use \App\Models\AuthModel;
 use App\Models\ShiftModel;
+use App\Models\WorkScheduleModel;
 use \Mpdf\Mpdf;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -19,6 +20,7 @@ class Report extends BaseController
     protected $departmentModel;
     protected $shiftModel;
     protected $employeeModel;
+    protected $workScheduleModel;
     protected $db;
 
     public function __construct()
@@ -28,6 +30,7 @@ class Report extends BaseController
         $this->shiftModel = new ShiftModel();
         $this->departmentModel = new DepartmentModel();
         $this->employeeModel = new EmployeeModel();
+        $this->workScheduleModel = new WorkScheduleModel();
         $this->db = Database::connect();
     }
 
@@ -395,5 +398,101 @@ class Report extends BaseController
 
         $writer = new Xlsx($spreadsheet);
         $writer->save('php://output');
+    }
+
+    public function printWorkSchedulePdf($employeeId)
+    {
+        $month = $this->request->getGet('month') ?: date('m');
+        $year = $this->request->getGet('year') ?: date('Y');
+
+        $workSchedules = $this->workScheduleModel->getWorkSchedulesByEmployeeAndMonth($employeeId, $month, $year);
+
+        // Mengambil data pegawai
+        $employeeModel = new \App\Models\EmployeeModel();
+        $employee = $employeeModel->find($employeeId);
+
+        // Mengambil data departemen dan shift
+        $department = $employeeModel->getDepartments($employee['department_id']);
+        $shift = $employeeModel->getShifts($employee['shift_id']);
+
+        $data = [
+            'employee' => $employee,
+            'department' => $department,
+            'shift' => $shift,
+            'month' => $month,
+            'year' => $year,
+            'workSchedules' => $workSchedules,
+        ];
+
+        $html = view('admin/report/work_schedule_pdf', $data);
+
+        $dompdf = new Mpdf();
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'landscape');
+        $dompdf->render();
+        $dompdf->stream('work_schedule.pdf', ['Attachment' => 0]);
+    }
+
+    public function printWorkScheduleExcel($employeeId)
+    {
+        $month = $this->request->getGet('month') ?: date('m');
+        $year = $this->request->getGet('year') ?: date('Y');
+
+        $workSchedules = $this->workScheduleModel->getWorkSchedulesByEmployeeAndMonth($employeeId, $month, $year);
+
+        // Mengambil data pegawai
+        $employeeModel = new \App\Models\EmployeeModel();
+        $employee = $employeeModel->find($employeeId);
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Header
+        $sheet->setCellValue('A1', 'Jadwal Kerja Pegawai');
+        $sheet->setCellValue('A2', 'Nama Pegawai: ' . $employee['employee_name']);
+        $sheet->setCellValue('A3', 'Departemen: ' . $employeeModel->getDepartments($employee['department_id'])['department_name']);
+        $sheet->setCellValue('A4', 'Bulan: ' . date('F', mktime(0, 0, 0, $month, 10)) . ' ' . $year);
+
+        // Tabel Header
+        $sheet->setCellValue('A6', 'No');
+        $sheet->setCellValue('B6', 'Tanggal');
+        $sheet->setCellValue('C6', 'Status');
+        $sheet->setCellValue('D6', 'Shift');
+
+        // Mengisi data jadwal
+        $row = 7;
+        $no = 1;
+        foreach ($workSchedules as $ws) {
+            $sheet->setCellValue('A' . $row, $no++);
+            $sheet->setCellValue('B' . $row, date('d-m-Y', strtotime($ws['schedule_date'])));
+            if ($ws['schedule_status'] === null && $ws['shift_id'] !== null) {
+                $status = 'Shift Kerja';
+                // Ambil shift detail
+                $shiftDetail = $this->shiftModel->find($ws['shift_id']);
+                $shiftTime = $shiftDetail['start_time'] . ' - ' . $shiftDetail['end_time'];
+            } elseif ($ws['schedule_status'] === 4) {
+                $status = 'Cuti';
+                $shiftTime = '-';
+            } elseif ($ws['schedule_status'] === 5) {
+                $status = 'Libur';
+                $shiftTime = '-';
+            } else {
+                $status = 'Tidak Ada Jadwal';
+                $shiftTime = '-';
+            }
+            $sheet->setCellValue('C' . $row, $status);
+            $sheet->setCellValue('D' . $row, $shiftTime);
+            $row++;
+        }
+
+        // Membuat file Excel
+        $writer = new Xlsx($spreadsheet);
+        $fileName = 'Work_Schedule_' . $employee['employee_name'] . '_' . $month . '_' . $year . '.xlsx';
+
+        // Redirect hasil generate ke browser
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment; filename="' . $fileName . '"');
+        $writer->save('php://output');
+        exit;
     }
 }

@@ -21,10 +21,8 @@ class DashboardAdmin extends BaseController
     {
         // jumlah pegawai berdasarkan departemen
         $data['d_list'] = $this->adminModel->getEmployeeCountByDepartment();
-
-        // jumlah pegawai berdasarkan shift
-        $data['s_list'] = $this->adminModel->getEmployeeCountByShift();
-
+        // Daftar shift
+        $data['s_list'] = $this->adminModel->getAllShifts();
         // Dashboard data
         $data['title'] = 'Dashboard Admin';
         $data['account'] = $this->authModel->getAccount(session()->get('username'));

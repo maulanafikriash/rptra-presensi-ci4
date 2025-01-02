@@ -72,6 +72,12 @@
                 'section' => 'Kehadiran'
             ],
             [
+                'title' => 'Jadwal Kerja',
+                'url' => 'employee/work_schedule',
+                'icon' => 'fas fa-calendar-alt',
+                'section' => 'Kehadiran'
+            ],
+            [
                 'title' => 'Profil Saya',
                 'url' => 'employee/profile',
                 'icon' => 'fas fa-id-badge',
@@ -130,12 +136,16 @@
     <!-- Bottom Menu for Employee -->
     <div class="bottom-menu bg-light d-flex justify-content-around py-2" style="display: none;">
         <a href="<?= base_url('employee/attendance'); ?>" class="text-center <?= (current_url() == base_url('employee/attendance')) ? 'active' : ''; ?>">
-            <i class="fas fa-calendar-alt"></i><br>
+            <i class="fas fa-calendar-check"></i><br>
             <small>Presensi</small>
         </a>
         <a href="<?= base_url('employee/attendance_history'); ?>" class="text-center <?= (current_url() == base_url('employee/attendance_history')) ? 'active' : ''; ?>">
-            <i class="fas fa-file-alt"></i><br>
+            <i class="fas fa-history"></i><br>
             <small>Riwayat</small>
+        </a>
+        <a href="<?= base_url('employee/work_schedule'); ?>" class="text-center <?= (current_url() == base_url('employee/work_schedule')) ? 'active' : ''; ?>">
+            <i class="fas fa-calendar-alt"></i><br>
+            <small>Jadwal</small>
         </a>
         <a href="<?= base_url('employee/profile'); ?>" class="text-center <?= (current_url() == base_url('employee/profile')) ? 'active' : ''; ?>">
             <i class="fas fa-user"></i><br>

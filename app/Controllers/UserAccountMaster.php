@@ -19,7 +19,7 @@ class UserAccountMaster extends BaseController
     public function index()
     {
         $data = [
-            'title' => 'User Accounts',
+            'title' => 'User Account',
             'data' => $this->userAccountModel->getAllUsersWithEmployee(),
             'account' => $this->authModel->getAccount(session()->get('username'))
         ];

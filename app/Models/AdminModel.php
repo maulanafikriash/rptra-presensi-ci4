@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 namespace App\Models;
 
@@ -13,41 +13,17 @@ class AdminModel extends Model
         $this->db = \Config\Database::connect();
     }
 
-    public function getAdmin($username)
-    {
-        // Ambil data akun berdasarkan username
-        $account = $this->db->table('user_accounts')->where('username', $username)->get()->getRowArray();
-        if (!$account) {
-            return null; // Mengembalikan null jika akun tidak ditemukan
-        }
-
-        $e_id = $account['employee_id'];
-
-        return $this->db->table('employee')
-            ->select('employee.employee_id AS id,
-                      employee.employee_name AS name,
-                      employee.gender AS gender,
-                      employee.shift_id AS shift,
-                      employee.image AS image,
-                      employee.birth_date AS birth_date,
-                      employee.hire_date AS hire_date')
-            ->where('employee.employee_id', $e_id)
-            ->get()
-            ->getRowArray();
-    }
-
     public function getDataForDashboard()
     {
-        // Ambil data shift, employee, department, dan user
+        // Ambil data employee, department, dan user
         return [
-            'shift' => $this->db->table('shift')->get()->getResultArray(),
             'c_shift' => $this->db->table('shift')->countAllResults(),
             'employee' => $this->db->table('employee')->get()->getResultArray(),
             'c_employee' => $this->db->table('employee')->countAllResults(),
             'department' => $this->db->table('department')->get()->getResultArray(),
             'c_department' => $this->db->table('department')->countAllResults(),
-            'users' => $this->db->table('user_accounts')->get()->getResultArray(),
-            'c_users' => $this->db->table('user_accounts')->countAllResults(),
+            'users' => $this->db->table('user_account')->get()->getResultArray(),
+            'c_users' => $this->db->table('user_account')->countAllResults(),
         ];
     }
 
@@ -79,36 +55,27 @@ class AdminModel extends Model
 
     public function getEmployeeCountByDepartment()
     {
-        $query = "
-            SELECT 
-                d.department_id AS d_id, 
-                d.department_name AS d_name, 
-                COUNT(e.employee_id) AS qty 
-            FROM department d
-            LEFT JOIN employee e ON d.department_id = e.department_id
-            GROUP BY d.department_id
-            ORDER BY d.department_id ASC
-        ";
-        return $this->db->query($query)->getResultArray();
+        return $this->db->table('department d')
+            ->select('d.department_id AS d_id, d.department_name AS d_name, COUNT(e.employee_id) AS qty')
+            ->join('employee e', 'd.department_id = e.department_id', 'left')
+            ->groupBy('d.department_id')
+            ->orderBy('d.department_id', 'ASC')
+            ->get()
+            ->getResultArray();
     }
 
-    public function getEmployeeCountByShift()
+    public function getShiftCount()
     {
-        $query = "
-            SELECT 
-                s.shift_id AS s_id, 
-                CONCAT(s.start_time, ' - ', s.end_time) AS shift_time, 
-                COUNT(e.employee_id) AS qty 
-            FROM shift s
-            LEFT JOIN employee e ON s.shift_id = e.shift_id
-            GROUP BY s.shift_id
-            ORDER BY s.shift_id ASC
-        ";
-        return $this->db->query($query)->getResultArray();
+        return $this->db->table('shift')->countAllResults();
     }
 
-    public function queryCustom($query)
+    // Metode baru untuk mengambil semua shift
+    public function getAllShifts()
     {
-        return $this->db->query($query)->getResultArray();
+        return $this->db->table('shift')
+            ->select('shift_id, start_time, end_time')
+            ->orderBy('shift_id', 'ASC')
+            ->get()
+            ->getResultArray();
     }
 }

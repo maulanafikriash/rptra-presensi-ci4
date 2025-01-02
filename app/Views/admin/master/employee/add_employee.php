@@ -121,27 +121,6 @@
                         </div>
                         <div class="col-lg-6">
                             <div class="form-group row">
-                                <label for="image" class="col-form-label col-lg-4">Foto Pegawai</label>
-                                <div class="col-lg-8 p-0">
-                                    <input type="file" name="image" id="image">
-                                </div>
-                            </div>
-                            <div class="form-group row">
-                                <label for="shift_id" class="col-form-label col-lg-4">Shift</label>
-                                <div class="col p-0">
-                                    <select class="form-control" name="shift_id" id="shift_id">
-                                        <?php foreach ($shift as $sft) : ?>
-                                            <option value="<?= esc($sft['shift_id']); ?>" <?= set_select('shift_id', $sft['shift_id']); ?>>
-                                                <?= esc($sft['shift_id'] . ' = ' . $sft['start_time'] . ' - ' . $sft['end_time']); ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                    <?php if (isset($validation) && $validation->hasError('shift_id')) : ?>
-                                        <small class="text-danger"><?= esc($validation->getError('shift_id')); ?></small>
-                                    <?php endif; ?>
-                                </div>
-                            </div>
-                            <div class="form-group row">
                                 <label for="birth_date" class="col-form-label col-lg-4">Tanggal Lahir</label>
                                 <div class="col-lg p-0">
                                     <input type="date" class="form-control col-lg" name="birth_date" id="birth_date" value="<?= set_value('birth_date'); ?>">

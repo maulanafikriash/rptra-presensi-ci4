@@ -15,7 +15,7 @@ class AuthModel extends Model
 
     public function getAccount($username)
     {
-        $account = $this->db->table('user_accounts')->where('username', $username)->get()->getRowArray();
+        $account = $this->db->table('user_account')->where('username', $username)->get()->getRowArray();
         if (!$account) {
             return null;
         }
@@ -30,7 +30,7 @@ class AuthModel extends Model
 
     public function updateUserAccount($employeeId, $data)
     {
-        return $this->db->table('user_accounts')
+        return $this->db->table('user_account')
             ->where('employee_id', $employeeId)
             ->update($data);
     }

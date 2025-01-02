@@ -74,10 +74,6 @@
                         <th scope="row">Department</th>
                         <td>: <?= $account['department_id']; ?></td>
                     </tr>
-                    <tr>
-                        <th scope="row">Shift</th>
-                        <td>: <?= $account['shift_id']; ?></td>
-                    </tr>
                 </tbody>
             </table>
         </div>
