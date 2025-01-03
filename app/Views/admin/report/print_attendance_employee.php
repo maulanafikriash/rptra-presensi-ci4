@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Riwayat Presensi Pegawai</title>
+    <title>Riwayat Presensi <?= htmlspecialchars($dept_name) ?></title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -73,8 +73,8 @@
 </head>
 
 <body>
-    <h3>Riwayat Presensi Pegawai</h3>
-    <h4>Nama : <?= $employee['employee_name']; ?></h4>
+    <h3>Riwayat Presensi <?= htmlspecialchars($dept_name) ?></h3>
+    <h4>Nama : <?= htmlspecialchars($employee['employee_name']); ?></h4>
     <h4>
         Bulan :
         <?php
@@ -129,7 +129,7 @@
                                 $badgeClass = '';
                         }
                         ?>
-                        <span class="badge <?= $badgeClass; ?>"><?= $status; ?></span>
+                        <span class="badge <?= $badgeClass; ?>"><?= htmlspecialchars($status); ?></span>
                     </td>
                 </tr>
             <?php endforeach; ?>

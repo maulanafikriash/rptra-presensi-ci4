@@ -163,7 +163,7 @@
                       // Tentukan apakah Tombol Presensi Masuk/Keluar akan ditampilkan
                       $show_presensi_button = false;
 
-                      if ($has_shift) {
+                      if ($has_shift && !in_array($presence_status, [2, 3])) {
                         if ($shift_status === 'presensi masuk' && !$already_checked_in) {
                           $show_presensi_button = true;
                         } elseif ($shift_status === 'presensi masuk' && $already_checked_in && !$already_checked_out) {
@@ -175,7 +175,6 @@
                         } elseif ($shift_status === 'sudah selesai' && $already_checked_in && $already_checked_out) {
                           $show_presensi_button = true;
                         } elseif ($shift_status === 'belum mulai') {
-                          // Tambahkan kondisi untuk 'belum mulai'
                           $show_presensi_button = true;
                         }
                       }

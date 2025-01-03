@@ -86,9 +86,9 @@
                             </span>
                             <span class="text">Riwayat Kehadiran</span>
                         </a>
-                        <a href="<?= base_url('admin/master/employee/work_schedule/') . esc($employee['employee_id']); ?>" class="btn btn-success btn-icon-split mt-4 float-right">
+                        <a href="<?= base_url('admin/master/employee/work_schedule/') . esc($employee['employee_id']); ?>" class="btn btn-primary mr-3 btn-icon-split mt-4 float-right">
                             <span class="icon text-white" title="Jadwal Kerja">
-                                <i class="fas fa-calendar-check"></i>
+                                <i class="fas fa-calendar-alt"></i>
                             </span>
                             <span class="text">Jadwal Kerja</span>
                         </a>

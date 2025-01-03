@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>Laporan Kehadiran Pegawai</title>
+    <title>Laporan Kehadiran</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -51,7 +51,7 @@
         }
         ?>
         <div class="header-section">
-            <h2>Laporan Kehadiran Pegawai</h2>
+            <h2>Laporan Kehadiran</h2>
         </div>
         <div class="department-info">
             <p><strong>Department :</strong> <?= htmlspecialchars($dept_name) ?></p>
@@ -82,18 +82,11 @@
                 <?php foreach ($attendance as $date => $attendances) : // Looping berdasarkan tanggal ?>
                     <?php foreach ($attendances as $index => $atd) : ?>
                         <?php
-                            // Mendapatkan informasi shift
-                            $shift_info = array_filter($shift_data, function ($shift) use ($atd) {
-                                return $shift['shift_id'] == $atd['shift_id'];
-                            });
-                            $shift_info = array_values($shift_info);
-                            if (!empty($shift_info)) {
-                                $shift = $shift_info[0];
-                                // Menggunakan helper function untuk mendapatkan status checkout
-                                $checkout_status = get_checkout_status($atd, $shift, $atd['attendance_date']);
-                            } else {
-                                $checkout_status = 'Shift Tidak Ditemukan';
-                            }
+                            // Menggunakan shift_start dan shift_end dari data presensi
+                            $checkout_status = get_checkout_status($atd, [
+                                'start_time' => $atd['shift_start'],
+                                'end_time' => $atd['shift_end']
+                            ], $atd['attendance_date']);
                         ?>
                         <tr>
                             <?php if ($index === 0) : ?>
@@ -103,11 +96,11 @@
                             <td><?= htmlspecialchars($atd['employee_name']); ?></td>
                             <td>
                                 <?php
-                                    if (!empty($shift_info)) {
-                                        echo htmlspecialchars($shift['shift_id']) . " = " . date('H:i', strtotime($shift['start_time'])) . " - " . date('H:i', strtotime($shift['end_time']));
-                                    } else {
-                                        echo "Shift Tidak Ditemukan";
-                                    }
+                                if (!empty($atd['shift_id']) && !empty($atd['shift_start']) && !empty($atd['shift_end'])) {
+                                    echo htmlspecialchars($atd['shift_id']) . " = " . date('H:i', strtotime($atd['shift_start'])) . " - " . date('H:i', strtotime($atd['shift_end']));
+                                } else {
+                                    echo "Shift Tidak Ditemukan";
+                                }
                                 ?>
                             </td>
                             <td><?= $atd['in_time'] ? date('H:i:s', strtotime($atd['in_time'])) : 'Belum check in'; ?></td>

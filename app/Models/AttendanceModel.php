@@ -61,18 +61,20 @@ class AttendanceModel extends Model
     {
         $builder = $this->builder();
         $builder->select('
-        attendance.attendance_id,
-        attendance.attendance_date,
-        employee.employee_name,
-        attendance.in_status,
-        attendance.in_time,
-        attendance.out_time,
-        shift.start_time AS shift_start,
-        shift.end_time AS shift_end
-    ');
+            attendance.attendance_id,
+            attendance.attendance_date,
+            employee.employee_name,
+            attendance.in_status,
+            attendance.in_time,
+            attendance.out_time,
+            shift.shift_id,   
+            shift.start_time AS shift_start,
+            shift.end_time AS shift_end,
+            schedule.schedule_id
+        ');
         $builder->join('employee', 'attendance.employee_id = employee.employee_id', 'left');
-        $builder->join('schedule', 'attendance.schedule_id = schedule.schedule_id', 'left'); // Join ke schedule
-        $builder->join('shift', 'schedule.shift_id = shift.shift_id', 'left'); // Join ke shift melalui schedule
+        $builder->join('schedule', 'attendance.schedule_id = schedule.schedule_id', 'left');
+        $builder->join('shift', 'schedule.shift_id = shift.shift_id', 'left');
 
         if (!is_null($dept)) {
             $builder->where('attendance.department_id', $dept);
@@ -81,6 +83,9 @@ class AttendanceModel extends Model
         $builder->where('attendance.attendance_date >=', $start);
         $builder->where('attendance.attendance_date <=', $end);
         $builder->where('attendance.presence_status', 1);
+
+        // Pastikan schedule_date sama dengan attendance_date
+        $builder->where('schedule.schedule_date = attendance.attendance_date', null, false);
 
         $builder->orderBy('attendance.attendance_date', 'ASC');
 

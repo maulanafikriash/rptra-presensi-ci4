@@ -1,5 +1,5 @@
 <div class="container-fluid">
-    <h4 class="mb-4 text-gray-800"><?= esc($title); ?></h4>
+    <h4 class="mb-4 text-gray-800 font-weight-bold"><?= esc($title); ?></h4>
     <div class="row">
         <div class="col-lg-3">
             <a href="<?= base_url('admin/master/employee/detail/' . esc($employee['employee_id'])); ?>" class="btn btn-secondary btn-icon-split mb-4">
@@ -18,11 +18,11 @@
     <div class="mb-5">
         <div class="row">
             <div class="col-3 text-end font-weight-bold">Nama :</div>
-            <div class="col"><?= esc($employee['employee_name']); ?></div>
+            <div class="col font-weight-bold"><?= esc($employee['employee_name']); ?></div>
         </div>
         <div class="row">
             <div class="col-3 text-end font-weight-bold">Department :</div>
-            <div class="col"><?= esc($department_current['department_name']); ?></div>
+            <div class="col font-weight-bold"><?= esc($department_current['department_name']); ?></div>
         </div>
     </div>
 
