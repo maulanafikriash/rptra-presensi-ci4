@@ -71,35 +71,35 @@
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
-        
-        <div class="modal-body">
-            <input type="hidden" name="schedule_id" id="schedule_id" value="">
-            <input type="hidden" name="employee_id" id="modal_employee_id" value="">
-            <input type="hidden" name="department_id" id="modal_department_id" value="">
-            <input type="hidden" name="schedule_date" id="modal_schedule_date" value="">
 
-            <div class="form-group">
-                <label for="modal_schedule_status">Status Jadwal</label>
-                <select name="schedule_status" id="modal_schedule_status" class="form-control" required>
-                    <option value="">Pilih Status</option>
-                    <option value="NULL">Shift Kerja</option>
-                    <option value="4">Cuti</option>
-                    <option value="5">Libur</option>
-                </select>
-            </div>
-            <div class="form-group" id="modal_shift_field" style="display: none;">
-                <label for="modal_shift_id">Shift</label>
-                <select name="shift_id" id="modal_shift_id" class="form-control">
-                    <option value="">Pilih Shift</option>
-                    <?php foreach($shifts as $shift): ?>
-                        <option value="<?= esc($shift['shift_id']) ?>">
-                            <?= esc($shift['start_time']) ?> - <?= esc($shift['end_time']) ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
+        <div class="modal-body">
+          <input type="hidden" name="schedule_id" id="schedule_id" value="">
+          <input type="hidden" name="employee_id" id="modal_employee_id" value="">
+          <input type="hidden" name="department_id" id="modal_department_id" value="">
+          <input type="hidden" name="schedule_date" id="modal_schedule_date" value="">
+
+          <div class="form-group">
+            <label for="modal_schedule_status">Status Jadwal</label>
+            <select name="schedule_status" id="modal_schedule_status" class="form-control" required>
+              <option value="">Pilih Status</option>
+              <option value="NULL">Shift Kerja</option>
+              <option value="4">Cuti</option>
+              <option value="5">Libur</option>
+            </select>
+          </div>
+          <div class="form-group" id="modal_shift_field" style="display: none;">
+            <label for="modal_shift_id">Shift</label>
+            <select name="shift_id" id="modal_shift_id" class="form-control">
+              <option value="">Pilih Shift</option>
+              <?php foreach ($shifts as $shift): ?>
+                <option value="<?= esc($shift['shift_id']) ?>">
+                  <?= esc($shift['start_time']) ?> - <?= esc($shift['end_time']) ?>
+                </option>
+              <?php endforeach; ?>
+            </select>
+          </div>
         </div>
-        
+
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
           <button type="submit" class="btn btn-primary">Simpan</button>
@@ -187,117 +187,116 @@
     });
   }
 
-// schedule
-$(document).ready(function() {
+  // schedule
+  $(document).ready(function() {
     // Handle tombol tambah jadwal
     $('.add-schedule').on('click', function(e) {
-        e.preventDefault();
-        var date = $(this).data('date');
-        var employeeId = $(this).data('employee-id');
-        var departmentId = $(this).data('department-id');
+      e.preventDefault();
+      var date = $(this).data('date');
+      var employeeId = $(this).data('employee-id');
+      var departmentId = $(this).data('department-id');
 
-        // Reset form
-        $('#scheduleForm')[0].reset();
-        $('#schedule_id').val('');
-        $('#modal_employee_id').val(employeeId);
-        $('#modal_department_id').val(departmentId);
-        $('#modal_schedule_date').val(date);
-        $('#modal_shift_field').hide();
-        $('#modal_shift_id').prop('required', false);
+      // Reset form
+      $('#scheduleForm')[0].reset();
+      $('#schedule_id').val('');
+      $('#modal_employee_id').val(employeeId);
+      $('#modal_department_id').val(departmentId);
+      $('#modal_schedule_date').val(date);
+      $('#modal_shift_field').hide();
+      $('#modal_shift_id').prop('required', false);
 
-        // Update form action untuk tambah jadwal
-        $('#scheduleForm').attr('action', '<?= base_url('admin/master/employee/work_schedule/add'); ?>');
+      // Update form action untuk tambah jadwal
+      $('#scheduleForm').attr('action', '<?= base_url('admin/master/employee/work_schedule/add'); ?>');
 
-        // Open modal
-        $('#scheduleModal').modal('show');
+      // Open modal
+      $('#scheduleModal').modal('show');
     });
 
     // Handle tombol edit jadwal
     $('.edit-schedule').on('click', function(e) {
-        e.preventDefault();
-        var scheduleId = $(this).data('schedule-id');
-        var date = $(this).data('date');
-        var status = $(this).data('status');
-        var shiftId = $(this).data('shift-id');
-        var employeeId = '<?= esc($employee['employee_id']); ?>';
-        var departmentId = '<?= esc($employee['department_id']); ?>';
+      e.preventDefault();
+      var scheduleId = $(this).data('schedule-id');
+      var date = $(this).data('date');
+      var status = $(this).data('status');
+      var shiftId = $(this).data('shift-id');
+      var employeeId = '<?= esc($employee['employee_id']); ?>';
+      var departmentId = '<?= esc($employee['department_id']); ?>';
 
-        // Reset form
-        $('#scheduleForm')[0].reset();
-        $('#schedule_id').val(scheduleId);
-        $('#modal_employee_id').val(employeeId);
-        $('#modal_department_id').val(departmentId);
-        $('#modal_schedule_date').val(date);
-        
-        // Set status
-        if (status === null || status === 'NULL') {
-            $('#modal_schedule_status').val('NULL');
-            $('#modal_shift_field').show();
-            $('#modal_shift_id').prop('required', true);
-        } else {
-            $('#modal_schedule_status').val(status);
-            $('#modal_shift_field').hide();
-            $('#modal_shift_id').prop('required', false);
-        }
+      // Reset form
+      $('#scheduleForm')[0].reset();
+      $('#schedule_id').val(scheduleId);
+      $('#modal_employee_id').val(employeeId);
+      $('#modal_department_id').val(departmentId);
+      $('#modal_schedule_date').val(date);
 
-        // Set shift_id jika ada
-        if (shiftId) {
-            $('#modal_shift_id').val(shiftId);
-        } else {
-            $('#modal_shift_id').val('');
-        }
+      // Set status
+      if (status === null || status === 'NULL') {
+        $('#modal_schedule_status').val('NULL');
+        $('#modal_shift_field').show();
+        $('#modal_shift_id').prop('required', true);
+      } else {
+        $('#modal_schedule_status').val(status);
+        $('#modal_shift_field').hide();
+        $('#modal_shift_id').prop('required', false);
+      }
 
-        // Update form action untuk edit jadwal
-        $('#scheduleForm').attr('action', '<?= base_url('admin/master/employee/work_schedule/edit'); ?>/' + scheduleId);
+      // Set shift_id jika ada
+      if (shiftId) {
+        $('#modal_shift_id').val(shiftId);
+      } else {
+        $('#modal_shift_id').val('');
+      }
 
-        // Open modal
-        $('#scheduleModal').modal('show');
+      // Update form action untuk edit jadwal
+      $('#scheduleForm').attr('action', '<?= base_url('admin/master/employee/work_schedule/edit'); ?>/' + scheduleId);
+
+      // Open modal
+      $('#scheduleModal').modal('show');
     });
 
     // Toggle shift field berdasarkan status
     $('#modal_schedule_status').on('change', function() {
-        var shiftField = $('#modal_shift_field');
-        if ($(this).val() === 'NULL') {
-            shiftField.show();
-            $('#modal_shift_id').prop('required', true);
-        } else {
-            shiftField.hide();
-            $('#modal_shift_id').prop('required', false);
-        }
+      var shiftField = $('#modal_shift_field');
+      if ($(this).val() === 'NULL') {
+        shiftField.show();
+        $('#modal_shift_id').prop('required', true);
+      } else {
+        shiftField.hide();
+        $('#modal_shift_id').prop('required', false);
+      }
     });
 
     // Trigger change event on modal load
-    $('#scheduleModal').on('shown.bs.modal', function () {
-        $('#modal_schedule_status').trigger('change');
+    $('#scheduleModal').on('shown.bs.modal', function() {
+      $('#modal_schedule_status').trigger('change');
     });
 
     // Submit form via AJAX
     $('#scheduleForm').on('submit', function(e) {
-        e.preventDefault();
-        var form = $(this);
-        var actionUrl = form.attr('action');
-        var formData = form.serialize();
+      e.preventDefault();
+      var form = $(this);
+      var actionUrl = form.attr('action');
+      var formData = form.serialize();
 
-        $.ajax({
-            url: actionUrl,
-            type: 'POST',
-            data: formData,
-            success: function(response) {
-                if(response.status === 'success'){
-                    // Reload halaman setelah berhasil
-                    location.reload();
-                } else {
-                    alert(response.message);
-                }
-            },
-            error: function(xhr, status, error) {
-                console.error('AJAX Error:', status, error);
-                alert('Terjadi kesalahan: ' + xhr.responseText);
-            }
-        });
+      $.ajax({
+        url: actionUrl,
+        type: 'POST',
+        data: formData,
+        success: function(response) {
+          if (response.status === 'success') {
+            // Reload halaman setelah berhasil
+            location.reload();
+          } else {
+            alert(response.message);
+          }
+        },
+        error: function(xhr, status, error) {
+          console.error('AJAX Error:', status, error);
+          alert('Terjadi kesalahan: ' + xhr.responseText);
+        }
+      });
     });
-});
-
+  });
 </script>
 
 </body>

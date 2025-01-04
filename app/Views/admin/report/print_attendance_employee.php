@@ -87,7 +87,8 @@
     <table>
         <thead>
             <tr>
-                <th>Hari/Tanggal</th>
+                <th>Hari</th>
+                <th>Tanggal</th>
                 <th>Status</th>
             </tr>
         </thead>
@@ -96,9 +97,17 @@
                 <tr>
                     <td>
                         <?php
+                        // Mendapatkan nama hari dalam Bahasa Indonesia
+                        $dateObj = new DateTime($date);
                         $formatter = new IntlDateFormatter('id_ID', IntlDateFormatter::FULL, IntlDateFormatter::NONE);
-                        $formatter->setPattern('EEEE, dd-MM-yyyy'); // Format: Hari, tanggal-bulan-tahun
-                        echo $formatter->format(new DateTime($date));
+                        $formatter->setPattern('EEEE'); // Format: Nama Hari
+                        echo $formatter->format($dateObj);
+                        ?>
+                    </td>
+                    <td>
+                        <?php
+                        // Format tanggal: dd-MM-yyyy
+                        echo $dateObj->format('d-m-Y');
                         ?>
                     </td>
                     <td>

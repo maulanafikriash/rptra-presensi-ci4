@@ -61,6 +61,8 @@ $routes->group('admin', ['filter' => 'userRole'], function ($routes) {
     $routes->get('report/print_attendance_employee/excel/(:segment)', 'Report::printExcelAttendanceHistory/$1');
     $routes->get('report/print_attendance_all/pdf/(:segment)/(:segment)/(:segment)', 'Report::printPdfAttendanceByDepartment/$1/$2/$3');
     $routes->get('report/print_attendance_all/excel/(:segment)/(:segment)/(:segment)', 'Report::printExcelAttendanceByDepartment/$1/$2/$3');
+    $routes->get('report/print_work_schedule/pdf/(:segment)', 'Report::printWorkSchedulePdf/$1');
+    $routes->get('report/print_work_schedule/excel/(:segment)', 'Report::printWorkScheduleExcel/$1');
 });
 
 $routes->group('employee', ['filter' => 'userRole'], function ($routes) {

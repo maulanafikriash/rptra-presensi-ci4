@@ -119,6 +119,8 @@ class UserRoleMiddleware implements FilterInterface
             'admin/report/print_attendance_employee/excel/.*',
             'admin/report/print_attendance_all/pdf/.*',
             'admin/report/print_attendance_all/excel/.*',
+            'admin/report/print_work_schedule/pdf/.*',
+            'admin/report/print_work_schedule/excel/.*',
         ];
 
         $employeePaths = [

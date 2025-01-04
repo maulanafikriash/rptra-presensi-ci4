@@ -18,14 +18,22 @@ class WorkScheduleModel extends Model
 
     public function getWorkSchedulesByEmployeeAndMonth($employeeId, $month, $year)
     {
-        // Menentukan tanggal awal dan akhir bulan
-        $startDate = sprintf('%04d-%02d-01', $year, $month);
-        $endDate = date("Y-m-t", strtotime($startDate));
+        $builder = $this->db->table($this->table);
+        $builder->select('schedule.*, shift.start_time, shift.end_time');
+        $builder->join('shift', 'schedule.shift_id = shift.shift_id', 'left');
+        $builder->where('schedule.employee_id', $employeeId);
+        $builder->where('MONTH(schedule.schedule_date)', $month);
+        $builder->where('YEAR(schedule.schedule_date)', $year);
+        $builder->orderBy('schedule.schedule_date', 'ASC');
+        $schedules = $builder->get()->getResultArray();
 
-        return $this->where('employee_id', $employeeId)
-                    ->where('schedule_date >=', $startDate)
-                    ->where('schedule_date <=', $endDate)
-                    ->findAll();
+        $result = [];
+        foreach ($schedules as $schedule) {
+            $day = (int) date('j', strtotime($schedule['schedule_date']));
+            $result[$day] = $schedule;
+        }
+
+        return $result;
     }
 
     public function getWorkSchedulesByEmployeeAndMonthDate($employee_id, $month, $year)

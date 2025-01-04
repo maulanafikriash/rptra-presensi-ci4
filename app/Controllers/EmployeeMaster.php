@@ -577,169 +577,156 @@ class EmployeeMaster extends BaseController
         echo view('layout/attendance_footer', $data);
     }
 
-   // Metode untuk menyimpan jadwal kerja
-public function storeWorkSchedule()
-{
-    // Mendapatkan data dari POST
-    $username = session()->get('username');
-    $employee_id = $this->request->getPost('employee_id');
-    $department_id = $this->request->getPost('department_id');
-    $schedule_date = $this->request->getPost('schedule_date');
-    $schedule_status_input = $this->request->getPost('schedule_status');
-    $schedule_status = $schedule_status_input === 'NULL' ? null : (int)$schedule_status_input;
-    $shift_id = $schedule_status_input === 'NULL' ? $this->request->getPost('shift_id') : null;
+    public function storeWorkSchedule()
+    {
+        // Mendapatkan data dari POST
+        $username = session()->get('username');
+        $employee_id = $this->request->getPost('employee_id');
+        $department_id = $this->request->getPost('department_id');
+        $schedule_date = $this->request->getPost('schedule_date');
+        $schedule_status_input = $this->request->getPost('schedule_status');
+        $schedule_status = $schedule_status_input === 'NULL' ? null : (int)$schedule_status_input;
+        $shift_id = $schedule_status_input === 'NULL' ? $this->request->getPost('shift_id') : null;
 
-    // Validasi tambahan: jika schedule_status adalah shift, pastikan shift_id valid
-    if (is_null($schedule_status) && is_null($shift_id)) {
-        return $this->response->setJSON(['status' => 'error', 'message' => 'Shift harus dipilih untuk jadwal shift kerja.']);
-    }
-
-    // Cek apakah jadwal sudah ada
-    $existingSchedule = $this->workScheduleModel->where('employee_id', $employee_id)
-        ->where('schedule_date', $schedule_date)
-        ->first();
-
-    if ($existingSchedule) {
-        return $this->response->setJSON(['status' => 'error', 'message' => 'Jadwal sudah ada untuk tanggal tersebut.']);
-    }
-
-    // Mulai transaksi
-    $this->db->transStart();
-
-    // Simpan jadwal
-    $schedule_id = $this->workScheduleModel->insert([
-        'employee_id' => $employee_id,
-        'department_id' => $department_id,
-        'schedule_date' => $schedule_date,
-        'schedule_status' => $schedule_status,
-        'shift_id' => $shift_id,
-    ]);
-
-    if ($schedule_id) {
-        // Jika status adalah 'Cuti' (4) atau 'Libur' (5), tambahkan ke attendance
-        if (in_array($schedule_status, [4, 5])) {
-            $presence_status = $schedule_status; // Sesuaikan dengan nilai yang diinginkan
-
-            // Cek apakah sudah ada record di attendance untuk tanggal tersebut
-            $existingAttendance = $this->attendanceModel->where('employee_id', $employee_id)
-                ->where('attendance_date', $schedule_date)
-                ->first();
-
-            if ($existingAttendance) {
-                // Update record yang ada
-                $this->attendanceModel->update($existingAttendance['attendance_id'], [
-                    'username' => $username,
-                    'schedule_id' => $schedule_id,
-                    'presence_status' => $presence_status,
-                ]);
-            } else {
-                // Insert record baru
-                $this->attendanceModel->insert([
-                    'username' => $username,
-                    'employee_id' => $employee_id,
-                    'department_id' => $department_id,
-                    'schedule_id' => $schedule_id,
-                    'attendance_date' => $schedule_date,
-                    'presence_status' => $presence_status,
-                ]);
-            }
+        // Validasi tambahan: jika schedule_status adalah shift, pastikan shift_id valid
+        if (is_null($schedule_status) && is_null($shift_id)) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Shift harus dipilih untuk jadwal shift kerja.']);
         }
 
-        // Selesaikan transaksi
-        $this->db->transComplete();
+        // Cek apakah jadwal sudah ada
+        $existingSchedule = $this->workScheduleModel->where('employee_id', $employee_id)
+            ->where('schedule_date', $schedule_date)
+            ->first();
 
-        if ($this->db->transStatus() === FALSE) {
-            // Log error transaksi
-            log_message('error', 'Transaksi gagal saat menambahkan jadwal kerja. Schedule ID: ' . $schedule_id);
+        if ($existingSchedule) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Jadwal sudah ada untuk tanggal tersebut.']);
+        }
+
+        // Mulai transaksi
+        $this->db->transStart();
+
+        // Simpan jadwal
+        $schedule_id = $this->workScheduleModel->insert([
+            'employee_id' => $employee_id,
+            'department_id' => $department_id,
+            'schedule_date' => $schedule_date,
+            'schedule_status' => $schedule_status,
+            'shift_id' => $shift_id,
+        ]);
+
+        if ($schedule_id) {
+            // Jika status adalah 'Cuti' (4) atau 'Libur' (5), tambahkan ke attendance
+            if (in_array($schedule_status, [4, 5])) {
+                $presence_status = $schedule_status; // Sesuaikan dengan nilai yang diinginkan
+
+                // Cek apakah sudah ada record di attendance untuk tanggal tersebut
+                $existingAttendance = $this->attendanceModel->where('employee_id', $employee_id)
+                    ->where('attendance_date', $schedule_date)
+                    ->first();
+
+                if ($existingAttendance) {
+                    // Update record yang ada
+                    $this->attendanceModel->update($existingAttendance['attendance_id'], [
+                        'username' => $username,
+                        'schedule_id' => $schedule_id,
+                        'presence_status' => $presence_status,
+                    ]);
+                } else {
+                    // Insert record baru
+                    $this->attendanceModel->insert([
+                        'username' => $username,
+                        'employee_id' => $employee_id,
+                        'department_id' => $department_id,
+                        'schedule_id' => $schedule_id,
+                        'attendance_date' => $schedule_date,
+                        'presence_status' => $presence_status,
+                    ]);
+                }
+            }
+
+            $this->db->transComplete();
+
+            if ($this->db->transStatus() === FALSE) {
+                log_message('error', 'Transaksi gagal saat menambahkan jadwal kerja. Schedule ID: ' . $schedule_id);
+                return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal menambahkan jadwal kerja.']);
+            }
+
+            return $this->response->setJSON(['status' => 'success', 'message' => 'Jadwal kerja berhasil ditambahkan.']);
+        } else {
+            // Rollback transaksi jika gagal
+            $this->db->transRollback();
+            log_message('error', 'Gagal insert jadwal kerja. Employee ID: ' . $employee_id . ', Tanggal: ' . $schedule_date);
             return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal menambahkan jadwal kerja.']);
         }
-
-        return $this->response->setJSON(['status' => 'success', 'message' => 'Jadwal kerja berhasil ditambahkan.']);
-    } else {
-        // Rollback transaksi jika gagal
-        $this->db->transRollback();
-        // Log error insert jadwal
-        log_message('error', 'Gagal insert jadwal kerja. Employee ID: ' . $employee_id . ', Tanggal: ' . $schedule_date);
-        return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal menambahkan jadwal kerja.']);
-    }
-}
-
-
-    // Metode untuk mengupdate jadwal kerja
-public function updateWorkSchedule($scheduleId)
-{
-    $schedule = $this->workScheduleModel->find($scheduleId);
-    if (!$schedule) {
-        return $this->response->setJSON(['status' => 'error', 'message' => 'Jadwal kerja tidak ditemukan.']);
-    }
-    $username = session()->get('username');
-    $schedule_status_input = $this->request->getPost('schedule_status');
-    $schedule_status = $schedule_status_input === 'NULL' ? null : (int)$schedule_status_input;
-    $shift_id = $schedule_status_input === 'NULL' ? $this->request->getPost('shift_id') : null;
-
-    // Validasi tambahan: jika schedule_status adalah shift, pastikan shift_id valid
-    if (is_null($schedule_status) && is_null($shift_id)) {
-        return $this->response->setJSON(['status' => 'error', 'message' => 'Shift harus dipilih untuk jadwal shift kerja.']);
     }
 
-    // Mulai transaksi
-    $this->db->transStart();
+    public function updateWorkSchedule($scheduleId)
+    {
+        $schedule = $this->workScheduleModel->find($scheduleId);
+        if (!$schedule) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Jadwal kerja tidak ditemukan.']);
+        }
+        $username = session()->get('username');
+        $schedule_status_input = $this->request->getPost('schedule_status');
+        $schedule_status = $schedule_status_input === 'NULL' ? null : (int)$schedule_status_input;
+        $shift_id = $schedule_status_input === 'NULL' ? $this->request->getPost('shift_id') : null;
 
-    $data = [
-        'schedule_status' => $schedule_status,
-        'shift_id' => $shift_id,
-    ];
-
-    if ($this->workScheduleModel->update($scheduleId, $data)) {
-        // Jika status baru adalah 'Cuti' (4) atau 'Libur' (5), tambahkan atau update ke attendance
-        if (in_array($schedule_status, [4, 5])) {
-            $presence_status = $schedule_status; // Sesuaikan dengan nilai yang diinginkan
-
-            // Cek apakah sudah ada record di attendance untuk schedule_id dan tanggal tersebut
-            $existingAttendance = $this->attendanceModel->where('schedule_id', $scheduleId)->first();
-
-            if ($existingAttendance) {
-                // Update record yang ada
-                $this->attendanceModel->update($existingAttendance['attendance_id'], [
-                    'username' => $username,
-                    'presence_status' => $presence_status,
-                ]);
-            } else {
-                // Insert record baru
-                $this->attendanceModel->insert([
-                    'username' => $username,
-                    'employee_id' => $schedule['employee_id'],
-                    'department_id' => $schedule['department_id'],
-                    'schedule_id' => $scheduleId,
-                    'attendance_date' => $schedule['schedule_date'],
-                    'presence_status' => $presence_status,
-                ]);
-            }
-        } else {
-            // Jika status baru adalah shift kerja, hapus record 'Cuti' atau 'Libur' di attendance
-            $this->attendanceModel->where('schedule_id', $scheduleId)
-                ->whereIn('presence_status', [4, 5])
-                ->delete();
+        // Validasi tambahan: jika schedule_status adalah shift, pastikan shift_id valid
+        if (is_null($schedule_status) && is_null($shift_id)) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Shift harus dipilih untuk jadwal shift kerja.']);
         }
 
-        // Selesaikan transaksi
-        $this->db->transComplete();
+        // Mulai transaksi
+        $this->db->transStart();
 
-        if ($this->db->transStatus() === FALSE) {
-            // Log error transaksi
-            log_message('error', 'Transaksi gagal saat mengupdate jadwal kerja. Schedule ID: ' . $scheduleId);
+        $data = [
+            'schedule_status' => $schedule_status,
+            'shift_id' => $shift_id,
+        ];
+
+        if ($this->workScheduleModel->update($scheduleId, $data)) {
+            // Jika status baru adalah 'Cuti' (4) atau 'Libur' (5), tambahkan atau update ke attendance
+            if (in_array($schedule_status, [4, 5])) {
+                $presence_status = $schedule_status; // Sesuaikan dengan nilai yang diinginkan
+
+                // Cek apakah sudah ada record di attendance untuk schedule_id dan tanggal tersebut
+                $existingAttendance = $this->attendanceModel->where('schedule_id', $scheduleId)->first();
+
+                if ($existingAttendance) {
+                    $this->attendanceModel->update($existingAttendance['attendance_id'], [
+                        'username' => $username,
+                        'presence_status' => $presence_status,
+                    ]);
+                } else {
+                    $this->attendanceModel->insert([
+                        'username' => $username,
+                        'employee_id' => $schedule['employee_id'],
+                        'department_id' => $schedule['department_id'],
+                        'schedule_id' => $scheduleId,
+                        'attendance_date' => $schedule['schedule_date'],
+                        'presence_status' => $presence_status,
+                    ]);
+                }
+            } else {
+                $this->attendanceModel->where('schedule_id', $scheduleId)
+                    ->whereIn('presence_status', [4, 5])
+                    ->delete();
+            }
+
+            $this->db->transComplete();
+
+            if ($this->db->transStatus() === FALSE) {
+                log_message('error', 'Transaksi gagal saat mengupdate jadwal kerja. Schedule ID: ' . $scheduleId);
+                return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal memperbarui jadwal kerja.']);
+            }
+
+            return $this->response->setJSON(['status' => 'success', 'message' => 'Jadwal kerja berhasil diperbarui.']);
+        } else {
+            $this->db->transRollback();
+            log_message('error', 'Gagal update jadwal kerja. Schedule ID: ' . $scheduleId);
             return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal memperbarui jadwal kerja.']);
         }
-
-        return $this->response->setJSON(['status' => 'success', 'message' => 'Jadwal kerja berhasil diperbarui.']);
-    } else {
-        // Rollback transaksi jika gagal
-        $this->db->transRollback();
-        // Log error update jadwal
-        log_message('error', 'Gagal update jadwal kerja. Schedule ID: ' . $scheduleId);
-        return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal memperbarui jadwal kerja.']);
     }
-}
 
 
     public function delete($id)

@@ -26,13 +26,31 @@
         </div>
     </div>
 
+    <?php
+    $bulanIndonesia = [
+        1 => 'Januari',
+        2 => 'Februari',
+        3 => 'Maret',
+        4 => 'April',
+        5 => 'Mei',
+        6 => 'Juni',
+        7 => 'Juli',
+        8 => 'Agustus',
+        9 => 'September',
+        10 => 'Oktober',
+        11 => 'November',
+        12 => 'Desember',
+    ];
+    ?>
     <!-- Filter Bulan dan Tahun -->
     <form action="" method="get" class="form-inline mb-3">
         <div class="form-group mr-2">
             <label for="month" class="mr-2">Bulan:</label>
             <select name="month" id="month" class="form-control">
                 <?php for ($m = 1; $m <= 12; $m++) : ?>
-                    <option value="<?= $m; ?>" <?= ($m == $month) ? 'selected' : ''; ?>><?= date('F', mktime(0, 0, 0, $m, 1)); ?></option>
+                    <option value="<?= $m; ?>" <?= ($m == $month) ? 'selected' : ''; ?>>
+                        <?= $bulanIndonesia[$m]; ?>
+                    </option>
                 <?php endfor; ?>
             </select>
         </div>
