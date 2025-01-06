@@ -2,7 +2,7 @@
 
   <!-- Page Heading -->
   <div class="d-sm-flex align-items-center justify-content-between mb-4">
-    <h1 class="h3 mb-0 text-gray-800"><?= esc($title); ?></h1>
+    <h3 class="mb-0 text-gray-700 font-weight-bold"><?= esc($title); ?></h3>
   </div>
 
   <!-- Content Row -->

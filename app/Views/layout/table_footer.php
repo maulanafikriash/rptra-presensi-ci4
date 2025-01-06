@@ -13,7 +13,6 @@
 
 <?= $this->include('components/logout_modal'); ?>
 
-
 <!-- Bootstrap core JavaScript-->
 <script src="<?= base_url('../assets/jquery/jquery.min.js'); ?>"></script>
 <script src="<?= base_url('../assets/bootstrap/js/bootstrap.bundle.min.js'); ?>"></script>
@@ -24,6 +23,7 @@
 <script src="<?= base_url('../assets/datatables/jquery.dataTables.min.js'); ?>"></script>
 <script src="<?= base_url('../assets/datatables/dataTables.bootstrap4.min.js'); ?>"></script>
 <script src="<?= base_url('../js/demo/datatables-demo.js'); ?>"></script>
+<script src="<?= base_url('../js/flash-data-message.js'); ?>"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
@@ -59,21 +59,6 @@
             });
         });
     });
-
-    // Seleksi elemen flashdata
-    const flashdataMessage = document.getElementById('flashdataMessage');
-
-    // Cek jika elemen ada
-    if (flashdataMessage) {
-        // Atur timer untuk menghilangkan elemen setelah 3 detik
-        setTimeout(() => {
-            flashdataMessage.style.transition = 'opacity 0.5s';
-            flashdataMessage.style.opacity = '0';
-            setTimeout(() => {
-                flashdataMessage.remove();
-            }, 500);
-        }, 3000);
-    }
 </script>
 
 </body>

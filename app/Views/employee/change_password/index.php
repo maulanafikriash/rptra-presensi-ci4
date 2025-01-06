@@ -1,5 +1,5 @@
 <div class="container mb-5">
-    <h3 class="text-center"><?= esc($title); ?></h3>
+    <h3 class="text-center text-gray-700 font-weight-bold"><?= esc($title); ?></h3>
 
     <!-- Pesan Flash -->
     <?php if (session()->getFlashdata('success')): ?>

@@ -648,14 +648,17 @@ class EmployeeMaster extends BaseController
 
             if ($this->db->transStatus() === FALSE) {
                 log_message('error', 'Transaksi gagal saat menambahkan jadwal kerja. Schedule ID: ' . $schedule_id);
+                session()->setFlashdata('error', 'Gagal menambahkan jadwal kerja.');
                 return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal menambahkan jadwal kerja.']);
             }
 
+            session()->setFlashdata('success', 'Jadwal kerja berhasil ditambahkan.');
             return $this->response->setJSON(['status' => 'success', 'message' => 'Jadwal kerja berhasil ditambahkan.']);
         } else {
             // Rollback transaksi jika gagal
             $this->db->transRollback();
             log_message('error', 'Gagal insert jadwal kerja. Employee ID: ' . $employee_id . ', Tanggal: ' . $schedule_date);
+            session()->setFlashdata('error', 'Gagal menambahkan jadwal kerja.');
             return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal menambahkan jadwal kerja.']);
         }
     }
@@ -717,13 +720,16 @@ class EmployeeMaster extends BaseController
 
             if ($this->db->transStatus() === FALSE) {
                 log_message('error', 'Transaksi gagal saat mengupdate jadwal kerja. Schedule ID: ' . $scheduleId);
+                session()->setFlashdata('error', 'Gagal memperbarui jadwal kerja.');
                 return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal memperbarui jadwal kerja.']);
             }
 
+            session()->setFlashdata('success', 'Jadwal kerja berhasil diperbarui.');
             return $this->response->setJSON(['status' => 'success', 'message' => 'Jadwal kerja berhasil diperbarui.']);
         } else {
             $this->db->transRollback();
             log_message('error', 'Gagal update jadwal kerja. Schedule ID: ' . $scheduleId);
+            session()->setFlashdata('error', 'Gagal memperbarui jadwal kerja.');
             return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal memperbarui jadwal kerja.']);
         }
     }

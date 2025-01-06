@@ -22,10 +22,14 @@ class AuthModel extends Model
 
         $e_id = $account['employee_id'];
 
-        return $this->db->table('employee')
+        $employee = $this->db->table('employee')
+            ->select('employee.*, department.department_name')
+            ->join('department', 'employee.department_id = department.department_id', 'left')
             ->where('employee.employee_id', $e_id)
             ->get()
-            ->getRowArray(); // Mengambil seluruh kolom dari tabel employee
+            ->getRowArray();
+
+        return $employee; 
     }
 
     public function updateUserAccount($employeeId, $data)

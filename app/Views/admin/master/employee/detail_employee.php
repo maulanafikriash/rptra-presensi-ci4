@@ -13,6 +13,12 @@
                 <span class="text">Kembali</span>
             </a>
         </div>
+         <!-- Tombol Cetak PDF -->
+         <div class="col-lg-9 text-right">
+            <a href="<?= base_url('admin/report/print_biodata/pdf/') . esc($employee['employee_id']); ?>" class="btn btn-danger" target="_blank">
+                <i class="fas fa-file-pdf"></i> Cetak Biodata
+            </a>
+        </div>
     </div>
 
     <div class="col-lg p-0">

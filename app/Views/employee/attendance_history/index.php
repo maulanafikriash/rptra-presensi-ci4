@@ -1,5 +1,5 @@
 <div class="container-fluid">
-    <h1 class="h3 mb-4 text-gray-800"><?= esc($title); ?></h1>
+    <h3 class="mb-4 text-gray-700 font-weight-bold"><?= esc($title); ?></h3>
 
     <!-- Form Filter Bulan dan Tahun -->
     <form action="" method="get" class="mb-3">

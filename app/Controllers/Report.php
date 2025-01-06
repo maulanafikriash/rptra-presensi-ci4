@@ -11,6 +11,7 @@ use App\Models\ShiftModel;
 use App\Models\WorkScheduleModel;
 use \Mpdf\Mpdf;
 use IntlDateFormatter;
+use Intervention\Image\ImageManagerStatic as Image;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -743,5 +744,52 @@ class Report extends BaseController
         // Menulis file ke output
         $writer->save('php://output');
         exit;
+    }
+
+    public function printBiodataPdf($id)
+    {
+        $employee = $this->employeeModel->findEmployeeWithRelations($id);
+        if (!$employee) {
+            throw new \CodeIgniter\Exceptions\PageNotFoundException("Pegawai tidak ditemukan");
+        }
+
+        // Mengambil nama department dari model Department
+        $department = $this->departmentModel->find($employee['department_id']);
+        $departmentName = $department['department_name'] ?? 'Tidak Diketahui';
+
+        $data = [
+            'employee' => $employee,
+            'department_current' => [
+                'department_id' => $employee['department_id'] ?? null,
+                'department_name' => $departmentName
+            ],
+        ];
+
+        // Render view untuk PDF
+        $html = view('admin/report/print_biodata', $data);
+
+         // Bersihkan output buffering untuk menghindari output yang tidak diinginkan
+         while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+
+        // Inisialisasi mPDF
+        $mpdf = new Mpdf([
+            'format' => 'A4',
+            'orientation' => 'P',
+        ]);
+
+        // Menambahkan header dan footer
+        $mpdf->SetHeader('RPTRA Cibubur Berseri');
+        $mpdf->SetFooter('Dicetak pada: {DATE j-m-Y H:i:s}');
+
+        // Set judul PDF
+        $mpdf->SetTitle('Biodata ' . $departmentName);
+
+        // Menulis HTML ke PDF
+        $mpdf->WriteHTML($html);
+
+        // Output ke browser
+        $mpdf->Output('Biodata_' . $employee['employee_name'] . '.pdf', 'I');
     }
 }
