@@ -1,5 +1,5 @@
 <div class="container-fluid">
-    <h4 class="mb-4 text-gray-800"><?= esc($title); ?></h4>
+    <h4 class="mb-4 text-gray-800 font-weight-bold"><?= esc($title); ?></h4>
     <div class="row">
         <div class="col-lg-3">
             <a href="<?= base_url('admin/master/employee/detail/' . esc($employee['employee_id'])); ?>" class="btn btn-secondary btn-icon-split mb-4">
@@ -18,21 +18,39 @@
     <div class="mb-5">
         <div class="row">
             <div class="col-3 text-end font-weight-bold">Nama :</div>
-            <div class="col"><?= esc($employee['employee_name']); ?></div>
+            <div class="col font-weight-bold"><?= esc($employee['employee_name']); ?></div>
         </div>
         <div class="row">
             <div class="col-3 text-end font-weight-bold">Department :</div>
-            <div class="col"><?= esc($department_current['department_name']); ?></div>
+            <div class="col font-weight-bold"><?= esc($department_current['department_name']); ?></div>
         </div>
     </div>
 
+    <?php
+    $bulanIndonesia = [
+        1 => 'Januari',
+        2 => 'Februari',
+        3 => 'Maret',
+        4 => 'April',
+        5 => 'Mei',
+        6 => 'Juni',
+        7 => 'Juli',
+        8 => 'Agustus',
+        9 => 'September',
+        10 => 'Oktober',
+        11 => 'November',
+        12 => 'Desember',
+    ];
+    ?>
     <!-- Filter Bulan dan Tahun -->
     <form action="" method="get" class="form-inline mb-3">
         <div class="form-group mr-2">
             <label for="month" class="mr-2">Bulan:</label>
             <select name="month" id="month" class="form-control">
                 <?php for ($m = 1; $m <= 12; $m++) : ?>
-                    <option value="<?= $m; ?>" <?= ($m == $month) ? 'selected' : ''; ?>><?= date('F', mktime(0, 0, 0, $m, 1)); ?></option>
+                    <option value="<?= $m; ?>" <?= ($m == $month) ? 'selected' : ''; ?>>
+                        <?= $bulanIndonesia[$m]; ?>
+                    </option>
                 <?php endfor; ?>
             </select>
         </div>
@@ -112,7 +130,18 @@
 
                             // Tampilkan ikon edit dan lokasi hanya jika tanggal saat ini atau sebelumnya
                             if ($currentLoopDate <= $currentDate) {
-                                echo "<a href='#' class='float-right' data-target='#editAttendanceModal' data-toggle='modal' data-day='$dayCounter'><i class='fas fa-edit'></i></a><br>";
+                                // Cek presence_status
+                                $canEdit = true;
+                                if (isset($attendanceData[$dayCounter]['presence_status'])) {
+                                    $status = $attendanceData[$dayCounter]['presence_status'];
+                                    if (in_array($status, [4, 5])) {
+                                        $canEdit = false;
+                                    }
+                                }
+
+                                if ($canEdit) {
+                                    echo "<a href='#' class='float-right' data-target='#editAttendanceModal' data-toggle='modal' data-day='$dayCounter'><i class='fas fa-edit'></i></a><br>";
+                                }
 
                                 if (isset($attendanceData[$dayCounter]) && $attendanceData[$dayCounter]['presence_status'] == 1) {
 

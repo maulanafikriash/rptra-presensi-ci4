@@ -40,7 +40,6 @@ class Auth extends BaseController
         if ($this->request->getMethod() === 'POST') {
             $validation = \Config\Services::validation();
 
-            // Atur aturan validasi
             $validation->setRules([
                 'username' => [
                     'label' => 'Username',
@@ -69,10 +68,10 @@ class Auth extends BaseController
             $password = $this->request->getPost('password');
 
             // Ambil data user berdasarkan username
-            $user = $this->db->table('user_accounts')
-                ->select('user_accounts.username, user_accounts.password, user_accounts.user_role_id, user_role.user_role_name')
-                ->join('user_role', 'user_accounts.user_role_id = user_role.user_role_id')
-                ->where('user_accounts.username', $username)
+            $user = $this->db->table('user_account')
+                ->select('user_account.username, user_account.password, user_account.user_role_id, user_role.user_role_name')
+                ->join('user_role', 'user_account.user_role_id = user_role.user_role_id')
+                ->where('user_account.username', $username)
                 ->get()
                 ->getRow();
 

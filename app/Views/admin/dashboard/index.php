@@ -114,7 +114,7 @@
         <div class="col-lg-6 mb-4">
             <div class="card shadow">
                 <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Pegawai per Shift</h6>
+                    <h6 class="m-0 font-weight-bold text-primary">Daftar Shift</h6>
                 </div>
                 <div class="card-body" style="max-height: 400px; overflow-y: auto;">
                     <table class="table table-bordered">
@@ -122,15 +122,13 @@
                             <tr>
                                 <th>ID Shift</th>
                                 <th>Waktu Shift</th>
-                                <th>Pegawai</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php foreach ($s_list as $shift) : ?>
                                 <tr>
-                                    <td><?= esc($shift['s_id']); ?></td>
-                                    <td><?= esc($shift['shift_time']); ?></td>
-                                    <td><?= esc($shift['qty']); ?></td>
+                                    <td><?= esc($shift['shift_id']); ?></td>
+                                    <td><?= esc($shift['start_time']) . ' - ' . esc($shift['end_time']); ?></td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
@@ -138,6 +136,7 @@
                 </div>
             </div>
         </div>
+
     </div>
 
 </div>

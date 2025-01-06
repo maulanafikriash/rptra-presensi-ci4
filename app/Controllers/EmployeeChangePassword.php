@@ -63,7 +63,7 @@ class EmployeeChangePassword extends BaseController
                 $new_password = $this->request->getPost('new_password');
 
                 // Ambil hash password dari database
-                $user = $db->table('user_accounts')
+                $user = $db->table('user_account')
                     ->select('password')
                     ->where('username', $username)
                     ->get()
@@ -76,7 +76,7 @@ class EmployeeChangePassword extends BaseController
                     } else {
                         // Hash password baru dan lakukan update
                         $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
-                        $db->table('user_accounts')
+                        $db->table('user_account')
                             ->where('username', $username)
                             ->update(['password' => $hashed_password]);
 

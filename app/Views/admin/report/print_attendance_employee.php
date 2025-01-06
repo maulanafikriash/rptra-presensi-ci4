@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Riwayat Presensi Pegawai</title>
+    <title>Riwayat Presensi <?= htmlspecialchars($dept_name) ?></title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -73,8 +73,8 @@
 </head>
 
 <body>
-    <h3>Riwayat Presensi Pegawai</h3>
-    <h4>Nama : <?= $employee['employee_name']; ?></h4>
+    <h3>Riwayat Presensi <?= htmlspecialchars($dept_name) ?></h3>
+    <h4>Nama : <?= htmlspecialchars($employee['employee_name']); ?></h4>
     <h4>
         Bulan :
         <?php
@@ -87,7 +87,8 @@
     <table>
         <thead>
             <tr>
-                <th>Hari/Tanggal</th>
+                <th>Hari</th>
+                <th>Tanggal</th>
                 <th>Status</th>
             </tr>
         </thead>
@@ -96,9 +97,17 @@
                 <tr>
                     <td>
                         <?php
+                        // Mendapatkan nama hari dalam Bahasa Indonesia
+                        $dateObj = new DateTime($date);
                         $formatter = new IntlDateFormatter('id_ID', IntlDateFormatter::FULL, IntlDateFormatter::NONE);
-                        $formatter->setPattern('EEEE, dd-MM-yyyy'); // Format: Hari, tanggal-bulan-tahun
-                        echo $formatter->format(new DateTime($date));
+                        $formatter->setPattern('EEEE'); // Format: Nama Hari
+                        echo $formatter->format($dateObj);
+                        ?>
+                    </td>
+                    <td>
+                        <?php
+                        // Format tanggal: dd-MM-yyyy
+                        echo $dateObj->format('d-m-Y');
                         ?>
                     </td>
                     <td>
@@ -129,7 +138,7 @@
                                 $badgeClass = '';
                         }
                         ?>
-                        <span class="badge <?= $badgeClass; ?>"><?= $status; ?></span>
+                        <span class="badge <?= $badgeClass; ?>"><?= htmlspecialchars($status); ?></span>
                     </td>
                 </tr>
             <?php endforeach; ?>

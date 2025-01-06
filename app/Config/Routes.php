@@ -37,9 +37,10 @@ $routes->group('admin', ['filter' => 'userRole'], function ($routes) {
     $routes->post('master/employee/attendance/edit/(:segment)', 'EmployeeMaster::updateAttendanceEmployee/$1');
     $routes->post('master/employee/attendance/edit', 'EmployeeMaster::updateAttendanceEmployee');
 
-    $routes->get('master/employee/work_schedule/(:segment)', 'EmployeeMaster::workSchedule/$1');
-    $routes->post('master/employee/work_schedule/(:segment)', 'EmployeeMaster::workSchedule/$1');
-
+    $routes->get('master/employee/work_schedule/(:segment)', 'EmployeeMaster::workScheduleEmployee/$1');
+    $routes->post('master/employee/work_schedule/add', 'EmployeeMaster::storeWorkSchedule');
+    $routes->post('master/employee/work_schedule/edit/(:segment)', 'EmployeeMaster::updateWorkSchedule/$1');
+    
     $routes->get('master/shift', 'ShiftMaster::index');
     $routes->get('master/shift/add', 'ShiftMaster::add');
     $routes->post('master/shift/add', 'ShiftMaster::add');
@@ -60,6 +61,9 @@ $routes->group('admin', ['filter' => 'userRole'], function ($routes) {
     $routes->get('report/print_attendance_employee/excel/(:segment)', 'Report::printExcelAttendanceHistory/$1');
     $routes->get('report/print_attendance_all/pdf/(:segment)/(:segment)/(:segment)', 'Report::printPdfAttendanceByDepartment/$1/$2/$3');
     $routes->get('report/print_attendance_all/excel/(:segment)/(:segment)/(:segment)', 'Report::printExcelAttendanceByDepartment/$1/$2/$3');
+    $routes->get('report/print_work_schedule/pdf/(:segment)', 'Report::printWorkSchedulePdf/$1');
+    $routes->get('report/print_work_schedule/excel/(:segment)', 'Report::printWorkScheduleExcel/$1');
+    $routes->get('report/print_biodata/pdf/(:segment)', 'Report::printBiodataPdf/$1');
 });
 
 $routes->group('employee', ['filter' => 'userRole'], function ($routes) {
@@ -67,6 +71,7 @@ $routes->group('employee', ['filter' => 'userRole'], function ($routes) {
     $routes->post('attendance', 'EmployeeAttendance::index');
     $routes->get('profile', 'EmployeeProfile::index');
     $routes->get('attendance_history', 'EmployeeAttendance::attendanceHistory');
+    $routes->get('work_schedule', 'EmployeeAttendance::workSchedule');
     $routes->get('change_password', 'EmployeeChangePassword::index');
     $routes->post('change_password', 'EmployeeChangePassword::index');
 });

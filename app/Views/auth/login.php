@@ -69,9 +69,9 @@
     setTimeout(() => {
         const errorMessage = document.getElementById('error-message');
         if (errorMessage) {
-            errorMessage.style.transition = "opacity 0.5s ease"; // Animasi transisi
+            errorMessage.style.transition = "opacity 0.5s ease";
             errorMessage.style.opacity = "0"; // Sembunyikan pesan dengan opacity
             setTimeout(() => errorMessage.remove(), 500); // Hapus elemen setelah animasi selesai
         }
-    }, 3000); // Timer 3 detik
+    }, 3000);
 </script>

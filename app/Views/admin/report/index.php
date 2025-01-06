@@ -65,17 +65,11 @@
                             <?php
                             $i = 1;
                             foreach ($attendance as $atd) :
-                                // Mendapatkan informasi shift
-                                $shift_info = array_filter($shift_data, function ($shift) use ($atd) {
-                                    return $shift['shift_id'] == $atd['shift_id'];
-                                });
-                                $shift_info = array_values($shift_info);
-                                if (!empty($shift_info)) {
-                                    $shift = $shift_info[0];
-                                    $checkout_status = get_checkout_status($atd, $shift, $atd['attendance_date']);
-                                } else {
-                                    $checkout_status = 'Shift Tidak Ditemukan';
-                                }
+                                // Menggunakan shift_start dan shift_end dari data presensi
+                                $checkout_status = get_checkout_status($atd, [
+                                    'start_time' => $atd['shift_start'],
+                                    'end_time' => $atd['shift_end']
+                                ], $atd['attendance_date']);
                             ?>
                                 <tr>
                                     <th><?= $i++ ?></th>
@@ -83,8 +77,8 @@
                                     <td><?= htmlspecialchars($atd['employee_name']) ?></td>
                                     <td class="text-center">
                                         <?php
-                                        if (!empty($shift_info)) {
-                                            echo htmlspecialchars($shift['shift_id']) . " = " . date('H:i', strtotime($shift['start_time'])) . " - " . date('H:i', strtotime($shift['end_time']));
+                                        if (!empty($atd['shift_start']) && !empty($atd['shift_end'])) {
+                                            echo htmlspecialchars($atd['shift_id']) . " = " . date('H:i', strtotime($atd['shift_start'])) . " - " . date('H:i', strtotime($atd['shift_end']));
                                         } else {
                                             echo "Shift Tidak Ditemukan";
                                         }

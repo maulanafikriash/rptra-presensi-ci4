@@ -31,7 +31,6 @@
                             <th>#</th>
                             <th>ID</th>
                             <th>Nama</th>
-                            <th>Shift</th>
                             <th>Jenis Kelamin</th>
                             <th>Foto</th>
                             <th>Tgl Lahir</th>
@@ -41,32 +40,30 @@
                     <tbody>
                         <?php $i = 1; ?>
                         <?php foreach ($employee as $emp) : ?>
-                            <?php if ($emp['shift_id'] == 0) {
-                                continue;
-                            } ?>
                             <tr>
                                 <td class="align-middle"><?= esc($i++); ?></td>
                                 <td class="align-middle"><?= esc($emp['employee_id']); ?></td>
                                 <td class="align-middle"><?= esc($emp['employee_name']); ?></td>
-                                <td class="align-middle"><?= esc($emp['shift_id']); ?></td>
                                 <td class="align-middle">
                                     <?= esc($emp['gender'] === 'Laki-Laki' ? 'Laki-Laki' : 'Perempuan'); ?>
                                 </td>
                                 <td class="text-center">
-                                    <img src="<?= base_url('img/pp/' . $emp['image']); ?>" style="width: 55px; height:55px" class="img-rounded">
+                                    <img src="<?= base_url('img/pp/' . $emp['image']); ?>" style="width: 55px; height:55px" class="img-rounded" alt="Foto Pegawai">
                                 </td>
                                 <td class="align-middle"><?= esc(date('d-m-Y', strtotime($emp['birth_date']))); ?></td>
                                 <td class="text-center align-middle">
-                                    <a href="<?= base_url('admin/master/employee/detail/' . $emp['employee_id']); ?>" class="btn btn-success btn-circle">
-                                        <span class="icon" title="Details">
+                                    <a href="<?= base_url('admin/master/employee/detail/' . $emp['employee_id']); ?>" class="btn btn-success btn-circle" title="Details">
+                                        <span class="icon">
                                             <i class="fas fa-info"></i>
                                         </span>
-                                    </a> |
-                                    <a href="<?= base_url('admin/master/employee/edit/' . $emp['employee_id']); ?>" class="btn btn-primary btn-circle">
-                                        <span class="icon text-white" title="Edit">
+                                    </a>
+                                    |
+                                    <a href="<?= base_url('admin/master/employee/edit/' . $emp['employee_id']); ?>" class="btn btn-primary btn-circle" title="Edit">
+                                        <span class="icon text-white">
                                             <i class="fas fa-edit"></i>
                                         </span>
-                                    </a> |
+                                    </a>
+                                    |
                                     <button type="button"
                                         class="btn btn-danger btn-circle delete-button"
                                         data-url="<?= base_url('admin/master/employee/delete/' . $emp['employee_id']); ?>"

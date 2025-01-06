@@ -1,3 +1,4 @@
+<!-- views/employee/work_schedule/index.php -->
 <div class="container-fluid">
     <h3 class="mb-4 text-gray-700 font-weight-bold"><?= esc($title); ?></h3>
 
@@ -40,30 +41,24 @@
         <button type="submit" class="btn btn-primary ml-2">Filter</button>
     </form>
 
-    <!-- Tabel Riwayat Presensi -->
+    <!-- Tabel Jadwal Kerja -->
     <div class="table-responsive">
         <table class="table table-bordered">
             <thead>
                 <tr>
                     <th>Hari</th>
                     <th>Tanggal</th>
-                    <th>Status</th>
+                    <th>Shift Kerja</th>
                 </tr>
             </thead>
             <tbody>
                 <?php
-                // Menghitung jumlah hari dalam bulan yang dipilih
                 $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $month, $year);
 
-                // Mendapatkan tanggal hari ini
-                $today = date('Y-m-d');
-
-                // Loop untuk menampilkan tanggal dan status presensi
                 for ($day = 1; $day <= $daysInMonth; $day++) {
                     $date = date('Y-m-d', strtotime("$year-$month-$day"));
                     $dayName = date('l', strtotime($date));
 
-                    // Mengatur nama hari dalam bahasa Indonesia
                     $hariIndonesia = [
                         'Sunday' => 'Minggu',
                         'Monday' => 'Senin',
@@ -75,42 +70,18 @@
                     ];
                     $dayName = $hariIndonesia[$dayName] ?? $dayName;
 
-                    // Status presensi default
-                    $status = 'Tidak Hadir';
-                    $statusClass = 'danger';
-
-                    if ($date > $today) {
-                        $status = 'Tidak Ada Data';
-                        $statusClass = 'secondary';
-                    } elseif (isset($attendance[$date])) {
-                        switch ($attendance[$date]) {
-                            case 1:
-                                $status = 'Hadir';
-                                $statusClass = 'success';
-                                break;
-                            case 2:
-                                $status = 'Izin';
-                                $statusClass = 'warning';
-                                break;
-                            case 3:
-                                $status = 'Sakit';
-                                $statusClass = 'warning';
-                                break;
-                            case 4:
-                                $status = 'Cuti';
-                                $statusClass = 'dark';
-                                break;
-                            case 5:
-                                $status = 'Libur';
-                                $statusClass = 'primary';
-                                break;
-                        }
+                    if (isset($schedule[$date])) {
+                        $statusKerja = $schedule[$date]['status_kerja'];
+                        $shiftClass = $schedule[$date]['shift_class'];
+                    } else {
+                        $statusKerja = 'Tidak Ada Jadwal';
+                        $shiftClass = 'secondary';
                     }
                 ?>
                     <tr>
                         <td><?= esc($dayName); ?></td>
                         <td><?= esc(date('d-m-Y', strtotime($date))); ?></td>
-                        <td><span class="badge badge-<?= esc($statusClass); ?>"><?= esc($status); ?></span></td>
+                        <td><span class="badge badge-<?= esc($shiftClass); ?>"><?= esc($statusKerja); ?></span></td>
                     </tr>
                 <?php } ?>
             </tbody>

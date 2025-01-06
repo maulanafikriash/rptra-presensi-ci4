@@ -16,7 +16,7 @@ class EmployeeProfile extends BaseController
     public function index()
     {
         $data = [
-            'title' => 'My Profile',
+            'title' => 'Profil Saya',
             'account' => $this->authModel->getAccount(session()->get('username')),
         ];
 

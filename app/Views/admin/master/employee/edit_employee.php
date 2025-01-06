@@ -30,7 +30,7 @@
                             <div class="row">
                                 <div class="col-lg-4 py-3">
                                     <div class="card" style="width: 100%; height: 100%">
-                                        <img src="<?= base_url('img/pp/' . $employee['image']); ?>" class="card-img-top w-75 mx-auto pt-3">
+                                        <img src="<?= base_url('img/pp/' . $employee['image']); ?>" class="card-img-top w-75 mx-auto pt-3" alt="Foto Pegawai">
                                         <div class="card-body mt-3">
                                             <label for="image">Ubah Foto Pegawai</label>
                                             <input type="file" name="image" id="image" class="form-control-image mt-2">
@@ -126,18 +126,6 @@
                                 </div>
                             </div>
                             <div class="row">
-                                <div class="col-lg-6">
-                                    <div class="form-group">
-                                        <label for="shift_id" class="col-form-label">Shift</label>
-                                        <select class="form-control" name="shift_id" id="shift_id">
-                                            <?php foreach ($shift as $sft) : ?>
-                                                <option value="<?= esc($sft['shift_id']); ?>" <?= $sft['shift_id'] == $employee['shift_id'] ? 'selected' : ''; ?>>
-                                                    <?= esc($sft['shift_id'] . ' = ' . $sft['start_time'] . ' - ' . $sft['end_time']); ?>
-                                                </option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                    </div>
-                                </div>
                                 <div class="col-lg-6">
                                     <div class="form-group">
                                         <label for="department_id" class="col-form-label">Department</label>

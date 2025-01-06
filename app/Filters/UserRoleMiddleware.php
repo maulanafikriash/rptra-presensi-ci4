@@ -104,6 +104,8 @@ class UserRoleMiddleware implements FilterInterface
             'admin/master/employee/attendance',
             'admin/master/employee/attendance/edit/.*', // Support dynamic ID   
             'admin/master/employee/work_schedule/.*', 
+            'admin/master/employee/work_schedule/add', 
+            'admin/master/employee/work_schedule/edit/.*', 
             'admin/master/shift',
             'admin/master/shift/add',
             'admin/master/shift/edit/.*', // Support dynamic ID
@@ -117,6 +119,9 @@ class UserRoleMiddleware implements FilterInterface
             'admin/report/print_attendance_employee/excel/.*',
             'admin/report/print_attendance_all/pdf/.*',
             'admin/report/print_attendance_all/excel/.*',
+            'admin/report/print_work_schedule/pdf/.*',
+            'admin/report/print_work_schedule/excel/.*',
+            'admin/report/print_biodata/pdf/.*',
         ];
 
         $employeePaths = [
@@ -124,6 +129,7 @@ class UserRoleMiddleware implements FilterInterface
             'employee/profile',
             'employee/change_password',
             'employee/attendance_history',
+            'employee/work_schedule',
         ];
 
         $publicPaths = [
