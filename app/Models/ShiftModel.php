@@ -1,15 +1,16 @@
-<?php 
+<?php
+
 namespace App\Models;
 
 use CodeIgniter\Model;
 
 class ShiftModel extends Model
 {
-    protected $table = 'shift'; 
-    protected $primaryKey = 'shift_id'; 
-    protected $useAutoIncrement = true; 
+    protected $table = 'shift';
+    protected $primaryKey = 'shift_id';
+    protected $useAutoIncrement = true;
     protected $allowedFields = ['start_time', 'end_time'];
-    protected $returnType = 'array'; 
+    protected $returnType = 'array';
     protected $useTimestamps = false;
 
     public function findShiftById($id)
@@ -20,7 +21,6 @@ class ShiftModel extends Model
             ->get()
             ->getRowArray();
     }
-    
 
     public function getAllShifts()
     {
@@ -31,12 +31,12 @@ class ShiftModel extends Model
     {
         $db = \Config\Database::connect();
 
-        $db->table('attendance')->where('shift_id', $s_id)->update(['shift_id' => NULL]);
+        // Update tabel 'schedule' untuk menghapus referensi shift_id
+        $db->table('schedule')->where('shift_id', $s_id)->update(['shift_id' => NULL]);
 
         $this->delete($s_id);
 
         // Reset AUTO_INCREMENT pada tabel shift
         $db->query('ALTER TABLE `shift` AUTO_INCREMENT = 1');
     }
-
 }

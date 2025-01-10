@@ -5,7 +5,6 @@ namespace App\Controllers;
 use App\Models\ShiftModel;
 use App\Models\EmployeeModel;
 use App\Models\AuthModel;
-use CodeIgniter\Controller;
 
 class ShiftMaster extends BaseController
 {
@@ -234,21 +233,4 @@ class ShiftMaster extends BaseController
         session()->setFlashdata('message', '<div class="alert alert-success" role="alert">Berhasil Menghapus Shift!</div>');
         return redirect()->to('admin/master/shift');
     }
-
-    // private function validationRules()
-    // {
-    //     return [
-    //         's_start_h' => 'required|numeric',
-    //         's_start_m' => 'required|numeric',
-    //         's_start_s' => 'required|numeric',
-    //         's_end_h' => 'required|numeric',
-    //         's_end_m' => 'required|numeric',
-    //         's_end_s' => 'required|numeric'
-    //     ];
-    // }
-
-    // private function formatTime($hourField, $minuteField, $secondField)
-    // {
-    //     return $this->request->getPost($hourField) . ':' . $this->request->getPost($minuteField) . ':' . $this->request->getPost($secondField);
-    // }
 }
