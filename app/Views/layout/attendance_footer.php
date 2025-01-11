@@ -66,7 +66,7 @@
       <?= csrf_field() ?>
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">Tambah/Edit Jadwal Kerja</h5>
+          <h5 class="modal-title font-weight-bold">Tambah/Edit Jadwal Kerja<span id="modal_schedule_date_display" class="ml-2 text-muted"></span></h5>
           <button type="button" class="close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">&times;</span>
           </button>
@@ -174,13 +174,38 @@
   }
 
   // schedule
+  // array bulan dalam Bahasa Indonesia
+  let bulanIndonesia = {
+    1: 'Januari',
+    2: 'Februari',
+    3: 'Maret',
+    4: 'April',
+    5: 'Mei',
+    6: 'Juni',
+    7: 'Juli',
+    8: 'Agustus',
+    9: 'September',
+    10: 'Oktober',
+    11: 'November',
+    12: 'Desember'
+  };
+
+  // Fungsi untuk memformat tanggal ke format "dd Month yyyy"
+  function formatTanggal(tanggal) {
+    let parts = tanggal.split('-'); // Asumsi format Y-m-d
+    let tahun = parts[0];
+    let bulan = parseInt(parts[1], 10);
+    let hari = parseInt(parts[2], 10);
+    return hari + ' ' + bulanIndonesia[bulan] + ' ' + tahun;
+  }
+
   $(document).ready(function() {
     // Handle tombol tambah jadwal
     $('.add-schedule').on('click', function(e) {
       e.preventDefault();
-      var date = $(this).data('date');
-      var employeeId = $(this).data('employee-id');
-      var departmentId = $(this).data('department-id');
+      let date = $(this).data('date');
+      let employeeId = $(this).data('employee-id');
+      let departmentId = $(this).data('department-id');
 
       // Reset form
       $('#scheduleForm')[0].reset();
@@ -190,6 +215,9 @@
       $('#modal_schedule_date').val(date);
       $('#modal_shift_field').hide();
       $('#modal_shift_id').prop('required', false);
+
+      // tampilan tanggal di modal
+      $('#modal_schedule_date_display').text(formatTanggal(date));
 
       // Update form action untuk tambah jadwal
       $('#scheduleForm').attr('action', '<?= base_url('admin/master/employee/work_schedule/add'); ?>');
@@ -201,12 +229,12 @@
     // Handle tombol edit jadwal
     $('.edit-schedule').on('click', function(e) {
       e.preventDefault();
-      var scheduleId = $(this).data('schedule-id');
-      var date = $(this).data('date');
-      var status = $(this).data('status');
-      var shiftId = $(this).data('shift-id');
-      var employeeId = '<?= esc($employee['employee_id']); ?>';
-      var departmentId = '<?= esc($employee['department_id']); ?>';
+      let scheduleId = $(this).data('schedule-id');
+      let date = $(this).data('date');
+      let status = $(this).data('status');
+      let shiftId = $(this).data('shift-id');
+      let employeeId = '<?= esc($employee['employee_id']); ?>';
+      let departmentId = '<?= esc($employee['department_id']); ?>';
 
       // Reset form
       $('#scheduleForm')[0].reset();
@@ -214,6 +242,9 @@
       $('#modal_employee_id').val(employeeId);
       $('#modal_department_id').val(departmentId);
       $('#modal_schedule_date').val(date);
+
+      // tampilan tanggal di modal edit
+      $('#modal_schedule_date_display').text(formatTanggal(date));
 
       // Set status
       if (status === null || status === 'NULL') {
@@ -242,7 +273,7 @@
 
     // Toggle shift field berdasarkan status
     $('#modal_schedule_status').on('change', function() {
-      var shiftField = $('#modal_shift_field');
+      let shiftField = $('#modal_shift_field');
       if ($(this).val() === 'NULL') {
         shiftField.show();
         $('#modal_shift_id').prop('required', true);
@@ -260,9 +291,9 @@
     // Submit form via AJAX
     $('#scheduleForm').on('submit', function(e) {
       e.preventDefault();
-      var form = $(this);
-      var actionUrl = form.attr('action');
-      var formData = form.serialize();
+      let form = $(this);
+      let actionUrl = form.attr('action');
+      let formData = form.serialize();
 
       $.ajax({
         url: actionUrl,
