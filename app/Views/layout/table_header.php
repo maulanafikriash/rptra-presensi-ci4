@@ -10,7 +10,9 @@
     <meta name="author" content="">
 
     <title><?= esc($title); ?></title>
+    <link rel="apple-touch-icon" href="<?= base_url('../img/icon/icon-rptra-192x192.png'); ?>" type="image/png">
     <link rel="icon" href="<?= base_url('../img/favicon.png'); ?>" type="image/png">
+    <link rel="manifest" href="/manifest.json">
 
     <!-- Custom fonts for this template -->
     <link href="<?= base_url('../assets/fontawesome-free/css/all.min.css'); ?>" rel="stylesheet" type="text/css">
