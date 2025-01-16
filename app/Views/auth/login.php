@@ -11,6 +11,11 @@
                         <p class="font-weight-bold">RPTRA Cibubur Berseri</p>
                     </div>
                     <div class="p-4">
+                        <?php if (session()->getFlashdata('success')) : ?>
+                            <div id="success-message" class="alert alert-success">
+                                <?= session()->getFlashdata('success'); ?>
+                            </div>
+                        <?php endif; ?>
                         <?php if (session()->getFlashdata('message')) : ?>
                             <div id="error-message" class="alert alert-danger">
                                 <?= session()->getFlashdata('message'); ?>
@@ -67,11 +72,18 @@
 
 <script>
     setTimeout(() => {
+        const successMessage = document.getElementById('success-message');
         const errorMessage = document.getElementById('error-message');
+        if (successMessage) {
+            successMessage.style.transition = "opacity 0.5s ease";
+            successMessage.style.opacity = "0";
+            setTimeout(() => successMessage.remove(), 500);
+        }
+
         if (errorMessage) {
             errorMessage.style.transition = "opacity 0.5s ease";
             errorMessage.style.opacity = "0"; // Sembunyikan pesan dengan opacity
             setTimeout(() => errorMessage.remove(), 500); // Hapus elemen setelah animasi selesai
         }
-    }, 3000);
+    }, 5000);
 </script>

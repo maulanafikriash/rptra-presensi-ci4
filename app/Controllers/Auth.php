@@ -4,14 +4,17 @@ namespace App\Controllers;
 
 use App\Controllers\BaseController;
 use Config\Database;
+use App\Models\AuthModel;
 
 class Auth extends BaseController
 {
     protected $db;
+    protected $authModel;
 
     public function __construct()
     {
         $this->db = Database::connect();
+        $this->authModel = new AuthModel();
     }
 
     public function index()
@@ -68,12 +71,7 @@ class Auth extends BaseController
             $password = $this->request->getPost('password');
 
             // Ambil data user berdasarkan username
-            $user = $this->db->table('user_account')
-                ->select('user_account.username, user_account.password, user_account.user_role_id, user_role.user_role_name')
-                ->join('user_role', 'user_account.user_role_id = user_role.user_role_id')
-                ->where('user_account.username', $username)
-                ->get()
-                ->getRow();
+            $user = $this->authModel->getUserByUsername($username);
 
             // Jika user ditemukan
             if ($user) {
@@ -108,8 +106,9 @@ class Auth extends BaseController
 
     public function logout()
     {
-        // Hapus semua sesi
-        session()->destroy();
+        // Hapus sesi
+        session()->remove(['username', 'user_role_id', 'role', 'logged_in']);
+        session()->setFlashdata('success', 'Anda telah logout');
         return redirect()->to('auth/login');
     }
 

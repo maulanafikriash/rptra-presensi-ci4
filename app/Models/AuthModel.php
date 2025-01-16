@@ -29,7 +29,7 @@ class AuthModel extends Model
             ->get()
             ->getRowArray();
 
-        return $employee; 
+        return $employee;
     }
 
     public function updateUserAccount($employeeId, $data)
@@ -37,5 +37,17 @@ class AuthModel extends Model
         return $this->db->table('user_account')
             ->where('employee_id', $employeeId)
             ->update($data);
+    }
+
+    public function getUserByUsername($username)
+    {
+        $user = $this->db->table('user_account')
+            ->select('user_account.username, user_account.password, user_account.user_role_id, user_role.user_role_name, user_account.employee_id')
+            ->join('user_role', 'user_account.user_role_id = user_role.user_role_id')
+            ->where('user_account.username', $username)
+            ->get()
+            ->getRow();
+
+        return $user;
     }
 }
