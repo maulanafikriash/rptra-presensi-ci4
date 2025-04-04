@@ -41,7 +41,11 @@
     </div>
     <!-- End of row show -->
     <?php if (!$attendance) : ?>
-        <h5>Tidak Ada Data, <br> Silakan Pilih Tanggal dan Department</h5>
+        <?php if (isset($_GET['start']) && isset($_GET['end'])) : ?>
+            <h5 class="text-danger">Data kehadiran tidak ditemukan</h5>
+        <?php else : ?>
+            <h5>Tidak Ada Data, <br> Silakan Pilih Tanggal dan Department</h5>
+        <?php endif; ?>
     <?php else : ?>
         <div class="card shadow mb-4">
             <div class="card-header py-3">

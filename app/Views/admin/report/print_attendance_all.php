@@ -9,28 +9,37 @@
         body {
             font-family: Arial, sans-serif;
         }
+
         .container {
             margin: 20px;
         }
+
         .header-section {
             text-align: center;
             margin-bottom: 20px;
         }
-        .department-info, .date-range {
+
+        .department-info,
+        .date-range {
             margin-bottom: 10px;
         }
+
         table {
             width: 100%;
             border-collapse: collapse;
         }
-        table, th, td {
+
+        table,
+        th,
+        td {
             border: 1px solid black;
         }
-        th, td {
+
+        th,
+        td {
             padding: 8px;
             text-align: center;
         }
-        
     </style>
 </head>
 
@@ -59,17 +68,22 @@
         </div>
         <div class="date-range">
             <?php if ($start != null || $end != null) : ?>
-                <p><strong>Dari tanggal:</strong> <?= formatTanggalIndonesia($start); ?> <strong>sampai</strong> <?= formatTanggalIndonesia($end); ?></p>
+                <?php if ($start === $end) : ?>
+                    <p><strong>Hari/Tanggal :</strong> <?= formatTanggalIndonesia($start); ?></p>
+                <?php else : ?>
+                    <p><strong>Dari tanggal :</strong> <?= formatTanggalIndonesia($start); ?> <strong>sampai</strong> <?= formatTanggalIndonesia($end); ?></p>
+                <?php endif; ?>
             <?php else : ?>
                 <p>Semua tanggal</p>
             <?php endif; ?>
         </div>
-
         <table>
             <thead>
                 <tr>
                     <th>No</th>
-                    <th>Tanggal</th>
+                    <?php if ($start !== $end) : ?>
+                        <th>Tanggal</th>
+                    <?php endif; ?>
                     <th>Nama</th>
                     <th>Shift</th>
                     <th>Check In</th>
@@ -79,19 +93,22 @@
             </thead>
             <tbody>
                 <?php $i = 1; ?>
-                <?php foreach ($attendance as $date => $attendances) : // Looping berdasarkan tanggal ?>
+                <?php foreach ($attendance as $date => $attendances) : // Looping berdasarkan tanggal 
+                ?>
                     <?php foreach ($attendances as $index => $atd) : ?>
                         <?php
-                            // Menggunakan shift_start dan shift_end dari data presensi
-                            $checkout_status = get_checkout_status($atd, [
-                                'start_time' => $atd['shift_start'],
-                                'end_time' => $atd['shift_end']
-                            ], $atd['attendance_date']);
+                        // Menggunakan shift_start dan shift_end dari data presensi
+                        $checkout_status = get_checkout_status($atd, [
+                            'start_time' => $atd['shift_start'],
+                            'end_time' => $atd['shift_end']
+                        ], $atd['attendance_date']);
                         ?>
                         <tr>
                             <?php if ($index === 0) : ?>
                                 <td rowspan="<?= count($attendances); ?>"><?= $i++; ?></td>
-                                <td rowspan="<?= count($attendances); ?>"><?= formatTanggalIndonesia($date); ?></td>
+                                <?php if ($start !== $end) : ?>
+                                    <td rowspan="<?= count($attendances); ?>"><?= formatTanggalIndonesia($date); ?></td>
+                                <?php endif; ?>
                             <?php endif; ?>
                             <td><?= htmlspecialchars($atd['employee_name']); ?></td>
                             <td>
