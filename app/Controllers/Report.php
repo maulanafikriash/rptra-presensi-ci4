@@ -11,7 +11,6 @@ use App\Models\ShiftModel;
 use App\Models\WorkScheduleModel;
 use \Mpdf\Mpdf;
 use IntlDateFormatter;
-use Intervention\Image\ImageManagerStatic as Image;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -51,7 +50,6 @@ class Report extends BaseController
             'end' => $end,
             'dept' => $dept,
             'attendance' => $this->attendanceDetails($start, $end, $dept),
-            // 'shift_data' => $this->shiftModel->getAllShifts(),
         ];
 
         echo view('layout/header', $data);
@@ -68,7 +66,7 @@ class Report extends BaseController
         } else {
             $attendanceModel = new AttendanceModel();
 
-            // Ambil data presensi dengan shift, pastikan schedule_date = attendance_date dan presence_status = 1
+            // data presensi dengan shift, schedule_date = attendance_date dan presence_status = 1
             $attendance = $attendanceModel->getAttendance($start, $end, $dept);
 
             return $attendance;
@@ -89,7 +87,7 @@ class Report extends BaseController
 
         $html = view('admin/report/print_attendance_all', $data);
 
-        // Bersihkan output buffering
+        // clear output buffering
         while (ob_get_level() > 0) {
             ob_end_clean();
         }
@@ -114,23 +112,41 @@ class Report extends BaseController
         $startDate = new \DateTime($start);
         $endDate = new \DateTime($end);
 
+        $isSingleDay = ($start === $end);
+
         // Membuat spreadsheet baru
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
 
         // Header laporan
         $sheet->setCellValue('A1', 'Laporan Kehadiran');
-        $sheet->setCellValue('A2', 'Dari Tanggal: ' . $startDate->format('d-m-Y') . ' - ' . $endDate->format('d-m-Y'));
+        if ($isSingleDay) {
+            $sheet->setCellValue('A2', 'Hari/Tanggal: ' . $startDate->format('d-m-Y'));
+        } else {
+            $sheet->setCellValue('A2', 'Dari Tanggal: ' . $startDate->format('d-m-Y') . ' Sampai ' . $endDate->format('d-m-Y'));
+        }
         $sheet->setCellValue('A3', 'Department: ' . ($department['department_name'] ?? 'Semua Department'));
 
         // Header tabel
-        $sheet->setCellValue('A5', 'No');
-        $sheet->setCellValue('B5', 'Tanggal');
-        $sheet->setCellValue('C5', 'Nama');
-        $sheet->setCellValue('D5', 'Shift');
-        $sheet->setCellValue('E5', 'Check In');
-        $sheet->setCellValue('F5', 'Status Masuk');
-        $sheet->setCellValue('G5', 'Check Out');
+        // Jika laporan satu hari, kolom tanggal dihilangkan
+        if ($isSingleDay) {
+            $sheet->setCellValue('A5', 'No');
+            $sheet->setCellValue('B5', 'Nama');
+            $sheet->setCellValue('C5', 'Shift');
+            $sheet->setCellValue('D5', 'Check In');
+            $sheet->setCellValue('E5', 'Status Masuk');
+            $sheet->setCellValue('F5', 'Check Out');
+            $lastColumn = 'F';
+        } else {
+            $sheet->setCellValue('A5', 'No');
+            $sheet->setCellValue('B5', 'Tanggal');
+            $sheet->setCellValue('C5', 'Nama');
+            $sheet->setCellValue('D5', 'Shift');
+            $sheet->setCellValue('E5', 'Check In');
+            $sheet->setCellValue('F5', 'Status Masuk');
+            $sheet->setCellValue('G5', 'Check Out');
+            $lastColumn = 'G';
+        }
 
         // Menambahkan styling pada header tabel
         $headerStyleArray = [
@@ -151,14 +167,13 @@ class Report extends BaseController
                 ],
             ],
         ];
-        $sheet->getStyle('A5:G5')->applyFromArray($headerStyleArray);
+        $sheet->getStyle('A5:' . $lastColumn . '5')->applyFromArray($headerStyleArray);
 
-        // Isi data
         $row = 6;
         $i = 1;
         $groupedAttendance = $this->groupAttendanceByDate($attendance);
 
-        foreach ($groupedAttendance as $date => $attendances) { // Group by Y-m-d
+        foreach ($groupedAttendance as $date => $attendances) {
             foreach ($attendances as $atd) {
                 // Menggunakan shift_start dan shift_end dari data presensi
                 $checkout_status = get_checkout_status($atd, [
@@ -166,19 +181,30 @@ class Report extends BaseController
                     'end_time' => $atd['shift_end']
                 ], $atd['attendance_date']);
 
-                // Menulis data ke spreadsheet
-                $sheet->setCellValue('A' . $row, $i++);
-                $sheet->setCellValue('B' . $row, date('d-m-Y', strtotime($atd['attendance_date'])));
-                $sheet->setCellValue('C' . $row, $atd['employee_name']);
-                $sheet->setCellValue('D' . $row, (!empty($atd['shift_id']) && !empty($atd['shift_start']) && !empty($atd['shift_end'])) ? htmlspecialchars($atd['shift_id']) . " = " . date('H:i', strtotime($atd['shift_start'])) . " - " . date('H:i', strtotime($atd['shift_end'])) : "Shift Tidak Ditemukan");
-                $sheet->setCellValue('E' . $row, $atd['in_time'] ? date('H:i:s', strtotime($atd['in_time'])) : 'Belum check in');
-                $sheet->setCellValue('F' . $row, $atd['in_status']);
-                $sheet->setCellValue('G' . $row, $checkout_status);
+                if ($isSingleDay) {
+                    $sheet->setCellValue('A' . $row, $i++);
+                    $sheet->setCellValue('B' . $row, $atd['employee_name']);
+                    $sheet->setCellValue('C' . $row, (!empty($atd['shift_id']) && !empty($atd['shift_start']) && !empty($atd['shift_end']))
+                        ? htmlspecialchars($atd['shift_id']) . " = " . date('H:i', strtotime($atd['shift_start'])) . " - " . date('H:i', strtotime($atd['shift_end']))
+                        : "Shift Tidak Ditemukan");
+                    $sheet->setCellValue('D' . $row, $atd['in_time'] ? date('H:i:s', strtotime($atd['in_time'])) : 'Belum check in');
+                    $sheet->setCellValue('E' . $row, $atd['in_status']);
+                    $sheet->setCellValue('F' . $row, $checkout_status);
+                } else {
+                    $sheet->setCellValue('A' . $row, $i++);
+                    $sheet->setCellValue('B' . $row, date('d-m-Y', strtotime($atd['attendance_date'])));
+                    $sheet->setCellValue('C' . $row, $atd['employee_name']);
+                    $sheet->setCellValue('D' . $row, (!empty($atd['shift_id']) && !empty($atd['shift_start']) && !empty($atd['shift_end']))
+                        ? htmlspecialchars($atd['shift_id']) . " = " . date('H:i', strtotime($atd['shift_start'])) . " - " . date('H:i', strtotime($atd['shift_end']))
+                        : "Shift Tidak Ditemukan");
+                    $sheet->setCellValue('E' . $row, $atd['in_time'] ? date('H:i:s', strtotime($atd['in_time'])) : 'Belum check in');
+                    $sheet->setCellValue('F' . $row, $atd['in_status']);
+                    $sheet->setCellValue('G' . $row, $checkout_status);
+                }
                 $row++;
             }
         }
 
-        // Menambahkan styling pada isi tabel
         $bodyStyleArray = [
             'alignment' => [
                 'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
@@ -189,22 +215,19 @@ class Report extends BaseController
                 ],
             ],
         ];
-        $sheet->getStyle('A5:G' . ($row - 1))->applyFromArray($bodyStyleArray);
+        $sheet->getStyle('A5:' . $lastColumn . ($row - 1))->applyFromArray($bodyStyleArray);
 
         // Menyesuaikan lebar kolom secara otomatis
-        foreach (range('A', 'G') as $columnID) {
+        foreach (range('A', $lastColumn) as $columnID) {
             $sheet->getColumnDimension($columnID)->setAutoSize(true);
         }
 
-        // Mengatur style header dan footer
-        $sheet->getStyle('A1:G1')->getFont()->setBold(true)->setSize(14);
-        $sheet->getStyle('A2:G2')->getFont()->setBold(true);
-        $sheet->getStyle('A3:G3')->getFont()->setBold(true);
+        $sheet->getStyle('A1:' . $lastColumn . '1')->getFont()->setBold(true)->setSize(14);
+        $sheet->getStyle('A2:' . $lastColumn . '2')->getFont()->setBold(true);
+        $sheet->getStyle('A3:' . $lastColumn . '3')->getFont()->setBold(true);
 
-        // Membuat filename dengan format yang diinginkan
-        $filename = 'Laporan_Kehadiran_Pengelola_' . date('d-m-Y_H-i-s') . '.xlsx';
+        $filename = 'Laporan_Kehadiran_Pengelola_' . date('H-i-s') . '.xlsx';
 
-        // Mengirimkan file ke browser untuk diunduh
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment;filename="' . $filename . '"');
         header('Cache-Control: max-age=0');
@@ -219,11 +242,12 @@ class Report extends BaseController
     {
         $grouped = [];
         foreach ($attendance as $atd) {
-            $date = $atd['attendance_date']; // Group by Y-m-d
+            $date = $atd['attendance_date'];
             $grouped[$date][] = $atd;
         }
         return $grouped;
     }
+
     // ---------------section----------
     public function printPdfAttendanceHistory($employee_id)
     {
@@ -287,7 +311,6 @@ class Report extends BaseController
 
         $html = view('admin/report/print_attendance_employee', $data);
 
-        // Bersihkan output buffering
         while (ob_get_level() > 0) {
             ob_end_clean();
         }
@@ -297,10 +320,8 @@ class Report extends BaseController
         $pdf->SetFooter('Dicetak pada: {DATE j-m-Y H:i:s}');
         $pdf->WriteHTML($html);
 
-        // Nama file
         $filename = "Riwayat_Presensi_" . preg_replace('/[^a-zA-Z0-9_\-]/', '_', $employee['employee_name']) . "_{$month}_{$year}.pdf";
 
-        // Output PDF ke browser
         $pdf->Output($filename, 'I');
         exit;
     }
@@ -335,7 +356,6 @@ class Report extends BaseController
             }
         }
 
-        // Update attendance based on actual data only for dates <= today
         foreach ($attendanceData as $att) {
             $date = $att['date'];
             $presence_status = $att['presence_status'];
@@ -368,11 +388,9 @@ class Report extends BaseController
             // Jika tanggal > today, status tetap 'Tidak Ada Data'
         }
 
-        // Ambil department_id dari employee dan kemudian department_name
         $department = $this->departmentModel->getDepartmentById($employee['department_id']);
         $dept_name = $department['department_name'] ?? 'Departemen';
 
-        // Array bulan dalam Bahasa Indonesia
         $bulanIndonesia = [
             1 => 'Januari',
             2 => 'Februari',
@@ -391,17 +409,14 @@ class Report extends BaseController
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
 
-        // Header laporan
         $sheet->setCellValue('A1', 'Riwayat Presensi ' . ($dept_name ?? 'Departemen'));
         $sheet->setCellValue('A2', 'Nama : ' . $employee['employee_name']);
         $sheet->setCellValue('A3', 'Bulan : ' . $bulanIndonesia[$month] . " $year");
 
-        // Header tabel
         $sheet->setCellValue('A5', 'Hari');
         $sheet->setCellValue('B5', 'Tanggal');
         $sheet->setCellValue('C5', 'Status Presensi');
 
-        // Menambahkan styling pada header tabel
         $headerStyleArray = [
             'font' => [
                 'bold' => true,
@@ -422,18 +437,16 @@ class Report extends BaseController
         ];
         $sheet->getStyle('A5:C5')->applyFromArray($headerStyleArray);
 
-        // Isi data
         $row = 6;
         foreach ($attendance as $date => $status) {
             $dateObj = new \DateTime($date);
             $formatter = new \IntlDateFormatter('id_ID', \IntlDateFormatter::FULL, \IntlDateFormatter::NONE);
-            $formatter->setPattern('EEEE'); // Format: Nama Hari
+            $formatter->setPattern('EEEE');
             $hari = $formatter->format($dateObj);
 
-            // Format tanggal: dd-MM-yyyy
             $tanggal = $dateObj->format('d-m-Y');
 
-            // Tentukan warna badge berdasarkan status
+            // warna badge berdasarkan status
             $badgeColor = '';
             switch ($status) {
                 case 'Hadir':
@@ -471,34 +484,27 @@ class Report extends BaseController
             // Terapkan warna teks putih untuk kontras
             $sheet->getStyle('C' . $row)->getFont()->getColor()->setARGB('FFFFFFFF');
 
-            // Terapkan alignment center
             $sheet->getStyle('A' . $row . ':C' . $row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
 
-            // Menambahkan border
             $sheet->getStyle('A' . $row . ':C' . $row)->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
 
             $row++;
         }
 
-        // Menyesuaikan lebar kolom secara otomatis
         foreach (range('A', 'C') as $columnID) {
             $sheet->getColumnDimension($columnID)->setAutoSize(true);
         }
 
-        // Mengatur style header dan footer
         $sheet->getStyle('A1:C1')->getFont()->setBold(true)->setSize(14);
         $sheet->getStyle('A2:C2')->getFont()->setBold(true);
         $sheet->getStyle('A3:C3')->getFont()->setBold(true);
 
-        // Membuat filename dengan format yang diinginkan
         $filename = "Riwayat_Presensi_" . preg_replace('/[^a-zA-Z0-9_\-]/', '_', $employee['employee_name']) . "_{$month}_{$year}.xlsx";
 
-        // Mengirimkan file ke browser untuk diunduh
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment;filename="' . $filename . '"');
         header('Cache-Control: max-age=0');
 
-        // Menulis file ke output
         $writer = new Xlsx($spreadsheet);
         $writer->save('php://output');
         exit;
@@ -516,7 +522,7 @@ class Report extends BaseController
             'MMMM'
         );
 
-        return $formatter->format(mktime(0, 0, 0, $month, 10, $year)); // Contoh: "Januari"
+        return $formatter->format(mktime(0, 0, 0, $month, 10, $year));
     }
 
     public function printWorkSchedulePdf($employeeId)
@@ -547,23 +553,19 @@ class Report extends BaseController
             $year
         );
 
-        // Mendapatkan nama bulan dalam Bahasa Indonesia
         $monthName = $this->getIndonesianMonthName($month, $year);
 
-        // Menyiapkan data untuk view
         $data = [
             'department_name' => $department['department_name'],
             'employee_name' => $employee['employee_name'],
-            'month_name' => $monthName, // Nama bulan dalam Bahasa Indonesia
-            'month_number' => $month, // Angka bulan
+            'month_name' => $monthName,
+            'month_number' => $month,
             'year' => $year,
             'workSchedules' => $workSchedules,
         ];
 
-        // Render view ke HTML
         $html = view('admin/report/print_work_schedule', $data);
 
-        // Bersihkan output buffering untuk menghindari output yang tidak diinginkan
         while (ob_get_level() > 0) {
             ob_end_clean();
         }
@@ -581,20 +583,16 @@ class Report extends BaseController
                 'margin_footer' => 9,
             ]);
 
-            // Menambahkan header dan footer
             $mpdf->SetHeader('RPTRA Cibubur Berseri');
             $mpdf->SetFooter('Dicetak pada: {DATE j-m-Y H:i:s}');
 
-            // Menulis HTML ke PDF
             $mpdf->WriteHTML($html);
 
-            // Menentukan nama file
             $filename = "Jadwal_Kerja_{$employee['employee_name']}_{$month}_{$year}.pdf";
 
             // Output PDF ke browser
-            $mpdf->Output($filename, 'I'); // 'I' untuk menampilkan di browser, 'D' untuk download
+            $mpdf->Output($filename, 'I');
         } catch (\Mpdf\MpdfException $e) {
-            // Handle exception jika mPDF gagal
             log_message('error', 'mPDF Error: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Terjadi kesalahan saat menghasilkan PDF.');
         }
@@ -696,27 +694,25 @@ class Report extends BaseController
                             $formattedStartTime = date('H:i', strtotime($schedule['start_time']));
                             $formattedEndTime = date('H:i', strtotime($schedule['end_time']));
                             $shiftTime = "{$formattedStartTime} - {$formattedEndTime}";
-                            $fillColor = '00FF00'; // Hijau
-                            $fontColor = '000000'; // Hitam
+                            $fillColor = '00FF00';
+                            $fontColor = '000000';
                         } else {
                             $shiftTime = 'Tidak ada jadwal';
-                            $fillColor = 'FFFFFF'; // Putih (tanpa warna)
-                            $fontColor = '000000'; // Hitam
+                            $fillColor = 'FFFFFF';
+                            $fontColor = '000000';
                         }
                         break;
                 }
             } else {
                 $shiftTime = 'Tidak ada jadwal';
-                $fillColor = 'FFFFFF'; // Putih (tanpa warna)
-                $fontColor = '000000'; // Hitam
+                $fillColor = 'FFFFFF';
+                $fontColor = '000000';
             }
 
-            // Menetapkan nilai sel
             $sheet->setCellValue("A{$row}", $dayName);
             $sheet->setCellValue("B{$row}", $formattedDate);
             $sheet->setCellValue("C{$row}", $shiftTime);
 
-            // Mengatur warna latar belakang dan warna font berdasarkan status
             $sheet->getStyle("C{$row}")->getFill()->setFillType(Fill::FILL_SOLID)
                 ->getStartColor()->setRGB($fillColor);
             $sheet->getStyle("C{$row}")->getFont()->getColor()->setRGB($fontColor);
@@ -724,24 +720,18 @@ class Report extends BaseController
             $row++;
         }
 
-        // Mengatur border untuk seluruh tabel
         $sheet->getStyle("A6:C{$row}")->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
 
-        // Mengatur lebar kolom otomatis
         foreach (range('A', 'C') as $columnID) {
             $sheet->getColumnDimension($columnID)->setAutoSize(true);
         }
 
-        // Membuat writer dan output ke browser
         $writer = new Xlsx($spreadsheet);
         $filename = "Jadwal_Kerja_{$employee['employee_name']}_{$month}_{$year}.xlsx";
 
-        // Header untuk download
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header("Content-Disposition: attachment; filename=\"{$filename}\"");
         header('Cache-Control: max-age=0');
-
-        // Menulis file ke output
         $writer->save('php://output');
         exit;
     }
@@ -765,31 +755,23 @@ class Report extends BaseController
             ],
         ];
 
-        // Render view untuk PDF
         $html = view('admin/report/print_biodata', $data);
 
-         // Bersihkan output buffering untuk menghindari output yang tidak diinginkan
-         while (ob_get_level() > 0) {
+        while (ob_get_level() > 0) {
             ob_end_clean();
         }
 
-        // Inisialisasi mPDF
         $mpdf = new Mpdf([
             'format' => 'A4',
             'orientation' => 'P',
         ]);
 
-        // Menambahkan header dan footer
         $mpdf->SetHeader('RPTRA Cibubur Berseri');
         $mpdf->SetFooter('Dicetak pada: {DATE j-m-Y H:i:s}');
 
-        // Set judul PDF
         $mpdf->SetTitle('Biodata ' . $departmentName);
-
-        // Menulis HTML ke PDF
         $mpdf->WriteHTML($html);
 
-        // Output ke browser
         $mpdf->Output('Biodata_' . $employee['employee_name'] . '.pdf', 'I');
     }
 }

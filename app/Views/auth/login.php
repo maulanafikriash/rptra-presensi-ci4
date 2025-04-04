@@ -61,7 +61,7 @@
                             </button>
                         </form>
                         <div class="text-center mt-3">
-                            <small class="text-muted">&copy; <?= date('Y'); ?> RPTRA Cibubur Berseri</small>
+                            <small class="text-muted">&copy; <?= date('Y'); ?> CodeEagle Team</small>
                         </div>
                     </div>
                 </div>

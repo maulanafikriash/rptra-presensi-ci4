@@ -40,7 +40,7 @@ $routes->group('admin', ['filter' => 'userRole'], function ($routes) {
     $routes->get('master/employee/work_schedule/(:segment)', 'EmployeeMaster::workScheduleEmployee/$1');
     $routes->post('master/employee/work_schedule/add', 'EmployeeMaster::storeWorkSchedule');
     $routes->post('master/employee/work_schedule/edit/(:segment)', 'EmployeeMaster::updateWorkSchedule/$1');
-    
+
     $routes->get('master/shift', 'ShiftMaster::index');
     $routes->get('master/shift/add', 'ShiftMaster::add');
     $routes->post('master/shift/add', 'ShiftMaster::add');

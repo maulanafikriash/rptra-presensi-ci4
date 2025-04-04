@@ -31,7 +31,6 @@
 
               <form id="attendance-form" action="<?= base_url('employee/attendance'); ?>" method="POST">
 
-                <!-- CSRF Field -->
                 <?= csrf_field() ?>
 
                 <!-- Bagian Shift dan Lokasi -->
@@ -97,7 +96,7 @@
                   <div class="col-lg-6 text-center">
                     <hr>
                     <?php
-                    // Definisikan array mapping untuk presence_status
+                    // array mapping untuk presence_status
                     $presenceStatuses = [
                       1 => [
                         'label' => 'Hadir',
@@ -160,7 +159,6 @@
                       </div>
 
                       <?php
-                      // Tentukan apakah Tombol Presensi Masuk/Keluar akan ditampilkan
                       $show_presensi_button = false;
 
                       if ($has_shift && !in_array($presence_status, [2, 3])) {
@@ -181,7 +179,6 @@
                       ?>
 
                       <?php if ($show_presensi_button): ?>
-                        <!-- Spacer -->
                         <div style="width: 4rem;"></div>
                       <?php endif; ?>
 
@@ -191,7 +188,7 @@
                           <?php
                           if (!$has_shift) {
                             // Tidak Ada Jadwal Shift atau status lainnya sudah ditangani di Bagian Shift dan Lokasi
-                            // Tidak perlu menampilkan apa-apa di sini jika tidak ada shift
+                            // Tidak ada apa-apa di sini jika tidak ada shift
                           } else {
                             // Ada Jadwal Shift, lanjutkan dengan logika presensi
                             if ($shift_status === 'belum mulai') {
@@ -247,7 +244,7 @@
                               <?php
                               }
                             } else {
-                              // Kondisi Default (jika ada)
+                              // Kondisi Default
                               ?>
                               <button type="button" class="btn btn-dark btn-circle" style="font-size: 20px; width: 100px; height: 100px;" disabled>
                                 <i class="fas fa-fw fa-sign-in-alt fa-2x"></i>
@@ -332,15 +329,12 @@
 
     // Kondisi Tidak Ada Jadwal Shift
     if (!hasShift) {
-      // Hilangkan tampilan form shift dan button aktifkan lokasi
       const shiftForm = document.querySelector('input[name="work_shift_display"]');
       if (shiftForm) shiftForm.parentElement.style.display = 'none';
 
       const locationContainer = document.querySelector('.location-container');
       if (locationContainer) locationContainer.style.display = 'none';
 
-      // Tampilkan ikon kalender kosong
-      // Sudah dilakukan di bagian atas dengan PHP
     } else {
       // Ada Jadwal Shift, lanjutkan dengan logika presensi
       if (shiftStatus === "belum mulai") {
@@ -372,7 +366,6 @@
           });
         });
 
-        // Handle Check-In via AJAX
         if (checkInBtn) {
           checkInBtn.addEventListener("click", function() {
             const latitude = document.getElementById("latitude").value;
@@ -388,7 +381,6 @@
               return;
             }
 
-            // Disable button to prevent multiple submissions
             checkInBtn.disabled = true;
             checkInBtn.classList.remove("btn-primary");
             checkInBtn.classList.add("btn-dark");
@@ -406,7 +398,7 @@
 
                   latitude: latitude,
                   longitude: longitude,
-                  [csrfName]: csrfHash // Sertakan CSRF token
+                  [csrfName]: csrfHash
                 })
               })
               .then(response => response.json())
@@ -483,7 +475,7 @@
             activateLocationBtn.disabled = false;
             checkOutBtn.disabled = true;
             checkOutBtn.classList.remove("btn-danger");
-            checkOutBtn.classList.add("btn-danger"); // Tetap merah
+            checkOutBtn.classList.add("btn-danger");
 
             activateLocationBtn.addEventListener("click", function() {
               activateLocation(function(success) {
