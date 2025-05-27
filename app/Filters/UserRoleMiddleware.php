@@ -57,6 +57,7 @@ class UserRoleMiddleware implements FilterInterface
         $employeePaths = [
             'employee/attendance',
             'employee/profile',
+            'employee/profile/edit',
             'employee/change_password',
             'employee/attendance_history',
             'employee/work_schedule',

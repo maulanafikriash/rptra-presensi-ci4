@@ -1,11 +1,43 @@
 <!-- Begin Page Content -->
 <div class="container-fluid">
-
     <div class="row">
-
         <!-- Left Section -->
         <div class="col-sm-10 col-md-5 col-lg-4 col-xl-3 offset-sm-1 offset-md-0 offset-lg-0 offset-xl-0">
+            <?php if (session()->getFlashdata('success')): ?>
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <?= session()->getFlashdata('success'); ?>
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            <?php endif; ?>
+
+            <?php if (session()->getFlashdata('error')): ?>
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <?= session()->getFlashdata('error'); ?>
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            <?php endif; ?>
+
+            <?php if (session()->getFlashdata('message')): ?>
+                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                    <?= session()->getFlashdata('message'); ?>
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            <?php endif; ?>
+
             <img src="<?= base_url('img/pp/') . $account['image']; ?>" class="rounded-circle img-thumbnail account-image" alt="Profile Picture">
+            <form action="<?= base_url('employee/profile/edit'); ?>" method="POST" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="image">Ganti Foto Profil</label>
+                    <input type="file" class="form-control" name="image" id="image">
+                    <button type="submit" class="btn btn-primary mt-2">Upload Foto</button>
+                </div>
+            </form>
         </div>
 
         <!-- Right Section -->
