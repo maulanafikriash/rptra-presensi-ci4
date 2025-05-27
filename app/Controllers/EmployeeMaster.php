@@ -304,9 +304,9 @@ class EmployeeMaster extends BaseController
                     ],
                 ],
                 'image' => [
-                    'rules' => 'permit_empty|uploaded[image]|max_size[image,5240]|is_image[image]|mime_in[image,image/jpg,image/jpeg,image/png]',
+                    'rules' => 'permit_empty|uploaded[image]|max_size[image,3072]|is_image[image]|mime_in[image,image/jpg,image/jpeg,image/png]',
                     'errors' => [
-                        'max_size' => 'Ukuran file gambar maksimal 5MB.',
+                        'max_size' => 'Ukuran file gambar maksimal 3MB.',
                         'is_image' => 'File harus berupa gambar.',
                         'mime_in' => 'Format file harus JPG, JPEG, atau PNG.',
                     ],
@@ -321,14 +321,14 @@ class EmployeeMaster extends BaseController
                 $imageName = $employee['image'];
 
                 if ($file->isValid() && !$file->hasMoved()) {
-                    if (in_array($file->getClientExtension(), ['jpg', 'png', 'jpeg']) && $file->getSize() <= 5242880) {
+                    if (in_array($file->getClientExtension(), ['jpg', 'png', 'jpeg']) && $file->getSize() <= 3145728) {
                         $imageName = 'item-' . date('ymd') . '-' . substr(md5(rand()), 0, 10) . '.' . $file->getExtension();
                         $file->move('./img/pp/', $imageName);
                         if ($employee['image'] !== 'default.png') {
                             unlink('./img/pp/' . $employee['image']);
                         }
                     } else {
-                        session()->setFlashdata('message', '<div class="alert alert-danger" role="alert">Format file tidak didukung atau ukuran file lebih dari 5MB!</div>');
+                        session()->setFlashdata('message', '<div class="alert alert-danger" role="alert">Format file tidak didukung atau ukuran file lebih dari 3MB!</div>');
                         return redirect()->back()->withInput();
                     }
                 }

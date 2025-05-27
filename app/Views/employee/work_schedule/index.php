@@ -1,4 +1,3 @@
-<!-- views/employee/work_schedule/index.php -->
 <div class="container-fluid">
     <h3 class="mb-4 text-gray-700 font-weight-bold"><?= esc($title); ?></h3>
 

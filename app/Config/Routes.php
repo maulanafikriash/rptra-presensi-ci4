@@ -70,6 +70,7 @@ $routes->group('employee', ['filter' => 'userRole'], function ($routes) {
     $routes->get('attendance', 'EmployeeAttendance::index');
     $routes->post('attendance', 'EmployeeAttendance::index');
     $routes->get('profile', 'EmployeeProfile::index');
+    $routes->post('profile/edit', 'EmployeeProfile::uploadImage');
     $routes->get('attendance_history', 'EmployeeAttendance::attendanceHistory');
     $routes->get('work_schedule', 'EmployeeAttendance::workSchedule');
     $routes->get('change_password', 'EmployeeChangePassword::index');
