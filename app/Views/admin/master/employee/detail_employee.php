@@ -1,4 +1,3 @@
-<!-- Begin Page Content -->
 <div class="container-fluid">
 
     <!-- Page Heading -->
@@ -13,8 +12,8 @@
                 <span class="text">Kembali</span>
             </a>
         </div>
-         <!-- Tombol Cetak PDF -->
-         <div class="col-lg-9 text-right">
+        <!-- Tombol Cetak PDF -->
+        <div class="col-lg-9 text-right">
             <a href="<?= base_url('admin/report/print_biodata/pdf/') . esc($employee['employee_id']); ?>" class="btn btn-danger" target="_blank">
                 <i class="fas fa-file-pdf"></i> Cetak Biodata
             </a>
@@ -56,6 +55,8 @@
                             'Nama RPTRA' => $employee['rptra_name'],
                             'Alamat RPTRA' => $employee['rptra_address'],
                         ];
+
+                        $departmentId = esc($employee['department_id']);
                         ?>
 
                         <?php foreach ($details as $label => $value): ?>
@@ -86,18 +87,20 @@
                             </div>
                         <?php endforeach; ?>
 
-                        <a href="<?= base_url('admin/master/employee/attendance/') . esc($employee['employee_id']); ?>" class="btn btn-success btn-icon-split mt-4 float-right">
-                            <span class="icon text-white" title="Riwayat Kehadiran">
-                                <i class="fas fa-calendar-check"></i>
-                            </span>
-                            <span class="text">Riwayat Kehadiran</span>
-                        </a>
-                        <a href="<?= base_url('admin/master/employee/work_schedule/') . esc($employee['employee_id']); ?>" class="btn btn-primary mr-3 btn-icon-split mt-4 float-right">
-                            <span class="icon text-white" title="Jadwal Kerja">
-                                <i class="fas fa-calendar-alt"></i>
-                            </span>
-                            <span class="text">Jadwal Kerja</span>
-                        </a>
+                        <?php if ($departmentId != 'ADM'): ?>
+                            <a href="<?= base_url('admin/master/employee/attendance/') . esc($employee['employee_id']); ?>" class="btn btn-success btn-icon-split mt-4 float-right">
+                                <span class="icon text-white" title="Riwayat Kehadiran">
+                                    <i class="fas fa-calendar-check"></i>
+                                </span>
+                                <span class="text">Riwayat Kehadiran</span>
+                            </a>
+                            <a href="<?= base_url('admin/master/employee/work_schedule/') . esc($employee['employee_id']); ?>" class="btn btn-primary mr-3 btn-icon-split mt-4 float-right">
+                                <span class="icon text-white" title="Jadwal Kerja">
+                                    <i class="fas fa-calendar-alt"></i>
+                                </span>
+                                <span class="text">Jadwal Kerja</span>
+                            </a>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
