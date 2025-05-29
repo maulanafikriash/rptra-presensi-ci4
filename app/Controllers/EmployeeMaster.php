@@ -136,9 +136,9 @@ class EmployeeMaster extends BaseController
                     ],
                 ],
                 'image' => [
-                    'rules' => 'permit_empty|uploaded[image]|max_size[image,5240]|is_image[image]|mime_in[image,image/jpg,image/jpeg,image/png]',
+                    'rules' => 'permit_empty|uploaded[image]|max_size[image,3072]|is_image[image]|mime_in[image,image/jpg,image/jpeg,image/png]',
                     'errors' => [
-                        'max_size' => 'Ukuran file gambar maksimal 5MB.',
+                        'max_size' => 'Ukuran file gambar maksimal 3MB.',
                         'is_image' => 'File harus berupa gambar.',
                         'mime_in' => 'Format file harus JPG, JPEG, atau PNG.',
                     ],

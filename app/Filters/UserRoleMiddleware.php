@@ -27,22 +27,22 @@ class UserRoleMiddleware implements FilterInterface
             'admin/master/department/delete/.*', // Support dynamic ID
             'admin/master/employee',
             'admin/master/employee/add',
-            'admin/master/employee/edit/.*', // Support dynamic ID
+            'admin/master/employee/edit/.*',
             'admin/master/employee/detail/.*',
-            'admin/master/employee/delete/.*', // Support dynamic ID
-            'admin/master/employee/attendance/.*', // Support dynamic ID
+            'admin/master/employee/delete/.*',
+            'admin/master/employee/attendance/.*',
             'admin/master/employee/attendance',
-            'admin/master/employee/attendance/edit/.*', // Support dynamic ID   
+            'admin/master/employee/attendance/edit/.*',   
             'admin/master/employee/work_schedule/.*', 
             'admin/master/employee/work_schedule/add', 
             'admin/master/employee/work_schedule/edit/.*', 
             'admin/master/shift',
             'admin/master/shift/add',
-            'admin/master/shift/edit/.*', // Support dynamic ID
-            'admin/master/shift/delete/.*', // Support dynamic ID
+            'admin/master/shift/edit/.*',
+            'admin/master/shift/delete/.*',
             'admin/master/user_account',
             'admin/master/user_account/add/.*',
-            'admin/master/user_account/edit/.*', // Support dynamic ID
+            'admin/master/user_account/edit/.*',
             'admin/master/user_account/delete/.*',
             'admin/report',
             'admin/report/print_attendance_employee/pdf/.*',
