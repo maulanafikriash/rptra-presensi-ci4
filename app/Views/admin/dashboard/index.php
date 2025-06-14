@@ -128,7 +128,11 @@
                             <?php foreach ($s_list as $shift) : ?>
                                 <tr>
                                     <td><?= esc($shift['shift_id']); ?></td>
-                                    <td><?= esc($shift['start_time']) . ' - ' . esc($shift['end_time']); ?></td>
+                                    <td>
+                                        <?= date('H:i', strtotime(esc($shift['start_time'])))
+                                            . ' - ' .
+                                            date('H:i', strtotime(esc($shift['end_time']))) ?>
+                                    </td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>

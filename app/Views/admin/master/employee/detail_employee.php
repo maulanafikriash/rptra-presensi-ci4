@@ -1,6 +1,5 @@
 <div class="container-fluid">
 
-    <!-- Page Heading -->
     <h1 class="h3 mb-4 text-gray-800"><?= esc($title); ?></h1>
 
     <div class="row">
@@ -12,7 +11,6 @@
                 <span class="text">Kembali</span>
             </a>
         </div>
-        <!-- Tombol Cetak PDF -->
         <div class="col-lg-9 text-right">
             <a href="<?= base_url('admin/report/print_biodata/pdf/') . esc($employee['employee_id']); ?>" class="btn btn-danger" target="_blank">
                 <i class="fas fa-file-pdf"></i> Cetak Biodata
@@ -32,7 +30,25 @@
             </div>
             <div class="col-lg-9">
                 <div class="card">
-                    <h5 class="card-header">Biodata Pegawai</h5>
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Biodata Pegawai</h5>
+                        <div>
+                            <?php if (esc($employee['department_id']) != 'ADM'): ?>
+                                <a href="<?= base_url('admin/master/employee/attendance/') . esc($employee['employee_id']); ?>" class="btn btn-success btn-icon-split float-right btn-sm">
+                                    <span class="icon text-white" title="Riwayat Kehadiran">
+                                        <i class="fas fa-calendar-check"></i>
+                                    </span>
+                                    <span class="text">Riwayat Kehadiran</span>
+                                </a>
+                                <a href="<?= base_url('admin/master/employee/work_schedule/') . esc($employee['employee_id']); ?>" class="btn btn-primary mr-3 btn-icon-split float-right btn-sm">
+                                    <span class="icon text-white" title="Jadwal Kerja">
+                                        <i class="fas fa-calendar-alt"></i>
+                                    </span>
+                                    <span class="text">Jadwal Kerja</span>
+                                </a>
+                            <?php endif; ?>
+                        </div>
+                    </div>
                     <div class="card-body">
                         <?php
                         $details = [
@@ -86,26 +102,10 @@
                                 </div>
                             </div>
                         <?php endforeach; ?>
-
-                        <?php if ($departmentId != 'ADM'): ?>
-                            <a href="<?= base_url('admin/master/employee/attendance/') . esc($employee['employee_id']); ?>" class="btn btn-success btn-icon-split mt-4 float-right">
-                                <span class="icon text-white" title="Riwayat Kehadiran">
-                                    <i class="fas fa-calendar-check"></i>
-                                </span>
-                                <span class="text">Riwayat Kehadiran</span>
-                            </a>
-                            <a href="<?= base_url('admin/master/employee/work_schedule/') . esc($employee['employee_id']); ?>" class="btn btn-primary mr-3 btn-icon-split mt-4 float-right">
-                                <span class="icon text-white" title="Jadwal Kerja">
-                                    <i class="fas fa-calendar-alt"></i>
-                                </span>
-                                <span class="text">Jadwal Kerja</span>
-                            </a>
-                        <?php endif; ?>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-<!-- /.container-fluid -->
 </div>
