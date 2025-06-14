@@ -40,6 +40,8 @@ class EmployeeAttendance extends BaseController
             ->where('shift_id !=', null) // Hanya jadwal berupa shift
             ->first();
 
+        $isFlexibleShift = false;
+
         if ($schedule) {
             $data['has_shift'] = true;
             $data['schedule_shift'] = $schedule;
@@ -47,6 +49,11 @@ class EmployeeAttendance extends BaseController
             // Ambil detail shift berdasarkan shift_id dari schedule
             $shiftDetails = $this->shiftModel->find($schedule['shift_id']);
             $data['shift_details'] = $shiftDetails;
+
+            if ($shiftDetails && $shiftDetails['start_time'] == '00:00:00' && $shiftDetails['end_time'] == '23:59:00') {
+                $isFlexibleShift = true;
+            }
+            $data['is_flexible_shift'] = $isFlexibleShift;
 
             // Format waktu shift ke 'H:i'
             $data['shift_start_time'] = date('H:i', strtotime($shiftDetails['start_time']));
@@ -56,18 +63,24 @@ class EmployeeAttendance extends BaseController
             $shiftStart = strtotime($shiftDetails['start_time']);
             $shiftEnd = strtotime($shiftDetails['end_time']);
 
-            // Jika shift berakhir di hari berikutnya (misal shift malam)
-            if ($shiftEnd < $shiftStart) {
-                $shiftEnd = strtotime($shiftDetails['end_time'] . ' +1 day');
-            }
-
-            // Menentukan status shift
-            if ($currentTime < $shiftStart) {
-                $data['shift_status'] = 'belum mulai';
-            } elseif ($currentTime >= $shiftStart && $currentTime <= $shiftEnd) {
+            if ($isFlexibleShift) {
+                // Untuk shift fleksibel, status selalu 'presensi masuk' sepanjang hari
                 $data['shift_status'] = 'presensi masuk';
             } else {
-                $data['shift_status'] = 'sudah selesai';
+                // Logika original untuk shift normal
+                $shiftStart = strtotime($shiftDetails['start_time']);
+                $shiftEnd = strtotime($shiftDetails['end_time']);
+                if ($shiftEnd < $shiftStart) {
+                    $shiftEnd = strtotime($shiftDetails['end_time'] . ' +1 day');
+                }
+
+                if ($currentTime < $shiftStart) {
+                    $data['shift_status'] = 'belum mulai';
+                } elseif ($currentTime >= $shiftStart && $currentTime <= $shiftEnd) {
+                    $data['shift_status'] = 'presensi masuk';
+                } else {
+                    $data['shift_status'] = 'sudah selesai';
+                }
             }
         } else {
             $data['has_shift'] = false;
@@ -76,6 +89,7 @@ class EmployeeAttendance extends BaseController
             $data['shift_status'] = 'tidak ada jadwal';
             $data['shift_start_time'] = null;
             $data['shift_end_time'] = null;
+            $data['is_flexible_shift'] = false; // Kirim flag ke view
         }
 
         // Cek presensi hari ini
@@ -174,10 +188,15 @@ class EmployeeAttendance extends BaseController
             $data['can_check_in'] = true;
         }
 
-        // Menentukan apakah bisa check-out
         $data['can_check_out'] = false;
-        if ($data['shift_status'] == 'sudah selesai' && $data['already_checked_in'] && !$data['already_checked_out']) {
-            $data['can_check_out'] = true;
+        if ($data['already_checked_in'] && !$data['already_checked_out']) {
+            if ($isFlexibleShift) {
+                // Untuk shift fleksibel, bisa checkout kapan saja setelah check-in
+                $data['can_check_out'] = true;
+            } elseif ($data['shift_status'] == 'sudah selesai') {
+                // Untuk shift normal, harus menunggu jam kerja selesai
+                $data['can_check_out'] = true;
+            }
         }
 
         // Handle AJAX Check-In dan Check-Out
@@ -185,7 +204,7 @@ class EmployeeAttendance extends BaseController
             if ($this->request->getPost('check_in')) {
                 return $this->handleCheckIn($data);
             } elseif ($this->request->getPost('check_out')) {
-                return $this->handleClockOut($data);
+                return $this->handleCheckOut($data);
             }
         }
 
@@ -258,8 +277,14 @@ class EmployeeAttendance extends BaseController
         $in_time = date('H:i:s');
         $today = date('Y-m-d');
 
-        $allowedTime = date('H:i:s', strtotime($shiftData['start_time'] . '+5 minutes +59 seconds'));
-        $inStatus = (strtotime($in_time) <= strtotime($allowedTime)) ? 'Tepat Waktu' : 'Terlambat';
+        if ($data['is_flexible_shift']) {
+            // Jika shift fleksibel, maka set status presensi menjadi "Tugas Luar" dan tidak ada keterlambatan
+            $inStatus = 'Tugas Luar';
+        } else {
+            // shift lainnya
+            $allowedTime = date('H:i:s', strtotime($shiftData['start_time'] . '+15 minutes +59 seconds'));
+            $inStatus = (strtotime($in_time) <= strtotime($allowedTime)) ? 'Tepat Waktu' : 'Terlambat';
+        }
         $presence_status = 1; // Hadir
 
         $attendanceData = [
@@ -286,7 +311,7 @@ class EmployeeAttendance extends BaseController
         }
     }
 
-    private function handleClockOut($data)
+    private function handleCheckOut($data)
     {
         if (!$data['can_check_out']) {
             log_message('error', 'Clock-out gagal: Tidak dapat melakukan presensi keluar saat ini.');
