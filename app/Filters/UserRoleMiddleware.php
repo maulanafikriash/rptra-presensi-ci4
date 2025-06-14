@@ -61,6 +61,7 @@ class UserRoleMiddleware implements FilterInterface
             'employee/change_password',
             'employee/attendance_history',
             'employee/work_schedule',
+            'employee/get_location',
         ];
 
         $publicPaths = [
