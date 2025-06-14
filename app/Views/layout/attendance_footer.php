@@ -93,7 +93,7 @@
               <option value="">Pilih Shift</option>
               <?php foreach ($shifts as $shift): ?>
                 <option value="<?= esc($shift['shift_id']) ?>">
-                  <?= esc($shift['start_time']) ?> - <?= esc($shift['end_time']) ?>
+                  <?= date('H:i', strtotime(esc($shift['start_time']))) ?> - <?= date('H:i', strtotime(esc($shift['end_time']))) ?>
                 </option>
               <?php endforeach; ?>
             </select>
@@ -128,10 +128,8 @@
     let year = '<?= $year; ?>';
     let modal = $(this);
 
-    // Tambahkan log untuk memeriksa nilai-nilai variabel
     console.log('day:', day, 'month:', month, 'year:', year);
 
-    // Update judul modal dan input date dengan nilai yang sesuai
     modal.find('.modal-title').text('Edit Presensi - <?= $employee['employee_name']; ?> (' + day + '-' + month + '-' + year + ')');
     modal.find('#attendance_date').val(year + '-' + month + '-' + day);
   });
@@ -140,7 +138,6 @@
   let map;
 
   function showMap(lat, lng, label) {
-    console.log("showMap called with lat:", lat, "lng:", lng, "label:", label); // Debugging
     document.getElementById("mapModalLabel").textContent = "Lokasi Presensi " + label;
 
     if (map) {
@@ -153,15 +150,41 @@
       attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
-    L.marker([lat, lng]).addTo(map)
-      .bindPopup(`<b>${label}</b>`)
+    const marker = L.marker([lat, lng]).addTo(map)
+      .bindPopup(<b>${label}</b><br><i>Memuat alamat...</i>)
       .openPopup();
+    fetchAddress(lat, lng, marker, label);
 
     $('#mapModal').modal('show');
 
     setTimeout(() => {
       map.invalidateSize();
     }, 200);
+  }
+
+  async function fetchAddress(lat, lng, marker, originalLabel) {
+    const url = https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng};
+
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error('Gagal mendapatkan respon dari server.');
+      }
+      const data = await response.json();
+
+      let popupContent;
+      if (data && data.display_name) {
+        popupContent = <b>${originalLabel}</b><br>${data.display_name};
+      } else {
+        popupContent = <b>${originalLabel}</b><br><small>Alamat tidak ditemukan.</small>;
+      }
+      marker.setPopupContent(popupContent);
+
+    } catch (error) {
+      console.error("Error fetching address:", error);
+      const errorContent = <b>${originalLabel}</b><br><small class="text-danger">Gagal memuat alamat.</small>;
+      marker.setPopupContent(errorContent);
+    }
   }
 
   function showAlert(message) {
@@ -174,7 +197,6 @@
   }
 
   // schedule
-  // array bulan dalam Bahasa Indonesia
   let bulanIndonesia = {
     1: 'Januari',
     2: 'Februari',
@@ -190,9 +212,9 @@
     12: 'Desember'
   };
 
-  // Fungsi untuk memformat tanggal ke format "dd Month yyyy"
+  // memformat tanggal ke "dd Month yyyy"
   function formatTanggal(tanggal) {
-    let parts = tanggal.split('-'); // Asumsi format Y-m-d
+    let parts = tanggal.split('-');
     let tahun = parts[0];
     let bulan = parseInt(parts[1], 10);
     let hari = parseInt(parts[2], 10);
@@ -216,13 +238,10 @@
       $('#modal_shift_field').hide();
       $('#modal_shift_id').prop('required', false);
 
-      // tampilan tanggal di modal
       $('#modal_schedule_date_display').text(formatTanggal(date));
 
       // Update form action untuk tambah jadwal
       $('#scheduleForm').attr('action', '<?= base_url('admin/master/employee/work_schedule/add'); ?>');
-
-      // Open modal
       $('#scheduleModal').modal('show');
     });
 
@@ -246,7 +265,6 @@
       // tampilan tanggal di modal edit
       $('#modal_schedule_date_display').text(formatTanggal(date));
 
-      // Set status
       if (status === null || status === 'NULL') {
         $('#modal_schedule_status').val('NULL');
         $('#modal_shift_field').show();
@@ -257,17 +275,14 @@
         $('#modal_shift_id').prop('required', false);
       }
 
-      // Set shift_id jika ada
       if (shiftId) {
         $('#modal_shift_id').val(shiftId);
       } else {
         $('#modal_shift_id').val('');
       }
 
-      // Update form action untuk edit jadwal
       $('#scheduleForm').attr('action', '<?= base_url('admin/master/employee/work_schedule/edit'); ?>/' + scheduleId);
 
-      // Open modal
       $('#scheduleModal').modal('show');
     });
 
@@ -283,7 +298,6 @@
       }
     });
 
-    // Trigger change event on modal load
     $('#scheduleModal').on('shown.bs.modal', function() {
       $('#modal_schedule_status').trigger('change');
     });
@@ -301,10 +315,8 @@
         data: formData,
         success: function(response) {
           if (response.status === 'success') {
-            // Reload halaman setelah berhasil
             location.reload();
           } else {
-            // Menampilkan pesan error tanpa reload
             $('#flashdataMessage').html(`
               <div class="alert alert-danger alert-dismissible fade show" role="alert">
                 ${response.message}
@@ -321,7 +333,6 @@
         }
       });
     });
-    // Tambahkan fungsi untuk menggulir ke atas jika ada Flashdata
     <?php if (session()->getFlashdata('success') || session()->getFlashdata('error')): ?>
       $('html, body').animate({
         scrollTop: 0
@@ -329,7 +340,6 @@
     <?php endif; ?>
   });
 </script>
-
 </body>
 
 </html>
