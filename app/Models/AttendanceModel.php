@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use CodeIgniter\Model;
+use Config\Database;
 
 class AttendanceModel extends Model
 {
@@ -54,42 +55,126 @@ class AttendanceModel extends Model
             ->update();
     }
 
-    /**
-     * Mengambil data presensi berdasarkan rentang tanggal dan departemen
-     */
-    public function getAttendance($start, $end, $dept = null)
+    public function getAttendanceByEmployeeId($start, $end, $employee_id)
     {
-        $builder = $this->builder();
+        $builder = $this->db->table('attendance a');
         $builder->select('
-            attendance.attendance_id,
-            attendance.attendance_date,
-            employee.employee_name,
-            attendance.in_status,
-            attendance.in_time,
-            attendance.out_time,
-            shift.shift_id,   
-            shift.start_time AS shift_start,
-            shift.end_time AS shift_end,
-            schedule.schedule_id
-        ');
-        $builder->join('employee', 'attendance.employee_id = employee.employee_id', 'left');
-        $builder->join('schedule', 'attendance.schedule_id = schedule.schedule_id', 'left');
-        $builder->join('shift', 'schedule.shift_id = shift.shift_id', 'left');
+        a.*,
+        e.employee_name,
+        d.department_name,
+        s.shift_id,
+        s.start_time AS shift_start,
+        s.end_time   AS shift_end
+    ');
+        $builder->join('employee e', 'e.employee_id = a.employee_id', 'left');
+        $builder->join('department d', 'd.department_id = a.department_id', 'left');
+        $builder->join('schedule sch', 'sch.schedule_id = a.schedule_id', 'left');
+        $builder->join('shift s', 's.shift_id = sch.shift_id', 'left');
 
-        if (!is_null($dept)) {
-            $builder->where('attendance.department_id', $dept);
-        }
-
-        $builder->where('attendance.attendance_date >=', $start);
-        $builder->where('attendance.attendance_date <=', $end);
-        $builder->where('attendance.presence_status', 1);
-
-        // Pastikan schedule_date sama dengan attendance_date
-        $builder->where('schedule.schedule_date = attendance.attendance_date', null, false);
-
-        $builder->orderBy('attendance.attendance_date', 'ASC');
+        $builder->where('a.attendance_date >=', $start);
+        $builder->where('a.attendance_date <=', $end);
+        $builder->where('a.employee_id', $employee_id);
+        $builder->orderBy('a.attendance_date', 'ASC');
 
         return $builder->get()->getResultArray();
+    }
+
+    public function getAttendanceReportData($start, $end, $dept = null)
+    {
+        $db = Database::connect();
+
+        $employeeBuilder = $db->table('employee');
+        if (!is_null($dept) && $dept !== 'all') {
+            $employeeBuilder->where('department_id', $dept);
+        }
+        $employees = $employeeBuilder->get()->getResultArray();
+
+        $reportData = [];
+        $currentDate = date('Y-m-d');
+
+        foreach ($employees as $employee) {
+            $period = new \DatePeriod(
+                new \DateTime($start),
+                new \DateInterval('P1D'),
+                (new \DateTime($end))->modify('+1 day')
+            );
+
+            foreach ($period as $date) {
+                $attendanceDate = $date->format('Y-m-d');
+
+                $builder = $this->builder();
+                $builder->select('
+                    attendance.attendance_id,
+                    attendance.attendance_date,
+                    attendance.in_time,
+                    attendance.in_status,
+                    attendance.out_time,
+                    attendance.presence_status,
+                    shift.shift_id,
+                    shift.start_time AS shift_start,
+                    shift.end_time AS shift_end
+                ');
+                $builder->join('schedule', 'attendance.schedule_id = schedule.schedule_id', 'left');
+                $builder->join('shift', 'schedule.shift_id = shift.shift_id', 'left');
+                $builder->where('attendance.employee_id', $employee['employee_id']);
+                $builder->where('attendance.attendance_date', $attendanceDate);
+
+                $attendance = $builder->get()->getRowArray();
+
+                $rowData = [
+                    'employee_id'       => $employee['employee_id'],
+                    'employee_name'     => $employee['employee_name'],
+                    'attendance_date'   => $attendanceDate,
+                    'in_time'           => null,
+                    'in_status'         => null,
+                    'out_time'          => null,
+                    'out_status'        => null,
+                    'shift_id'          => null,
+                    'shift_start'       => null,
+                    'shift_end'         => null,
+                    'presence_status'   => null,
+                    'presence_status_text' => ''
+                ];
+
+                if ($attendance) {
+                    $rowData = array_merge($rowData, $attendance);
+                }
+
+                $status = $rowData['presence_status'];
+                if ($status == '1') {
+                    $rowData['presence_status_text'] = 'Hadir';
+                } elseif ($status == '2') {
+                    $rowData['presence_status_text'] = 'Izin';
+                } elseif ($status == '3') {
+                    $rowData['presence_status_text'] = 'Sakit';
+                } elseif ($status == '4') {
+                    $rowData['presence_status_text'] = 'Cuti';
+                } elseif ($status == '5') {
+                    $rowData['presence_status_text'] = 'Libur';
+                } else {
+                    // Jika tidak ada data di tabel attendance
+                    if ($attendanceDate > $currentDate) {
+                        $rowData['presence_status'] = 'default';
+                        $rowData['presence_status_text'] = 'Tidak Ada Data';
+                    } else {
+                        $rowData['presence_status'] = '0';
+                        $rowData['presence_status_text'] = 'Tidak Hadir';
+                    }
+                }
+
+                $reportData[] = $rowData;
+            }
+        }
+
+        // hasil berdasarkan tanggal dan nama pegawai
+        usort($reportData, function ($a, $b) {
+            if ($a['attendance_date'] == $b['attendance_date']) {
+                return strcmp($a['employee_name'], $b['employee_name']);
+            }
+            return strcmp($a['attendance_date'], $b['attendance_date']);
+        });
+
+        return $reportData;
     }
 
     public function getAttendanceWithShift($start, $end, $dept = null)
