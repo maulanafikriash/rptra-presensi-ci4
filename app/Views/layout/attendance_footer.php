@@ -151,7 +151,7 @@
     }).addTo(map);
 
     const marker = L.marker([lat, lng]).addTo(map)
-      .bindPopup(`<b>${label}</b><br><i>Memuat alamat...</i>`)
+      .bindPopup(<b>${label}</b><br><i>Memuat alamat...</i>)
       .openPopup();
     fetchAddress(lat, lng, marker, label);
 
@@ -163,7 +163,7 @@
   }
 
   async function fetchAddress(lat, lng, marker, originalLabel) {
-    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`;
+    const url = https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng};
 
     try {
       const response = await fetch(url);
@@ -174,15 +174,15 @@
 
       let popupContent;
       if (data && data.display_name) {
-        popupContent = `<b>${originalLabel}</b><br>${data.display_name}`;
+        popupContent = <b>${originalLabel}</b><br>${data.display_name};
       } else {
-        popupContent = `<b>${originalLabel}</b><br><small>Alamat tidak ditemukan.</small>`;
+        popupContent = <b>${originalLabel}</b><br><small>Alamat tidak ditemukan.</small>;
       }
       marker.setPopupContent(popupContent);
 
     } catch (error) {
       console.error("Error fetching address:", error);
-      const errorContent = `<b>${originalLabel}</b><br><small class="text-danger">Gagal memuat alamat.</small>`;
+      const errorContent = <b>${originalLabel}</b><br><small class="text-danger">Gagal memuat alamat.</small>;
       marker.setPopupContent(errorContent);
     }
   }

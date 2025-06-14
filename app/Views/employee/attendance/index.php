@@ -12,7 +12,7 @@
         </div>
         <div class="card-body">
 
-          <?php if (session()->getFlashdata('message')) : ?>
+          <?php if (session()->getFlashdata('message')): ?>
             <div class="alert alert-dismissible fade show" role="alert">
               <?= session()->getFlashdata('message'); ?>
               <button type="button" class="close" data-dismiss="alert" aria-label="Close">
@@ -31,10 +31,11 @@
             <div class="row">
               <div class="col-lg-5">
                 <label for="work_shift" class="col-form-label">Shift Kerja</label>
-                <?php if ($has_shift && $shift_details) : ?>
+                <?php if ($has_shift && $shift_details): ?>
                   <input class="form-control" type="text"
-                    value="<?= $is_flexible_shift ? 'Shift Fleksibel (00:00 - 23:59)' : 'Shift ' . esc($shift_details['shift_id']) . ' = ' . esc($shift_start_time) . ' - ' . esc($shift_end_time) . ''; ?>" readonly>
-                <?php else : ?>
+                    value="<?= $is_flexible_shift ? 'Shift Fleksibel (00:00 - 23:59)' : 'Shift ' . esc($shift_details['shift_id']) . ' = ' . esc($shift_start_time) . ' - ' . esc($shift_end_time) . ''; ?>"
+                    readonly>
+                <?php else: ?>
                   <?php
                   $statusMap = [
                     5 => ['icon' => 'fa-calendar-day', 'color' => 'text-primary', 'text' => 'Hari ini Libur'],
@@ -53,12 +54,14 @@
               </div>
 
               <div class="col-lg-5 offset-lg-1 location-container">
-                <?php if ($can_check_in || $can_check_out) : ?>
+                <?php if ($can_check_in || $can_check_out): ?>
                   <label for="location" class="col-form-label">Aktifkan Lokasi Saat Ini</label>
-                  <button type="button" class="btn btn-primary btn-lg btn-block shadow-sm" id="activate-location-btn" style="display: flex; align-items: center; justify-content: center; font-size: 16px;">
+                  <button type="button" class="btn btn-primary btn-lg btn-block shadow-sm" id="activate-location-btn"
+                    style="display: flex; align-items: center; justify-content: center; font-size: 16px;">
                     <i class="fas fa-map-marker-alt mr-2"></i> Aktifkan Lokasi
                   </button>
-                  <p id="location-status" class="mt-2 text-muted text-center" style="font-size: 14px;">Lokasi belum diaktifkan</p>
+                  <p id="location-status" class="mt-2 text-muted text-center" style="font-size: 14px;">Lokasi belum
+                    diaktifkan</p>
                 <?php endif; ?>
               </div>
             </div>
@@ -85,35 +88,39 @@
                       $status = ['label' => 'Sudah Keluar', 'class' => 'btn-secondary', 'icon' => 'fa-check-circle', 'text_class' => 'text-secondary'];
                     }
                     ?>
-                    <button class="btn <?= esc($status['class']); ?> btn-circle" style="width: 100px; height: 100px;" disabled>
+                    <button class="btn <?= esc($status['class']); ?> btn-circle" style="width: 100px; height: 100px;"
+                      disabled>
                       <i class="fas <?= esc($status['icon']); ?> fa-2x"></i>
                     </button>
-                    <p class="font-weight-bold <?= esc($status['text_class']); ?> pt-2"><?= esc($status['label']); ?></p>
+                    <p class="font-weight-bold <?= esc($status['text_class']); ?> pt-2"><?= esc($status['label']); ?>
+                    </p>
                   </div>
 
-                  <?php if ($can_check_in || $can_check_out || $already_checked_in && !$already_checked_out || $shift_status === 'belum mulai') : ?>
+                  <?php if ($can_check_in || $can_check_out || $already_checked_in && !$already_checked_out || $shift_status === 'belum mulai'): ?>
                     <div class="mx-4"></div>
                   <?php endif; ?>
 
                   <div class="text-center">
-                    <?php if ($can_check_in) : ?>
-                      <button type="button" name="check_in" id="check-in-btn" class="btn btn-primary btn-circle" style="width: 100px; height: 100px;" disabled>
+                    <?php if ($can_check_in): ?>
+                      <button type="button" name="check_in" id="check-in-btn" class="btn btn-primary btn-circle"
+                        style="width: 100px; height: 100px;" disabled>
                         <i class="fas fa-fw fa-sign-in-alt fa-2x"></i>
                       </button>
                       <p class="font-weight-bold text-primary pt-2">Masuk!</p>
-                    <?php elseif ($can_check_out) : ?>
-                      <button type="button" name="check_out" id="check-out-btn" class="btn btn-danger btn-circle" style="width: 100px; height: 100px;" disabled>
+                    <?php elseif ($can_check_out): ?>
+                      <button type="button" name="check_out" id="check-out-btn" class="btn btn-danger btn-circle"
+                        style="width: 100px; height: 100px;" disabled>
                         <i class="fas fa-fw fa-sign-out-alt fa-2x"></i>
                       </button>
                       <p class="font-weight-bold text-danger pt-2">Keluar</p>
 
-                    <?php elseif ($shift_status === 'belum mulai') : ?>
+                    <?php elseif ($shift_status === 'belum mulai'): ?>
                       <button type="button" class="btn btn-dark btn-circle" style="width: 100px; height: 100px;" disabled>
                         <i class="fas fa-fw fa-sign-in-alt fa-2x"></i>
                       </button>
                       <p class="font-weight-bold text-dark pt-2">Belum Mulai</p>
 
-                    <?php elseif ($already_checked_in && !$already_checked_out) : ?>
+                    <?php elseif ($already_checked_in && !$already_checked_out): ?>
                       <button type="button" class="btn btn-dark btn-circle" style="width: 100px; height: 100px;" disabled>
                         <i class="fas fa-fw fa-clock fa-2x"></i>
                       </button>
@@ -130,7 +137,7 @@
   </div>
 </div>
 <script>
-  document.addEventListener("DOMContentLoaded", function() {
+  document.addEventListener("DOMContentLoaded", function () {
     // --- Variabel dari PHP ---
     const isFlexibleShift = <?= json_encode($is_flexible_shift); ?>;
     const canCheckIn = <?= json_encode($can_check_in); ?>;
@@ -196,7 +203,7 @@
       } catch (error) {
         console.error('Error fetching address from backend:', error);
         // Tampilkan pesan error yang lebih informatif ke console atau UI jika perlu
-        return `Gagal mengambil nama alamat: ${error.message}`;
+        return Gagal mengambil nama alamat: ${ error.message };
       }
     }
 
@@ -215,52 +222,52 @@
 
       navigator.geolocation.getCurrentPosition(
         async (position) => {
-            const lat = position.coords.latitude;
-            const lon = position.coords.longitude;
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
 
-            latitudeInput.value = lat;
-            longitudeInput.value = lon;
+          latitudeInput.value = lat;
+          longitudeInput.value = lon;
 
-            locationStatusEl.textContent = "Lokasi didapat. Mengambil nama alamat...";
+          locationStatusEl.textContent = "Lokasi didapat. Mengambil nama alamat...";
 
-            // Ambil nama alamat
-            const address = await getAddressFromCoordinates(lat, lon);
-            locationRemarkInput.value = address;
+          // Ambil nama alamat
+          const address = await getAddressFromCoordinates(lat, lon);
+          locationRemarkInput.value = address;
 
-            // Tampilkan alamat ke pengguna
-            locationStatusEl.innerHTML = `<span class="font-weight-bold text-success">${address}</span>`;
+          // Tampilkan alamat ke pengguna
+          locationStatusEl.innerHTML = <span class="font-weight-bold text-success">${address}</span>;
 
-            // Aktifkan tombol yang sesuai
-            if (canCheckIn && checkInBtn) checkInBtn.disabled = false;
-            if (canCheckOut && checkOutBtn) checkOutBtn.disabled = false;
+          // Aktifkan tombol yang sesuai
+          if (canCheckIn && checkInBtn) checkInBtn.disabled = false;
+          if (canCheckOut && checkOutBtn) checkOutBtn.disabled = false;
 
-            // Ganti ikon & teks tombol aktivasi menjadi tanda sukses
-            activateLocationBtn.innerHTML = '<i class="fas fa-check-circle mr-2"></i> Lokasi Diaktifkan';
-            activateLocationBtn.classList.remove('btn-primary');
-            activateLocationBtn.classList.add('btn-success');
-          },
-          (error) => {
-            let errorMessage = 'Gagal mendapatkan lokasi. Harap izinkan akses lokasi dan coba lagi.';
-            switch (error.code) {
-              case error.PERMISSION_DENIED:
-                errorMessage = "Akses lokasi ditolak. Silakan izinkan dari pengaturan browser Anda.";
-                break;
-              case error.POSITION_UNAVAILABLE:
-                errorMessage = "Informasi lokasi tidak tersedia.";
-                break;
-              case error.TIMEOUT:
-                errorMessage = "Waktu permintaan lokasi habis.";
-                break;
-            }
-            Swal.fire('Gagal!', errorMessage, 'error');
-            locationStatusEl.textContent = "Gagal mendapatkan lokasi.";
-            locationStatusEl.className = "mt-2 text-danger text-center";
-            activateLocationBtn.disabled = false;
-          }, {
-            enableHighAccuracy: true,
-            timeout: 15000,
-            maximumAge: 0 // ambil lokasi baru
+          // Ganti ikon & teks tombol aktivasi menjadi tanda sukses
+          activateLocationBtn.innerHTML = '<i class="fas fa-check-circle mr-2"></i> Lokasi Diaktifkan';
+          activateLocationBtn.classList.remove('btn-primary');
+          activateLocationBtn.classList.add('btn-success');
+        },
+        (error) => {
+          let errorMessage = 'Gagal mendapatkan lokasi. Harap izinkan akses lokasi dan coba lagi.';
+          switch (error.code) {
+            case error.PERMISSION_DENIED:
+              errorMessage = "Akses lokasi ditolak. Silakan izinkan dari pengaturan browser Anda.";
+              break;
+            case error.POSITION_UNAVAILABLE:
+              errorMessage = "Informasi lokasi tidak tersedia.";
+              break;
+            case error.TIMEOUT:
+              errorMessage = "Waktu permintaan lokasi habis.";
+              break;
           }
+          Swal.fire('Gagal!', errorMessage, 'error');
+          locationStatusEl.textContent = "Gagal mendapatkan lokasi.";
+          locationStatusEl.className = "mt-2 text-danger text-center";
+          activateLocationBtn.disabled = false;
+        }, {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 0 // ambil lokasi baru
+      }
       );
     }
 
@@ -277,12 +284,12 @@
       formData.append(action, '1'); // Menambah 'check_in' atau 'check_out'
 
       fetch("<?= base_url('employee/attendance'); ?>", {
-          method: "POST",
-          headers: {
-            "X-Requested-With": "XMLHttpRequest"
-          },
-          body: formData
-        })
+        method: "POST",
+        headers: {
+          "X-Requested-With": "XMLHttpRequest"
+        },
+        body: formData
+      })
         .then(response => response.json())
         .then(data => {
           if (data.status === 'success') {
@@ -291,7 +298,7 @@
               hour: '2-digit',
               minute: '2-digit'
             });
-            const successMessage = `Berhasil presensi ${actionText} pada pukul ${timeString}.`;
+            const successMessage = Berhasil presensi ${ actionText } pada pukul ${ timeString }.;
 
             Swal.fire('Berhasil!', successMessage, 'success').then(() => location.reload());
           } else {
@@ -314,7 +321,7 @@
     }
 
     if (checkOutBtn) {
-      checkOutBtn.addEventListener("click", function() {
+      checkOutBtn.addEventListener("click", function () {
         if (isFlexibleShift) {
           Swal.fire({
             title: 'Konfirmasi Keluar',
