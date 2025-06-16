@@ -11,7 +11,7 @@
             <div class="modal-body">Pilih "Logout" jika Anda ingin keluar</div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
-                <a class="btn btn-info" href="<?= base_url('auth/logout') ?>">Logout</a>
+                <a class="btn btn-primary" href="<?= base_url('auth/logout') ?>">Logout</a>
             </div>
         </div>
     </div>

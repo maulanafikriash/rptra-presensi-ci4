@@ -14,6 +14,8 @@ use IntlDateFormatter;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
 
 class Report extends BaseController
 {
@@ -49,7 +51,7 @@ class Report extends BaseController
             'start' => $start,
             'end' => $end,
             'dept' => $dept,
-            'attendance' => $this->attendanceDetails($start, $end, $dept),
+            'attendance' => ($start && $end) ? $this->attendanceDetails($start, $end, $dept) : [],
         ];
 
         echo view('layout/header', $data);
@@ -61,181 +63,7 @@ class Report extends BaseController
 
     private function attendanceDetails($start, $end, $dept)
     {
-        if (!$start || !$end) {
-            return false;
-        } else {
-            $attendanceModel = new AttendanceModel();
-
-            // data presensi dengan shift, schedule_date = attendance_date dan presence_status = 1
-            $attendance = $attendanceModel->getAttendance($start, $end, $dept);
-
-            return $attendance;
-        }
-    }
-
-    public function printPdfAttendanceByDepartment($start, $end, $dept)
-    {
-        $attendance = $this->attendanceModel->getAttendance($start, $end, $dept);
-        $department = $this->departmentModel->getDepartmentById($dept);
-        $data = [
-            'start' => $start,
-            'end' => $end,
-            'dept' => $dept,
-            'dept_name' => $department['department_name'],
-            'attendance' => $this->groupAttendanceByDate($attendance),
-        ];
-
-        $html = view('admin/report/print_attendance_all', $data);
-
-        // clear output buffering
-        while (ob_get_level() > 0) {
-            ob_end_clean();
-        }
-
-        $mpdf = new Mpdf([
-            'mode' => 'utf-8',
-            'format' => 'A4-L',
-            'default_font_size' => 12,
-            'default_font' => 'Arial'
-        ]);
-        $mpdf->SetHeader('RPTRA Cibubur Berseri');
-        $mpdf->SetFooter('Dicetak pada: {DATE j-m-Y H:i:s}');
-        $mpdf->WriteHTML($html);
-        $mpdf->Output('Laporan_Kehadiran_Pengelola.pdf', 'I');
-    }
-
-    public function printExcelAttendanceByDepartment($start, $end, $dept)
-    {
-        // Mengambil data presensi berdasarkan tanggal dan departemen
-        $attendance = $this->attendanceModel->getAttendance($start, $end, $dept);
-        $department = $this->departmentModel->getDepartmentById($dept);
-        $startDate = new \DateTime($start);
-        $endDate = new \DateTime($end);
-
-        $isSingleDay = ($start === $end);
-
-        // Membuat spreadsheet baru
-        $spreadsheet = new Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
-
-        // Header laporan
-        $sheet->setCellValue('A1', 'Laporan Kehadiran');
-        if ($isSingleDay) {
-            $sheet->setCellValue('A2', 'Hari/Tanggal: ' . $startDate->format('d-m-Y'));
-        } else {
-            $sheet->setCellValue('A2', 'Dari Tanggal: ' . $startDate->format('d-m-Y') . ' Sampai ' . $endDate->format('d-m-Y'));
-        }
-        $sheet->setCellValue('A3', 'Department: ' . ($department['department_name'] ?? 'Semua Department'));
-
-        // Header tabel
-        // Jika laporan satu hari, kolom tanggal dihilangkan
-        if ($isSingleDay) {
-            $sheet->setCellValue('A5', 'No');
-            $sheet->setCellValue('B5', 'Nama');
-            $sheet->setCellValue('C5', 'Shift');
-            $sheet->setCellValue('D5', 'Check In');
-            $sheet->setCellValue('E5', 'Status Masuk');
-            $sheet->setCellValue('F5', 'Check Out');
-            $lastColumn = 'F';
-        } else {
-            $sheet->setCellValue('A5', 'No');
-            $sheet->setCellValue('B5', 'Tanggal');
-            $sheet->setCellValue('C5', 'Nama');
-            $sheet->setCellValue('D5', 'Shift');
-            $sheet->setCellValue('E5', 'Check In');
-            $sheet->setCellValue('F5', 'Status Masuk');
-            $sheet->setCellValue('G5', 'Check Out');
-            $lastColumn = 'G';
-        }
-
-        // Menambahkan styling pada header tabel
-        $headerStyleArray = [
-            'font' => [
-                'bold' => true,
-                'color' => ['argb' => 'FFFFFFFF'],
-            ],
-            'fill' => [
-                'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
-                'startColor' => ['argb' => 'FF007BFF'],
-            ],
-            'alignment' => [
-                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
-            ],
-            'borders' => [
-                'allBorders' => [
-                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
-                ],
-            ],
-        ];
-        $sheet->getStyle('A5:' . $lastColumn . '5')->applyFromArray($headerStyleArray);
-
-        $row = 6;
-        $i = 1;
-        $groupedAttendance = $this->groupAttendanceByDate($attendance);
-
-        foreach ($groupedAttendance as $date => $attendances) {
-            foreach ($attendances as $atd) {
-                // Menggunakan shift_start dan shift_end dari data presensi
-                $checkout_status = get_checkout_status($atd, [
-                    'start_time' => $atd['shift_start'],
-                    'end_time' => $atd['shift_end']
-                ], $atd['attendance_date']);
-
-                if ($isSingleDay) {
-                    $sheet->setCellValue('A' . $row, $i++);
-                    $sheet->setCellValue('B' . $row, $atd['employee_name']);
-                    $sheet->setCellValue('C' . $row, (!empty($atd['shift_id']) && !empty($atd['shift_start']) && !empty($atd['shift_end']))
-                        ? htmlspecialchars($atd['shift_id']) . " = " . date('H:i', strtotime($atd['shift_start'])) . " - " . date('H:i', strtotime($atd['shift_end']))
-                        : "Shift Tidak Ditemukan");
-                    $sheet->setCellValue('D' . $row, $atd['in_time'] ? date('H:i:s', strtotime($atd['in_time'])) : 'Belum check in');
-                    $sheet->setCellValue('E' . $row, $atd['in_status']);
-                    $sheet->setCellValue('F' . $row, $checkout_status);
-                } else {
-                    $sheet->setCellValue('A' . $row, $i++);
-                    $sheet->setCellValue('B' . $row, date('d-m-Y', strtotime($atd['attendance_date'])));
-                    $sheet->setCellValue('C' . $row, $atd['employee_name']);
-                    $sheet->setCellValue('D' . $row, (!empty($atd['shift_id']) && !empty($atd['shift_start']) && !empty($atd['shift_end']))
-                        ? htmlspecialchars($atd['shift_id']) . " = " . date('H:i', strtotime($atd['shift_start'])) . " - " . date('H:i', strtotime($atd['shift_end']))
-                        : "Shift Tidak Ditemukan");
-                    $sheet->setCellValue('E' . $row, $atd['in_time'] ? date('H:i:s', strtotime($atd['in_time'])) : 'Belum check in');
-                    $sheet->setCellValue('F' . $row, $atd['in_status']);
-                    $sheet->setCellValue('G' . $row, $checkout_status);
-                }
-                $row++;
-            }
-        }
-
-        $bodyStyleArray = [
-            'alignment' => [
-                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
-            ],
-            'borders' => [
-                'allBorders' => [
-                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
-                ],
-            ],
-        ];
-        $sheet->getStyle('A5:' . $lastColumn . ($row - 1))->applyFromArray($bodyStyleArray);
-
-        // Menyesuaikan lebar kolom secara otomatis
-        foreach (range('A', $lastColumn) as $columnID) {
-            $sheet->getColumnDimension($columnID)->setAutoSize(true);
-        }
-
-        $sheet->getStyle('A1:' . $lastColumn . '1')->getFont()->setBold(true)->setSize(14);
-        $sheet->getStyle('A2:' . $lastColumn . '2')->getFont()->setBold(true);
-        $sheet->getStyle('A3:' . $lastColumn . '3')->getFont()->setBold(true);
-
-        $filename = 'Laporan_Kehadiran_Pengelola_' . date('H-i-s') . '.xlsx';
-
-        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        header('Content-Disposition: attachment;filename="' . $filename . '"');
-        header('Cache-Control: max-age=0');
-
-        // Menulis file ke output
-        $writer = new Xlsx($spreadsheet);
-        $writer->save('php://output');
-        exit;
+        return $this->attendanceModel->getAttendanceReportData($start, $end, $dept);
     }
 
     private function groupAttendanceByDate($attendance)
@@ -245,61 +73,213 @@ class Report extends BaseController
             $date = $atd['attendance_date'];
             $grouped[$date][] = $atd;
         }
+        // urutan tanggal
+        ksort($grouped);
         return $grouped;
+    }
+
+    public function printPdfAttendanceByDepartment($start, $end, $dept)
+    {
+        // Panggil fungsi baru untuk mendapatkan data lengkap
+        $attendance = $this->attendanceModel->getAttendanceReportData($start, $end, $dept);
+        $department = $this->departmentModel->getDepartmentById($dept);
+        $data = [
+            'start' => $start,
+            'end' => $end,
+            'dept' => $dept,
+            'dept_name' => $department['department_name'] ?? 'Semua Department',
+            'attendance' => $this->groupAttendanceByDate($attendance),
+        ];
+
+        $html = view('admin/report/print_attendance_all', $data);
+
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+
+        $mpdf = new Mpdf([
+            'mode' => 'utf-8',
+            'format' => 'A4-L',
+            'default_font_size' => 10,
+            'default_font' => 'Arial'
+        ]);
+        $mpdf->SetHeader('RPTRA Cibubur Berseri');
+        $mpdf->SetFooter('Dicetak pada: {DATE j-m-Y H:i:s}');
+        $mpdf->WriteHTML($html);
+        $mpdf->Output('Laporan_Kehadiran_Seluruh_Pengelola.pdf', 'I');
+    }
+
+    public function printExcelAttendanceByDepartment($start, $end, $dept)
+    {
+        $attendanceData = $this->attendanceModel->getAttendanceReportData($start, $end, $dept);
+        $department = $this->departmentModel->getDepartmentById($dept);
+        $startDate = new \DateTime($start);
+        $endDate = new \DateTime($end);
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Header Laporan
+        $sheet->mergeCells('A1:G1');
+        $sheet->setCellValue('A1', 'LAPORAN KEHADIRAN SELURUH ' . strtoupper(($department['department_name'] ?? 'Semua Departemen')) . ' RPTRA CIBUBUR BERSERI');
+        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+        $sheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+        $sheet->mergeCells('A2:G2');
+        $dateRange = 'Periode: ' . $startDate->format('d M Y') . ' - ' . $endDate->format('d M Y');
+        $sheet->setCellValue('A2', $dateRange);
+        $sheet->getStyle('A2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+        // Header Tabel
+        $sheet->setCellValue('A5', 'No');
+        $sheet->setCellValue('B5', 'Tanggal');
+        $sheet->setCellValue('C5', 'Nama');
+        $sheet->setCellValue('D5', 'Shift');
+        $sheet->setCellValue('E5', 'Check In');
+        $sheet->setCellValue('F5', 'Status Masuk');
+        $sheet->setCellValue('G5', 'Check Out');
+
+        // Styling Header Tabel
+        $headerStyle = [
+            'font' => ['bold' => true, 'color' => ['argb' => 'FFFFFFFF']],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF4F81BD']],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]]
+        ];
+        $sheet->getStyle('A5:G5')->applyFromArray($headerStyle);
+
+        // Isi Tabel
+        $row = 6;
+        $no = 1;
+        $groupedAttendance = $this->groupAttendanceByDate($attendanceData);
+
+        foreach ($groupedAttendance as $date => $attendances) {
+            foreach ($attendances as $atd) {
+                $sheet->setCellValue('A' . $row, $no++);
+                $sheet->setCellValue('B' . $row, \PhpOffice\PhpSpreadsheet\Shared\Date::PHPToExcel($atd['attendance_date']));
+                $sheet->getStyle('B' . $row)->getNumberFormat()->setFormatCode('DD-MM-YYYY');
+                $sheet->setCellValue('C' . $row, $atd['employee_name']);
+
+                $status = $atd['presence_status'];
+
+                switch ($status) {
+                    case '1': // Hadir
+                        $sheet->setCellValue('D' . $row, (!empty($atd['shift_id'])) ? $atd['shift_id'] . " (" . substr($atd['shift_start'], 0, 5) . "-" . substr($atd['shift_end'], 0, 5) . ")" : 'N/A');
+                        $sheet->setCellValue('E' . $row, $atd['in_time'] ? substr($atd['in_time'], 0, 5) : '-');
+                        $sheet->setCellValue('F' . $row, $atd['in_status']);
+                        $sheet->setCellValue('G' . $row, $atd['out_time'] ? substr($atd['out_time'], 0, 5) : '-');
+                        break;
+
+                    case '2': // Izin
+                    case '3': // Sakit
+                    case '4': // Cuti
+                    case '5': // Libur
+                    case '0': // Tidak Hadir
+                        // Gabungkan kolom D sampai G
+                        $sheet->mergeCells('D' . $row . ':G' . $row);
+                        $sheet->setCellValue('D' . $row, $atd['presence_status_text']);
+                        $sheet->getStyle('D' . $row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                        break;
+
+                    default: // Tidak Ada Data
+                        $sheet->mergeCells('C' . $row . ':G' . $row);
+                        $sheet->setCellValue('C' . $row, $atd['presence_status_text']);
+                        $sheet->getStyle('C' . $row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                        $sheet->setCellValue('B' . $row, \PhpOffice\PhpSpreadsheet\Shared\Date::PHPToExcel($atd['attendance_date'])); // Tetap tampilkan tanggal
+                        break;
+                }
+                $row++;
+            }
+        }
+
+        // Styling Body Tabel
+        $bodyStyle = [
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+            'alignment' => ['vertical' => Alignment::VERTICAL_CENTER]
+        ];
+        $sheet->getStyle('A6:G' . ($row - 1))->applyFromArray($bodyStyle);
+        // Center alignment untuk kolom tertentu
+        $sheet->getStyle('A6:B' . ($row - 1))->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('E6:G' . ($row - 1))->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+        // Atur lebar kolom otomatis
+        foreach (range('A', 'G') as $columnID) {
+            $sheet->getColumnDimension($columnID)->setAutoSize(true);
+        }
+
+        $filename = 'Laporan_Kehadiran_' . str_replace('-', '', $start) . '_' . str_replace('-', '', $end) . '.xlsx';
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+
+        $writer = new Xlsx($spreadsheet);
+        $writer->save('php://output');
+        exit;
+    }
+
+    private function prepareAttendanceHistoryData($employee_id, $month, $year)
+    {
+        $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $month, $year);
+        $currentDate = new \DateTime();
+
+        // Mengambil semua data absensi yang relevan dalam satu query untuk efisiensi
+        $startDate = sprintf('%04d-%02d-01', $year, $month);
+        $endDate = sprintf('%04d-%02d-%02d', $year, $month, $daysInMonth);
+        $attendanceData = $this->attendanceModel->getAttendanceByEmployeeId($startDate, $endDate, $employee_id);
+
+        // Mengindeks data absensi berdasarkan tanggal untuk pencarian cepat
+        $indexedAttendance = [];
+        foreach ($attendanceData as $att) {
+            $indexedAttendance[$att['attendance_date']] = $att;
+        }
+
+        $reportData = [];
+        for ($day = 1; $day <= $daysInMonth; $day++) {
+            $date = sprintf('%04d-%02d-%02d', $year, $month, $day);
+            $dateObj = new \DateTime($date);
+            $dailyRecord = null;
+
+            if (isset($indexedAttendance[$date])) {
+                $dailyRecord = $indexedAttendance[$date];
+            } else {
+                $defaultStatus = 0; // Tidak Hadir
+                if ($dateObj > $currentDate) {
+                    $defaultStatus = null; // Tidak Ada Data
+                }
+
+                $dailyRecord = [
+                    'attendance_date' => $date,
+                    'presence_status' => $defaultStatus,
+                    'shift_id' => null,
+                    'shift_start' => null,
+                    'shift_end' => null,
+                    'in_time' => null,
+                    'in_status' => null,
+                    'out_time' => null
+                ];
+            }
+            $reportData[] = $dailyRecord;
+        }
+
+        return $reportData;
     }
 
     // ---------------section----------
     public function printPdfAttendanceHistory($employee_id)
     {
-        $db = \Config\Database::connect();
-        $employee = $db->table('employee')->where('employee_id', $employee_id)->get()->getRowArray();
-
+        $employee = $this->employeeModel->find($employee_id);
         if (!$employee) {
             throw new \CodeIgniter\Exceptions\PageNotFoundException('Employee not found');
         }
 
         $month = (int) ($this->request->getGet('month') ?: date('m'));
         $year = (int) ($this->request->getGet('year') ?: date('Y'));
-        $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $month, $year);
-        $currentDate = new \DateTime(); // Current date
 
-        $attendanceData = $this->attendanceModel->getAttendanceByEmployeeAndDate($employee_id, $month, $year);
+        // Menggunakan fungsi helper untuk menyiapkan data
+        $attendance = $this->prepareAttendanceHistoryData($employee_id, $month, $year);
 
-        // Initialize attendance array
-        $attendance = [];
-        for ($day = 1; $day <= $daysInMonth; $day++) {
-            $date = sprintf('%04d-%02d-%02d', $year, $month, $day);
-            $dateObj = new \DateTime($date);
-
-            if ($dateObj <= $currentDate) {
-                $attendance[$date] = 'Tidak Hadir'; // Default status
-            } else {
-                $attendance[$date] = 'Tidak Ada Data';
-            }
-        }
-
-        // Update attendance based on actual data only for dates <= today
-        foreach ($attendanceData as $att) {
-            $date = $att['date'];
-            $presence_status = $att['presence_status'];
-            $dateObj = new \DateTime($date);
-
-            if ($dateObj <= $currentDate) {
-                $statusMap = [
-                    1 => 'Hadir',
-                    0 => 'Tidak Hadir',
-                    2 => 'Izin',
-                    3 => 'Sakit',
-                    4 => 'Cuti',
-                    5 => 'Libur',
-                ];
-                $attendance[$date] = $statusMap[$presence_status] ?? 'Tidak Ada Data';
-            }
-            // Jika tanggal > today, status tetap 'Tidak Ada Data'
-        }
-
-        $department = $this->departmentModel->getDepartmentById($employee['department_id']);
-        $dept_name = $department['department_name'] ?? 'Departemen';
+        $department = $this->departmentModel->find($employee['department_id']);
+        $dept_name = $department['department_name'] ?? 'Departemen Tidak Ditemukan';
 
         $data = [
             'employee' => $employee,
@@ -315,7 +295,12 @@ class Report extends BaseController
             ob_end_clean();
         }
 
-        $pdf = new Mpdf();
+        $pdf = new Mpdf([
+            'mode' => 'utf-8',
+            'format' => 'A4',
+            'default_font_size' => 10,
+            'default_font' => 'Arial'
+        ]);
         $pdf->SetHeader('RPTRA Cibubur Berseri');
         $pdf->SetFooter('Dicetak pada: {DATE j-m-Y H:i:s}');
         $pdf->WriteHTML($html);
@@ -328,9 +313,7 @@ class Report extends BaseController
 
     public function printExcelAttendanceHistory($employee_id)
     {
-        $db = \Config\Database::connect();
-        $employee = $db->table('employee')->where('employee_id', $employee_id)->get()->getRowArray();
-
+        $employee = $this->employeeModel->find($employee_id);
         if (!$employee) {
             throw new \CodeIgniter\Exceptions\PageNotFoundException('Employee not found');
         }
@@ -338,58 +321,10 @@ class Report extends BaseController
         $month = (int) ($this->request->getGet('month') ?: date('m'));
         $year = (int) ($this->request->getGet('year') ?: date('Y'));
 
-        $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $month, $year);
-        $currentDate = new \DateTime(); // Current date
+        $attendance = $this->prepareAttendanceHistoryData($employee_id, $month, $year);
 
-        $attendanceData = $this->attendanceModel->getAttendanceByEmployeeAndDate($employee_id, $month, $year);
-
-        // Initialize attendance array
-        $attendance = [];
-        for ($day = 1; $day <= $daysInMonth; $day++) {
-            $date = sprintf('%04d-%02d-%02d', $year, $month, $day);
-            $dateObj = new \DateTime($date);
-
-            if ($dateObj <= $currentDate) {
-                $attendance[$date] = 'Tidak Hadir'; // Default status
-            } else {
-                $attendance[$date] = 'Tidak Ada Data';
-            }
-        }
-
-        foreach ($attendanceData as $att) {
-            $date = $att['date'];
-            $presence_status = $att['presence_status'];
-            $dateObj = new \DateTime($date);
-
-            if ($dateObj <= $currentDate) {
-                switch ($presence_status) {
-                    case 1:
-                        $attendance[$date] = 'Hadir';
-                        break;
-                    case 0:
-                        $attendance[$date] = 'Tidak Hadir';
-                        break;
-                    case 2:
-                        $attendance[$date] = 'Izin';
-                        break;
-                    case 3:
-                        $attendance[$date] = 'Sakit';
-                        break;
-                    case 4:
-                        $attendance[$date] = 'Cuti';
-                        break;
-                    case 5:
-                        $attendance[$date] = 'Libur';
-                        break;
-                    default:
-                        $attendance[$date] = 'Tidak Ada Data';
-                }
-            }
-            // Jika tanggal > today, status tetap 'Tidak Ada Data'
-        }
-
-        $department = $this->departmentModel->getDepartmentById($employee['department_id']);
-        $dept_name = $department['department_name'] ?? 'Departemen';
+        $department = $this->departmentModel->find($employee['department_id']);
+        $dept_name = $department['department_name'] ?? 'Departemen Tidak Ditemukan';
 
         $bulanIndonesia = [
             1 => 'Januari',
@@ -409,95 +344,89 @@ class Report extends BaseController
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
 
-        $sheet->setCellValue('A1', 'Riwayat Presensi ' . ($dept_name ?? 'Departemen'));
-        $sheet->setCellValue('A2', 'Nama : ' . $employee['employee_name']);
-        $sheet->setCellValue('A3', 'Bulan : ' . $bulanIndonesia[$month] . " $year");
+        // --- Header Laporan ---
+        $sheet->mergeCells('A1:F1');
+        $sheet->setCellValue('A1', 'Daftar Hadir ' . $dept_name . ' RPTRA Cibubur Berseri');
+        $sheet->mergeCells('A2:F2');
+        $sheet->setCellValue('A2', 'Nama: ' . $employee['employee_name']);
+        $sheet->mergeCells('A3:F3');
+        $sheet->setCellValue('A3', 'Periode: ' . $bulanIndonesia[$month] . " " . $year);
 
-        $sheet->setCellValue('A5', 'Hari');
-        $sheet->setCellValue('B5', 'Tanggal');
-        $sheet->setCellValue('C5', 'Status Presensi');
+        // --- Header Tabel ---
+        $sheet->setCellValue('A6', 'No');
+        $sheet->setCellValue('B6', 'Tanggal');
+        $sheet->setCellValue('C6', 'Shift');
+        $sheet->setCellValue('D6', 'Check In');
+        $sheet->setCellValue('E6', 'Status Masuk');
+        $sheet->setCellValue('F6', 'Check Out');
 
-        $headerStyleArray = [
-            'font' => [
-                'bold' => true,
-                'color' => ['argb' => 'FFFFFFFF'],
-            ],
-            'fill' => [
-                'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
-                'startColor' => ['argb' => 'FF007BFF'],
-            ],
-            'alignment' => [
-                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
-            ],
-            'borders' => [
-                'allBorders' => [
-                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
-                ],
-            ],
+        // --- Styling Header ---
+        $headerStyle = [
+            'font' => ['bold' => true, 'color' => ['argb' => 'FFFFFFFF']],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF007BFF']],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]]
         ];
-        $sheet->getStyle('A5:C5')->applyFromArray($headerStyleArray);
+        $sheet->getStyle('A6:F6')->applyFromArray($headerStyle);
 
-        $row = 6;
-        foreach ($attendance as $date => $status) {
-            $dateObj = new \DateTime($date);
-            $formatter = new \IntlDateFormatter('id_ID', \IntlDateFormatter::FULL, \IntlDateFormatter::NONE);
-            $formatter->setPattern('EEEE');
-            $hari = $formatter->format($dateObj);
+        // --- Isi Tabel ---
+        $row = 7;
+        $no = 1;
+        $statusMap = [
+            1 => 'Hadir',
+            0 => 'Tidak Hadir',
+            2 => 'Izin',
+            3 => 'Sakit',
+            4 => 'Cuti',
+            5 => 'Libur',
+            null => 'Tidak Ada Data'
+        ];
 
-            $tanggal = $dateObj->format('d-m-Y');
+        foreach ($attendance as $att) {
+            $sheet->setCellValue('A' . $row, $no++);
+            $sheet->setCellValue('B' . $row, date('d-m-Y', strtotime($att['attendance_date'])));
 
-            // warna badge berdasarkan status
-            $badgeColor = '';
-            switch ($status) {
-                case 'Hadir':
-                    $badgeColor = 'FF28A745'; // Hijau
-                    break;
-                case 'Tidak Hadir':
-                    $badgeColor = 'DC3545'; // Merah
-                    break;
-                case 'Izin':
-                case 'Sakit':
-                    $badgeColor = 'FFC107'; // Kuning
-                    break;
-                case 'Cuti':
-                    $badgeColor = '6C757D'; // Abu-abu
-                    break;
-                case 'Libur':
-                    $badgeColor = '007BFF'; // Biru
-                    break;
-                case 'Tidak Ada Data':
-                    $badgeColor = '6C757D'; // Abu-abu
-                    break;
-                default:
-                    $badgeColor = '6C757D'; // Abu-abu
+            $presence_status = $att['presence_status'];
+
+            if ($presence_status == 1) { // Hadir
+                $shiftText = "Tidak ada shift";
+                if (!empty($att['shift_id']) && !empty($att['shift_start']) && !empty($att['shift_end'])) {
+                    $shiftText = htmlspecialchars($att['shift_id']) . " (" . date('H:i', strtotime($att['shift_start'])) . " - " . date('H:i', strtotime($att['shift_end'])) . ")";
+                }
+
+                $checkout_status = 'Belum check out';
+                if (function_exists('get_checkout_status')) {
+                    $checkout_status = get_checkout_status($att, ['start_time' => $att['shift_start'], 'end_time' => $att['shift_end']], $att['attendance_date']);
+                } elseif (!empty($att['out_time'])) {
+                    $checkout_status = date('H:i:s', strtotime($att['out_time']));
+                }
+
+                $sheet->setCellValue('C' . $row, $shiftText);
+                $sheet->setCellValue('D' . $row, $att['in_time'] ? date('H:i:s', strtotime($att['in_time'])) : '-');
+                $sheet->setCellValue('E' . $row, $att['in_status'] ?? '-');
+                $sheet->setCellValue('F' . $row, $checkout_status);
+            } else {
+                $sheet->mergeCells('C' . $row . ':F' . $row);
+                $statusText = $statusMap[$presence_status];
+                $sheet->setCellValue('C' . $row, $statusText);
+                $sheet->getStyle('C' . $row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
             }
-
-            // Menulis data ke spreadsheet
-            $sheet->setCellValue('A' . $row, $hari);
-            $sheet->setCellValue('B' . $row, $tanggal);
-            $sheet->setCellValue('C' . $row, $status);
-
-            // Terapkan warna latar belakang sel berdasarkan status
-            $sheet->getStyle('C' . $row)->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
-                ->getStartColor()->setARGB($badgeColor);
-
-            // Terapkan warna teks putih untuk kontras
-            $sheet->getStyle('C' . $row)->getFont()->getColor()->setARGB('FFFFFFFF');
-
-            $sheet->getStyle('A' . $row . ':C' . $row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-
-            $sheet->getStyle('A' . $row . ':C' . $row)->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
-
             $row++;
         }
 
-        foreach (range('A', 'C') as $columnID) {
+        // --- Styling Body ---
+        $bodyStyle = [
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]]
+        ];
+        $sheet->getStyle('A7:F' . ($row - 1))->applyFromArray($bodyStyle);
+        $sheet->getStyle('C7:C' . ($row - 1))->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+
+        foreach (range('A', 'F') as $columnID) {
             $sheet->getColumnDimension($columnID)->setAutoSize(true);
         }
-
-        $sheet->getStyle('A1:C1')->getFont()->setBold(true)->setSize(14);
-        $sheet->getStyle('A2:C2')->getFont()->setBold(true);
-        $sheet->getStyle('A3:C3')->getFont()->setBold(true);
+        $sheet->getStyle('A1:F1')->getFont()->setBold(true)->setSize(14);
+        $sheet->getStyle('A1:F4')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
         $filename = "Riwayat_Presensi_" . preg_replace('/[^a-zA-Z0-9_\-]/', '_', $employee['employee_name']) . "_{$month}_{$year}.xlsx";
 
@@ -571,7 +500,6 @@ class Report extends BaseController
         }
 
         try {
-            // Inisialisasi mPDF
             $mpdf = new \Mpdf\Mpdf([
                 'format' => 'A4',
                 'orientation' => 'portrait',
@@ -585,12 +513,9 @@ class Report extends BaseController
 
             $mpdf->SetHeader('RPTRA Cibubur Berseri');
             $mpdf->SetFooter('Dicetak pada: {DATE j-m-Y H:i:s}');
-
             $mpdf->WriteHTML($html);
-
             $filename = "Jadwal_Kerja_{$employee['employee_name']}_{$month}_{$year}.pdf";
 
-            // Output PDF ke browser
             $mpdf->Output($filename, 'I');
         } catch (\Mpdf\MpdfException $e) {
             log_message('error', 'mPDF Error: ' . $e->getMessage());
@@ -600,7 +525,6 @@ class Report extends BaseController
 
     public function printWorkScheduleExcel($employeeId)
     {
-        // Mengambil parameter bulan dan tahun dari query string
         $month = (int) ($this->request->getGet('month') ?: date('m'));
         $year = (int) ($this->request->getGet('year') ?: date('Y'));
 
@@ -625,21 +549,15 @@ class Report extends BaseController
             $month,
             $year
         );
-
-        // Mendapatkan nama bulan dalam Bahasa Indonesia
         $monthName = $this->getIndonesianMonthName($month, $year);
-
-        // Menyiapkan data untuk view
         $data = [
             'department_name' => $department['department_name'],
             'employee_name' => $employee['employee_name'],
-            'month_name' => $monthName, // Nama bulan dalam Bahasa Indonesia
-            'month_number' => $month, // Angka bulan
+            'month_name' => $monthName,
+            'month_number' => $month,
             'year' => $year,
             'workSchedules' => $workSchedules,
         ];
-
-        // Mendefinisikan hari dalam Bahasa Indonesia
         $indonesianDays = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
 
         // Membuat spreadsheet baru
@@ -662,11 +580,7 @@ class Report extends BaseController
         $sheet->setCellValue('A6', 'Hari');
         $sheet->setCellValue('B6', 'Tanggal');
         $sheet->setCellValue('C6', 'Shift Kerja');
-
-        // Mengatur header tabel dengan font tebal
         $sheet->getStyle("A6:C6")->getFont()->setBold(true);
-
-        // Menambahkan data jadwal
         $row = 7;
 
         for ($day = 1; $day <= cal_days_in_month(CAL_GREGORIAN, $month, $year); $day++) {
@@ -743,7 +657,6 @@ class Report extends BaseController
             throw new \CodeIgniter\Exceptions\PageNotFoundException("Pegawai tidak ditemukan");
         }
 
-        // Mengambil nama department dari model Department
         $department = $this->departmentModel->find($employee['department_id']);
         $departmentName = $department['department_name'] ?? 'Tidak Diketahui';
 
