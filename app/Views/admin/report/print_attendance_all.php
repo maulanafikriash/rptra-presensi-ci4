@@ -3,15 +3,15 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>Laporan Kehadiran</title>
+    <title>Laporan Kehadiran Seluruh Pengelola</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            font-size: 10px;
         }
 
         .container {
-            margin: 20px;
+            margin: 0;
         }
 
         .header-section {
@@ -19,9 +19,14 @@
             margin-bottom: 20px;
         }
 
-        .department-info,
-        .date-range {
-            margin-bottom: 10px;
+        .header-section h3 {
+            margin: 0;
+            font-size: 14px;
+        }
+
+        .header-section p {
+            margin: 5px 0;
+            font-size: 11px;
         }
 
         table {
@@ -29,16 +34,28 @@
             border-collapse: collapse;
         }
 
-        table,
         th,
         td {
-            border: 1px solid black;
+            border: 1px solid #333;
+            padding: 5px;
+            text-align: center;
         }
 
-        th,
-        td {
-            padding: 8px;
-            text-align: center;
+        th {
+            background-color: #e0e0e0;
+            font-weight: bold;
+        }
+
+        .text-left {
+            text-align: left;
+        }
+
+        .italic {
+            font-style: italic;
+        }
+
+        .text-muted {
+            color: #666;
         }
     </style>
 </head>
@@ -46,44 +63,26 @@
 <body>
     <div class="container">
         <?php
-        function formatTanggalIndonesia($tanggal)
+        function formatTanggalID($tanggal)
         {
-            $fmt = new IntlDateFormatter(
-                'id_ID',
-                IntlDateFormatter::FULL,
-                IntlDateFormatter::NONE,
-                'Asia/Jakarta',
-                IntlDateFormatter::GREGORIAN
-            );
-            $fmt->setPattern('EEEE, dd MMMM yyyy');
-            return $fmt->format(new DateTime($tanggal));
+            return date('d-m-Y', strtotime($tanggal));
         }
+        $isSingleDay = ($start === $end);
         ?>
         <div class="header-section">
-            <h2>Laporan Kehadiran</h2>
-        </div>
-        <div class="department-info">
-            <p><strong>Department :</strong> <?= htmlspecialchars($dept_name) ?></p>
-            <p><strong>ID Department :</strong> <?= htmlspecialchars($dept) ?></p>
-        </div>
-        <div class="date-range">
-            <?php if ($start != null || $end != null) : ?>
-                <?php if ($start === $end) : ?>
-                    <p><strong>Hari/Tanggal :</strong> <?= formatTanggalIndonesia($start); ?></p>
-                <?php else : ?>
-                    <p><strong>Dari tanggal :</strong> <?= formatTanggalIndonesia($start); ?> <strong>sampai</strong> <?= formatTanggalIndonesia($end); ?></p>
-                <?php endif; ?>
-            <?php else : ?>
-                <p>Semua tanggal</p>
+            <h3>LAPORAN KEHADIRAN SELURUH <?= strtoupper(htmlspecialchars($dept_name ?? 'Semua Departemen')) ?> RPTRA CIBUBUR BERSERI </h3>
+            <?php if ($isSingleDay): ?>
+                <p><strong>Tanggal:</strong> <?= formatTanggalID($start); ?></p>
+            <?php else: ?>
+                <p><strong>Periode:</strong> <?= formatTanggalID($start); ?> s/d <?= formatTanggalID($end); ?></p>
             <?php endif; ?>
         </div>
+
         <table>
             <thead>
                 <tr>
-                    <th>No</th>
-                    <?php if ($start !== $end) : ?>
-                        <th>Tanggal</th>
-                    <?php endif; ?>
+                    <th style="width: 5%;">No</th>
+                    <th style="width: 12%;">Tanggal</th>
                     <th>Nama</th>
                     <th>Shift</th>
                     <th>Check In</th>
@@ -93,39 +92,64 @@
             </thead>
             <tbody>
                 <?php $i = 1; ?>
-                <?php foreach ($attendance as $date => $attendances) : // Looping berdasarkan tanggal 
-                ?>
-                    <?php foreach ($attendances as $index => $atd) : ?>
+                <?php if (empty($attendance)): ?>
+                    <tr>
+                        <td colspan="7">Tidak ada data untuk ditampilkan.</td>
+                    </tr>
+                <?php else: ?>
+                    <?php
+                    $all_attendances = [];
+                    foreach ($attendance as $date_group) {
+                        $all_attendances = array_merge($all_attendances, $date_group);
+                    }
+                    $currentDate = null;
+                    ?>
+                    <?php foreach ($all_attendances as $atd): ?>
                         <?php
-                        // Menggunakan shift_start dan shift_end dari data presensi
-                        $checkout_status = get_checkout_status($atd, [
-                            'start_time' => $atd['shift_start'],
-                            'end_time' => $atd['shift_end']
-                        ], $atd['attendance_date']);
+                        // jika tanggal saat ini berbeda dengan tanggal sebelumnya
+                        $rowStyle = '';
+                        if ($atd['attendance_date'] !== $currentDate) {
+                            $rowStyle = 'background-color: #f2f2f2;';
+                            $currentDate = $atd['attendance_date'];
+                        }
                         ?>
-                        <tr>
-                            <?php if ($index === 0) : ?>
-                                <td rowspan="<?= count($attendances); ?>"><?= $i++; ?></td>
-                                <?php if ($start !== $end) : ?>
-                                    <td rowspan="<?= count($attendances); ?>"><?= formatTanggalIndonesia($date); ?></td>
-                                <?php endif; ?>
-                            <?php endif; ?>
-                            <td><?= htmlspecialchars($atd['employee_name']); ?></td>
-                            <td>
+                        <tr style="<?= $rowStyle; ?>">
+                            <td><?= $i++; ?></td>
+                            <td><?= formatTanggalID($atd['attendance_date']); ?></td>
+                            <?php
+                            $status = $atd['presence_status'];
+                            switch ($status) {
+                                case '1': // Hadir
+                            ?>
+                                    <td class="text-left"><?= htmlspecialchars($atd['employee_name']); ?></td>
+                                    <td><?= (!empty($atd['shift_id'])) ? htmlspecialchars($atd['shift_id']) . " (" . substr($atd['shift_start'], 0, 5) . "-" . substr($atd['shift_end'], 0, 5) . ")" : 'N/A'; ?></td>
+                                    <td><?= $atd['in_time'] ? substr($atd['in_time'], 0, 5) : '-'; ?></td>
+                                    <td><?= htmlspecialchars($atd['in_status'] ?? '-'); ?></td>
+                                    <td><?= $atd['out_time'] ? substr($atd['out_time'], 0, 5) : '-'; ?></td>
                                 <?php
-                                if (!empty($atd['shift_id']) && !empty($atd['shift_start']) && !empty($atd['shift_end'])) {
-                                    echo htmlspecialchars($atd['shift_id']) . " = " . date('H:i', strtotime($atd['shift_start'])) . " - " . date('H:i', strtotime($atd['shift_end']));
-                                } else {
-                                    echo "Shift Tidak Ditemukan";
-                                }
+                                    break;
+
+                                case '2': // Izin
+                                case '3': // Sakit
+                                case '4': // Cuti
+                                case '5': // Libur
+                                case '0': // Tidak Hadir
                                 ?>
-                            </td>
-                            <td><?= $atd['in_time'] ? date('H:i:s', strtotime($atd['in_time'])) : 'Belum check in'; ?></td>
-                            <td><?= htmlspecialchars($atd['in_status']); ?></td>
-                            <td><?= htmlspecialchars($checkout_status); ?></td>
+                                    <td class="text-left"><?= htmlspecialchars($atd['employee_name']); ?></td>
+                                    <td colspan="4" class="italic"><?= htmlspecialchars($atd['presence_status_text']); ?></td>
+                                <?php
+                                    break;
+
+                                default: // Tidak Ada Data
+                                ?>
+                                    <td colspan="5" class="italic text-muted"><?= htmlspecialchars($atd['presence_status_text']); ?></td>
+                            <?php
+                                    break;
+                            }
+                            ?>
                         </tr>
                     <?php endforeach; ?>
-                <?php endforeach; ?>
+                <?php endif; ?>
             </tbody>
         </table>
     </div>
