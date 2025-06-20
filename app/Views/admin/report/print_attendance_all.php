@@ -70,7 +70,7 @@
         $isSingleDay = ($start === $end);
         ?>
         <div class="header-section">
-            <h3>LAPORAN KEHADIRAN SELURUH <?= strtoupper(htmlspecialchars($dept_name ?? 'Semua Departemen')) ?> RPTRA CIBUBUR BERSERI </h3>
+            <h3>LAPORAN KEHADIRAN SELURUH <?= strtoupper(htmlspecialchars($dept_name)) ?> CIBUBUR BERSERI </h3>
             <?php if ($isSingleDay): ?>
                 <p><strong>Tanggal:</strong> <?= formatTanggalID($start); ?></p>
             <?php else: ?>

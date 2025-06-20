@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Riwayat Presensi - <?= htmlspecialchars($employee['employee_name']) ?></title>
+    <title>Riwayat Kehadiran - <?= htmlspecialchars($employee['employee_name']) ?></title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -78,7 +78,7 @@
     ?>
 
     <div class="header-section">
-        <h3>Daftar Hadir <?= htmlspecialchars($dept_name) ?> RPTRA Cibubur Berseri</h3>
+        <h3>DAFTAR HADIR <?= strtoupper(htmlspecialchars($dept_name)) ?> CIBUBUR BERSERI</h3>
     </div>
 
     <div class="info-section">
