@@ -30,14 +30,42 @@ class EmployeeAttendance extends BaseController
 
         date_default_timezone_set('Asia/Jakarta');
         $currentTime = time();
-
         $employeeId = $data['account']['employee_id'];
         $today = date('Y-m-d');
 
-        // Mengambil jadwal kerja hari ini dari tabel schedule (shift only)
+        // Cek presensi hari ini
+        $attendance = $this->attendanceModel->where('employee_id', $employeeId)
+            ->where('attendance_date', $today)
+            ->first();
+
+        $presence_status = $attendance['presence_status'] ?? null;
+        $leave_statuses = [
+            2 => ['text' => 'Izin',  'icon' => 'fa-user-clock',      'color' => 'text-warning'],
+            3 => ['text' => 'Sakit', 'icon' => 'fa-medkit',          'color' => 'text-warning'],
+            4 => ['text' => 'Cuti',  'icon' => 'fa-calendar-check',  'color' => 'text-dark'],
+            5 => ['text' => 'Libur', 'icon' => 'fa-calendar-day',    'color' => 'text-primary']
+        ];
+
+        if (array_key_exists($presence_status, $leave_statuses)) {
+            $status_info = $leave_statuses[$presence_status];
+            $data['status_text'] = $status_info['text'];
+            $data['status_icon'] = $status_info['icon'];
+            $data['status_color'] = $status_info['color'];
+            $data['status_subtitle'] = 'Hari ini kamu ' . strtolower($status_info['text']) . '.'; // Tambahan untuk konsistensi
+
+            echo view('layout/header', $data);
+            echo view('layout/sidebar');
+            echo view('layout/topbar');
+            echo view('employee/attendance/status_display', $data);
+            echo view('layout/footer');
+            return;
+        }
+
+        $data['all_shifts'] = $this->shiftModel->findAll();
+
         $schedule = $this->workScheduleModel->where('employee_id', $employeeId)
             ->where('schedule_date', $today)
-            ->where('shift_id !=', null) // Hanya jadwal berupa shift
+            ->where('shift_id !=', null)
             ->first();
 
         $isFlexibleShift = false;
@@ -45,33 +73,25 @@ class EmployeeAttendance extends BaseController
         if ($schedule) {
             $data['has_shift'] = true;
             $data['schedule_shift'] = $schedule;
-
-            // Ambil detail shift berdasarkan shift_id dari schedule
             $shiftDetails = $this->shiftModel->find($schedule['shift_id']);
             $data['shift_details'] = $shiftDetails;
 
-            if ($shiftDetails && $shiftDetails['start_time'] == '00:00:00' && $shiftDetails['end_time'] == '23:59:00') {
+            if ($shiftDetails && $shiftDetails['start_time'] == '05:00:00' && $shiftDetails['end_time'] == '23:59:00') {
                 $isFlexibleShift = true;
             }
             $data['is_flexible_shift'] = $isFlexibleShift;
 
-            // Format waktu shift ke 'H:i'
             $data['shift_start_time'] = date('H:i', strtotime($shiftDetails['start_time']));
             $data['shift_end_time'] = date('H:i', strtotime($shiftDetails['end_time']));
 
-            // Menentukan status shift berdasarkan waktu shift
-            $shiftStart = strtotime($shiftDetails['start_time']);
-            $shiftEnd = strtotime($shiftDetails['end_time']);
+            $shiftStart = strtotime($today . ' ' . $shiftDetails['start_time']);
+            $shiftEnd = strtotime($today . ' ' . $shiftDetails['end_time']);
 
             if ($isFlexibleShift) {
-                // Untuk shift fleksibel, status selalu 'presensi masuk' sepanjang hari
                 $data['shift_status'] = 'presensi masuk';
             } else {
-                // Logika original untuk shift normal
-                $shiftStart = strtotime($shiftDetails['start_time']);
-                $shiftEnd = strtotime($shiftDetails['end_time']);
                 if ($shiftEnd < $shiftStart) {
-                    $shiftEnd = strtotime($shiftDetails['end_time'] . ' +1 day');
+                    $shiftEnd = strtotime($today . ' ' . $shiftDetails['end_time'] . ' +1 day');
                 }
 
                 if ($currentTime < $shiftStart) {
@@ -83,135 +103,76 @@ class EmployeeAttendance extends BaseController
                 }
             }
         } else {
-            $data['has_shift'] = false;
-            $data['schedule_shift'] = null;
-            $data['shift_details'] = null;
-            $data['shift_status'] = 'tidak ada jadwal';
-            $data['shift_start_time'] = null;
-            $data['shift_end_time'] = null;
-            $data['is_flexible_shift'] = false; // Kirim flag ke view
-        }
+            $data['status_text']      = 'Jadwal Kerja Tidak Tersedia';
+            $data['status_icon']      = 'fa-calendar-times';
+            $data['status_color']     = 'text-secondary';
+            $data['status_subtitle']  = 'Jadwal kerja anda tidak tersedia, harap hubungi admin.'; // Pesan kustom
 
-        // Cek presensi hari ini
-        $attendance = $this->attendanceModel->where('employee_id', $employeeId)
-            ->where('attendance_date', $today)
-            ->first();
+            echo view('layout/header', $data);
+            echo view('layout/sidebar');
+            echo view('layout/topbar');
+            echo view('employee/attendance/status_display', $data);
+            echo view('layout/footer');
+            return;
+        }
 
         $data['already_checked_in'] = !empty($attendance) && !empty($attendance['in_time']);
         $data['presence_status'] = $attendance['presence_status'] ?? null;
         $data['already_checked_out'] = !empty($attendance['out_time']) && $attendance['out_time'] !== '-';
 
-        // Menentukan status presensi
-        if ($data['already_checked_in']) {
-            if ($data['already_checked_out']) {
-                $data['presence_status_label'] = 'Sudah Keluar';
-                $data['presence_status_class'] = 'btn-secondary';
-                $data['presence_icon'] = 'fa-check-circle';
-                $data['presence_text_class'] = 'text-secondary';
-            } else {
-                switch ($data['presence_status']) {
-                    case 1:
-                        $data['presence_status_label'] = 'Hadir';
-                        $data['presence_status_class'] = 'btn-success';
-                        $data['presence_icon'] = 'fa-check';
-                        $data['presence_text_class'] = 'text-success';
-                        break;
-                    case 0:
-                        $data['presence_status_label'] = 'Tidak Hadir';
-                        $data['presence_status_class'] = 'btn-danger';
-                        $data['presence_icon'] = 'fa-times';
-                        $data['presence_text_class'] = 'text-danger';
-                        break;
-                    case 2:
-                        $data['presence_status_label'] = 'Izin';
-                        $data['presence_status_class'] = 'btn-warning';
-                        $data['presence_icon'] = 'fa-calendar-day';
-                        $data['presence_text_class'] = 'text-warning';
-                        break;
-                    case 3:
-                        $data['presence_status_label'] = 'Sakit';
-                        $data['presence_status_class'] = 'btn-warning';
-                        $data['presence_icon'] = 'fa-medkit';
-                        $data['presence_text_class'] = 'text-warning';
-                        break;
-                    case 4:
-                        $data['presence_status_label'] = 'Cuti';
-                        $data['presence_status_class'] = 'btn-dark';
-                        $data['presence_icon'] = 'fa-calendar-check';
-                        $data['presence_text_class'] = 'text-dark';
-                        break;
-                    case 5:
-                        $data['presence_status_label'] = 'Libur';
-                        $data['presence_status_class'] = 'btn-primary';
-                        $data['presence_icon'] = 'fa-calendar-times';
-                        $data['presence_text_class'] = 'text-primary';
-                        break;
-                    default:
-                        $data['presence_status_label'] = 'Tidak Hadir';
-                        $data['presence_status_class'] = 'btn-danger';
-                        $data['presence_icon'] = 'fa-times';
-                        $data['presence_text_class'] = 'text-danger';
-                        break;
-                }
-            }
-        } else {
-            // Jika belum check-in, tentukan status berdasarkan shift_status
-            if ($data['has_shift']) {
-                switch ($data['shift_status']) {
-                    case 'belum mulai':
-                    case 'presensi masuk':
-                    case 'sudah selesai':
-                        $data['presence_status_label'] = 'Tidak Hadir';
-                        $data['presence_status_class'] = 'btn-danger';
-                        $data['presence_icon'] = 'fa-times';
-                        $data['presence_text_class'] = 'text-danger';
-                        break;
-                    default:
-                        $data['presence_status_label'] = 'Tidak Hadir';
-                        $data['presence_status_class'] = 'btn-danger';
-                        $data['presence_icon'] = 'fa-times';
-                        $data['presence_text_class'] = 'text-danger';
-                        break;
-                }
-            } else {
-                // Jika tidak ada jadwal shift
-                $data['presence_status_label'] = 'Tidak Hadir';
-                $data['presence_status_class'] = 'btn-danger';
-                $data['presence_icon'] = 'fa-times';
-                $data['presence_text_class'] = 'text-danger';
-            }
-        }
-
-        // Menentukan apakah bisa check-in
-        $data['can_check_in'] = false;
-        if ($data['shift_status'] == 'presensi masuk' && !$data['already_checked_in']) {
-            $data['can_check_in'] = true;
-        }
+        $data['can_check_in'] = !$data['already_checked_in'];
 
         $data['can_check_out'] = false;
         if ($data['already_checked_in'] && !$data['already_checked_out']) {
             if ($isFlexibleShift) {
-                // Untuk shift fleksibel, bisa checkout kapan saja setelah check-in
-                $data['can_check_out'] = true;
-            } elseif ($data['shift_status'] == 'sudah selesai') {
-                // Untuk shift normal, harus menunggu jam kerja selesai
+                // Untuk shift fleksibel, tombol keluar aktif setelah 8 jam kerja.
+                $checkInTimestamp = strtotime($attendance['in_time']);
+                $eightHoursInSeconds = 8 * 60 * 60;
+
+                // Tombol keluar aktif jika waktu saat ini sudah melewati waktu masuk + 8 jam
+                if ($currentTime >= ($checkInTimestamp + $eightHoursInSeconds)) {
+                    $data['can_check_out'] = true;
+                }
+            } elseif (isset($data['shift_status']) && $data['shift_status'] == 'sudah selesai') {
                 $data['can_check_out'] = true;
             }
         }
 
-        // Handle AJAX Check-In dan Check-Out
+        $data['attendance_message'] = null;
+
+        if ($data['already_checked_out']) {
+            $checkOutTimeFormatted = date('H:i', strtotime($attendance['out_time']));
+            $data['attendance_message'] = [
+                'text' => "Anda telah berhasil presensi keluar pada pukul {$checkOutTimeFormatted}.",
+                'icon' => 'fa-check-circle',
+                'color' => 'text-success'
+            ];
+        } else if ($data['already_checked_in'] && !$data['can_check_out']) {
+            $checkInTimeFormatted = date('H:i', strtotime($attendance['in_time']));
+            $messageText = '';
+
+            if ($isFlexibleShift) {
+                $checkInTimestamp = strtotime($attendance['in_time']);
+                $checkOutAvailableTimestamp = $checkInTimestamp + (8 * 60 * 60);
+                $checkOutAvailableTimeFormatted = date('H:i', $checkOutAvailableTimestamp);
+                $messageText = "Berhasil presensi masuk pada pukul {$checkInTimeFormatted}, presensi keluar bisa dilakukan pukul {$checkOutAvailableTimeFormatted}. Selamat bekerja.";
+            } else {
+                $messageText = "Berhasil presensi masuk pada pukul {$checkInTimeFormatted}. Selamat bekerja.";
+            }
+
+            $data['attendance_message'] = [
+                'text' => $messageText,
+                'icon' => 'fa-info-circle',
+                'color' => 'text-info'
+            ];
+        }
+
         if ($this->request->isAJAX()) {
             if ($this->request->getPost('check_in')) {
                 return $this->handleCheckIn($data);
             } elseif ($this->request->getPost('check_out')) {
                 return $this->handleCheckOut($data);
             }
-        }
-
-        // Mengirimkan status shift ke frontend untuk pengaturan tombol
-        if ($data['has_shift']) {
-        } else {
-            $data['shift_end_time'] = null;
         }
 
         echo view('layout/header', $data);
@@ -223,50 +184,66 @@ class EmployeeAttendance extends BaseController
 
     private function handleCheckIn($data)
     {
-        if (!$data['can_check_in']) {
-            log_message('error', 'Check-in gagal: Tidak dapat melakukan presensi saat ini.');
-            return $this->response->setJSON(['status' => 'error', 'message' => 'Tidak dapat melakukan presensi saat ini.']);
+        if ($data['already_checked_in']) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Anda sudah melakukan presensi masuk hari ini.']);
         }
 
-        // Ambil data menggunakan getPost()
         $latitude = $this->request->getPost('latitude');
         $longitude = $this->request->getPost('longitude');
         $shift_id = $this->request->getPost('work_shift');
 
-        log_message('info', "Check-in data: latitude={$latitude}, longitude={$longitude}, shift_id={$shift_id}");
-
         $rules = [
-            'latitude' => 'required|decimal',
-            'longitude' => 'required|decimal',
-            'work_shift' => 'required|integer'
+            'latitude'    => 'required|decimal',
+            'longitude'   => 'required|decimal',
+            'work_shift'  => 'required|integer'
         ];
 
-        $input = [
-            'latitude' => $latitude,
-            'longitude' => $longitude,
-            'work_shift' => $shift_id
-        ];
-
-        if (!$this->validate($rules, $input)) {
+        if (!$this->validate($rules)) {
             log_message('error', 'Check-in gagal: Data lokasi atau shift tidak valid.');
             return $this->response->setJSON(['status' => 'error', 'message' => 'Data lokasi atau shift tidak valid.']);
         }
 
-        // Validasi shift_id dari schedule_shift
-        if (!$data['has_shift'] || $data['schedule_shift']['shift_id'] != $shift_id) {
-            log_message('error', "Check-in gagal: Shift ID tidak valid atau tidak sesuai dengan jadwal.");
-            return $this->response->setJSON(['status' => 'error', 'message' => 'Shift tidak valid atau tidak sesuai dengan jadwal.']);
-        }
-
-        // Validasi shift_id
         $shiftData = $this->shiftModel->find($shift_id);
         if (!$shiftData) {
             log_message('error', "Check-in gagal: Shift dengan ID {$shift_id} tidak ditemukan.");
-            return $this->response->setJSON(['status' => 'error', 'message' => 'Shift tidak ditemukan.']);
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Shift yang dipilih tidak ditemukan.']);
+        }
+
+        $employeeId = $data['account']['employee_id'];
+        $today = date('Y-m-d');
+        $departmentId = $this->attendanceModel->getEmployeeDepartment($employeeId);
+        if (is_null($departmentId)) {
+            log_message('error', "Check-in gagal: Department ID tidak ditemukan untuk employee ID {$employeeId}.");
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal menemukan data departemen Anda!']);
+        }
+
+        $schedule = $this->workScheduleModel
+            ->where('employee_id', $employeeId)
+            ->where('schedule_date', $today)
+            ->first();
+
+        $schedule_id = null;
+        if ($schedule) {
+            // Jika jadwal sudah ada, update shift_id nya
+            $this->workScheduleModel->update($schedule['schedule_id'], ['shift_id' => $shift_id]);
+            $schedule_id = $schedule['schedule_id'];
+        } else {
+            // Jika jadwal tidak ada, buat baru
+            $newScheduleData = [
+                'employee_id'   => $employeeId,
+                'schedule_date' => $today,
+                'shift_id'      => $shift_id,
+                'department_id' => $departmentId,
+            ];
+            $schedule_id = $this->workScheduleModel->insert($newScheduleData);
+        }
+
+        if (!$schedule_id) {
+            log_message('error', "Check-in gagal: Gagal memperbarui atau membuat jadwal untuk Employee ID {$employeeId}.");
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal memproses jadwal kerja.']);
         }
 
         $username = session()->get('username');
-        $employeeId = $data['account']['employee_id'];
         $departmentId = $this->attendanceModel->getEmployeeDepartment($employeeId);
 
         if (is_null($departmentId)) {
@@ -275,27 +252,24 @@ class EmployeeAttendance extends BaseController
         }
 
         $in_time = date('H:i:s');
-        $today = date('Y-m-d');
+        $isFlexibleShift = ($shiftData['start_time'] == '05:00:00' && $shiftData['end_time'] == '23:59:00');
 
-        if ($data['is_flexible_shift']) {
-            // Jika shift fleksibel, maka set status presensi menjadi "Tugas Luar" dan tidak ada keterlambatan
+        if ($isFlexibleShift) {
             $inStatus = 'Tugas Luar';
         } else {
-            // shift lainnya
             $allowedTime = date('H:i:s', strtotime($shiftData['start_time'] . '+15 minutes +59 seconds'));
             $inStatus = (strtotime($in_time) <= strtotime($allowedTime)) ? 'Tepat Waktu' : 'Terlambat';
         }
-        $presence_status = 1; // Hadir
 
         $attendanceData = [
-            'employee_id' => $employeeId,
-            'username' => $username,
-            'attendance_date' => $today,
-            'department_id' => $departmentId,
-            'schedule_id' => $data['schedule_shift']['schedule_id'],
-            'in_time' => $in_time,
-            'in_status' => $inStatus,
-            'presence_status' => $presence_status,
+            'employee_id'       => $employeeId,
+            'username'          => $username,
+            'attendance_date'   => $today,
+            'department_id'     => $departmentId,
+            'schedule_id'       => $schedule_id,
+            'in_time'           => $in_time,
+            'in_status'         => $inStatus,
+            'presence_status'   => 1, // Hadir
             'check_in_latitude' => $latitude,
             'check_in_longitude' => $longitude,
         ];
@@ -318,13 +292,11 @@ class EmployeeAttendance extends BaseController
             return $this->response->setJSON(['status' => 'error', 'message' => 'Tidak dapat melakukan presensi keluar saat ini.']);
         }
 
-        // Cek apakah sudah melakukan check-in
         if (!$data['already_checked_in']) {
             log_message('error', 'Clock-out gagal: Belum melakukan presensi masuk.');
             return $this->response->setJSON(['status' => 'error', 'message' => 'Belum melakukan presensi masuk.']);
         }
 
-        // Ambil data menggunakan getPost()
         $latitude = $this->request->getPost('latitude');
         $longitude = $this->request->getPost('longitude');
 
@@ -333,12 +305,7 @@ class EmployeeAttendance extends BaseController
             'longitude' => 'required|decimal',
         ];
 
-        $input = [
-            'latitude' => $latitude,
-            'longitude' => $longitude,
-        ];
-
-        if (!$this->validate($rules, $input)) {
+        if (!$this->validate($rules)) {
             log_message('error', 'Clock-out gagal: Data lokasi tidak valid.');
             return $this->response->setJSON(['status' => 'error', 'message' => 'Data lokasi tidak valid.']);
         }
@@ -364,6 +331,7 @@ class EmployeeAttendance extends BaseController
         }
     }
 
+
     public function attendanceHistory()
     {
         $data['title'] = 'Riwayat Presensi';
@@ -379,23 +347,65 @@ class EmployeeAttendance extends BaseController
         $month = $this->request->getGet('month') ?? date('m');
         $year = $this->request->getGet('year') ?? date('Y');
 
-        // Simpan ke data untuk digunakan di view
         $data['month'] = $month;
         $data['year'] = $year;
 
-        // Ambil data kehadiran berdasarkan employee_id, bulan, dan tahun melalui model
+        // Ambil data kehadiran
         $attendance = $this->attendanceModel->getAttendanceByEmployeeAndDate($employee_id, $month, $year);
 
         $attendanceData = [];
         foreach ($attendance as $att) {
             if (is_array($att) && isset($att['date']) && isset($att['presence_status'])) {
-                // Simpan status presensi berdasarkan tanggal
                 $attendanceData[$att['date']] = $att['presence_status'];
             }
         }
         $data['attendance'] = $attendanceData;
 
-        // Load views
+        $summary = [
+            'hadir' => 0,
+            'izin_sakit' => 0,
+            'alpha' => 0,
+            'libur_cuti' => 0,
+        ];
+
+        $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $month, $year);
+        $today = date('Y-m-d');
+
+        for ($day = 1; $day <= $daysInMonth; $day++) {
+            $date = date('Y-m-d', strtotime("$year-$month-$day"));
+
+            // Hanya hitung tanggal yang sudah lewat
+            if ($date > $today) {
+                continue;
+            }
+
+            if (isset($attendanceData[$date])) {
+                switch ($attendanceData[$date]) {
+                    case 1:
+                        $summary['hadir']++;
+                        break;
+                    case 2:
+                        $summary['izin_sakit']++;
+                        break; // Izin
+                    case 3:
+                        $summary['izin_sakit']++;
+                        break; // Sakit
+                    case 4:
+                        $summary['libur_cuti']++;
+                        break; // Cuti
+                    case 5:
+                        $summary['libur_cuti']++;
+                        break; // Libur
+                }
+            } else {
+                $dayName = date('N', strtotime($date));
+                if ($dayName < 6) {
+                    $summary['alpha']++;
+                }
+            }
+        }
+        $data['summary'] = $summary;
+
         echo view('layout/header', $data);
         echo view('layout/sidebar');
         echo view('layout/topbar');
@@ -414,15 +424,12 @@ class EmployeeAttendance extends BaseController
             return $this->response->setStatusCode(ResponseInterface::HTTP_BAD_REQUEST, 'Employee ID is required but not found.')->sendBody();
         }
 
-        // Ambil bulan dan tahun dari request, default ke bulan dan tahun sekarang
         $month = (int) ($this->request->getGet('month') ?? date('m'));
         $year = (int) ($this->request->getGet('year') ?? date('Y'));
 
-        // Simpan ke data untuk digunakan di view
         $data['month'] = $month;
         $data['year'] = $year;
 
-        // Ambil data jadwal kerja berdasarkan employee_id, bulan, dan tahun melalui model
         $schedule = $this->workScheduleModel->getWorkSchedulesByEmployeeAndMonthDate($employee_id, $month, $year);
 
         $scheduleData = [];
@@ -437,7 +444,7 @@ class EmployeeAttendance extends BaseController
                 if ($scheduleStatus == 4) {
                     // Cuti
                     $statusKerja = 'Cuti';
-                    $shiftClass = 'dark'; // Kelas badge untuk Cuti
+                    $shiftClass = 'dark';
                 } elseif ($scheduleStatus == 5) {
                     // Libur
                     $statusKerja = 'Libur';
@@ -448,15 +455,12 @@ class EmployeeAttendance extends BaseController
                     $formattedEndTime = date('H:i', strtotime($endTime));
                     $statusKerja = "{$formattedStartTime} - {$formattedEndTime}";
 
-                    // Semua shift menggunakan kelas badge 'success'
                     $shiftClass = 'success';
                 } else {
-                    // Tidak ada jadwal
                     $statusKerja = 'Tidak Ada Jadwal';
                     $shiftClass = 'secondary';
                 }
 
-                // Simpan data ke array
                 $scheduleData[$date] = [
                     'status_kerja' => esc($statusKerja),
                     'shift_class' => esc($shiftClass)
@@ -465,7 +469,6 @@ class EmployeeAttendance extends BaseController
         }
         $data['schedule'] = $scheduleData;
 
-        // Load views
         echo view('layout/header', $data);
         echo view('layout/sidebar');
         echo view('layout/topbar');

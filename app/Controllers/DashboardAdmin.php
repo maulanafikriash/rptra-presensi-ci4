@@ -4,7 +4,6 @@ namespace App\Controllers;
 
 use App\Models\AdminModel;
 use App\Models\AuthModel;
-use CodeIgniter\Controller;
 
 class DashboardAdmin extends BaseController
 {
@@ -19,16 +18,13 @@ class DashboardAdmin extends BaseController
 
     public function index()
     {
-        // jumlah pegawai berdasarkan departemen
-        $data['d_list'] = $this->adminModel->getEmployeeCountByDepartment();
-        // Daftar shift
-        $data['s_list'] = $this->adminModel->getAllShifts();
-        // Dashboard data
-        $data['title'] = 'Dashboard Admin';
+        $rptraName = session()->get('rptra_name');
+        $data['title']   = 'Dashboard Admin';
         $data['account'] = $this->authModel->getAccount(session()->get('username'));
-        $data['display'] = $this->adminModel->getDataForDashboard();
+        $data['s_list'] = $this->adminModel->getAllShifts();
+        $data['display'] = $this->adminModel->getDataForDashboard($rptraName);
+        $data['d_list']  = $this->adminModel->getEmployeeCountByDepartment($rptraName);
 
-        // Load views
         echo view('layout/dashboard_header', $data);
         echo view('layout/sidebar');
         echo view('layout/topbar');

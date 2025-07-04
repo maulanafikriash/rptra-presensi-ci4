@@ -21,9 +21,9 @@ class EmployeeProfile extends BaseController
         $data = [
             'title' => 'Profil Saya',
             'account' => $this->authModel->getAccount(session()->get('username')),
+            'validation' => \Config\Services::validation()
         ];
 
-        // Load views
         echo view('layout/header', $data);
         echo view('layout/sidebar');
         echo view('layout/topbar');
@@ -33,52 +33,47 @@ class EmployeeProfile extends BaseController
 
     public function uploadImage()
     {
-        $data = [
-            'validation' => \Config\Services::validation()
+        $rules = [
+            'image' => [
+                'rules' => 'uploaded[image]|max_size[image,3072]|is_image[image]|mime_in[image,image/jpg,image/jpeg,image/png]',
+                'errors' => [
+                    'uploaded' => 'Tidak ada foto yang dipilih. Silakan pilih foto untuk diunggah.',
+                    'max_size' => 'Ukuran file gambar maksimal 3MB.',
+                    'is_image' => 'File yang Anda pilih bukan gambar.',
+                    'mime_in'  => 'Format file harus JPG, JPEG, atau PNG.',
+                ],
+            ]
         ];
 
-        if ($this->request->getMethod() === 'POST') {
-            $file = $this->request->getFile('image');
-
-            if (!$file->isValid() || $file->getError() == 4) {  // Error 4 berarti tidak ada file yang dipilih
-                session()->setFlashdata('message', 'Tidak ada foto yang dipilih. Silakan pilih foto untuk diunggah.');
-                return redirect()->to('/employee/profile')->withInput();
-            }
-
-            $rules = [
-                'image' => [
-                    'rules' => 'uploaded[image]|is_image[image]|max_size[image,3072]|mime_in[image,image/jpg,image/jpeg,image/png]',
-                    'errors' => [
-                        'max_size' => 'Ukuran file gambar maksimal 3MB.',
-                        'is_image' => 'File harus berupa gambar.',
-                        'mime_in' => 'Format file harus JPG, JPEG, atau PNG.',
-                    ],
-                ]
-            ];
-
-            if (!$this->validate($rules)) {
-                $data['validation'] = $this->validator;
-                session()->setFlashdata('error', 'Format file tidak didukung atau ukuran file lebih dari 3MB!');
-                return redirect()->to('/employee/profile');
-            } else {
-                // Jika file valid, ambil file dan data pegawai
-                $file = $this->request->getFile('image');
-                $employee = $this->employeeModel->getAllEmployeeData(session()->get('username'));
-                $imageName = $employee['image'];
-
-                if ($file->isValid() && !$file->hasMoved()) {
-                    // Nama file gambar baru yang diupload
-                    $imageName = 'item-' . date('ymd') . '-' . substr(md5(rand()), 0, 10) . '.' . $file->getExtension();
-
-                    $file->move('./img/pp/', $imageName);
-
-                    $employeeId = $employee['id'];
-                    $this->employeeModel->update($employeeId, ['image' => $imageName]);
-
-                    session()->setFlashdata('success', 'Foto profil berhasil diperbarui.');
-                    return redirect()->to('/employee/profile');
-                }
-            }
+        if (!$this->validate($rules)) {
+            session()->setFlashdata('error', $this->validator->listErrors());
+            return redirect()->to('/employee/profile');
         }
+
+        $imageFile = $this->request->getFile('image');
+        $employee = $this->employeeModel->getAllEmployeeData(session()->get('username'));
+        $oldImageName = $employee['image'];
+
+        // Cek apakah file valid dan belum dipindahkan
+        if ($imageFile->isValid() && !$imageFile->hasMoved()) {
+            // Buat nama file random baru
+            $newImageName = $imageFile->getRandomName();
+
+            $imageFile->move('img/pp/', $newImageName);
+
+            // Hapus file gambar lama jika bukan file default
+            if ($oldImageName != 'default.jpg' && file_exists('img/pp/' . $oldImageName)) {
+                unlink('img/pp/' . $oldImageName);
+            }
+
+            $employeeId = $employee['id'];
+            $this->employeeModel->update($employeeId, ['image' => $newImageName]);
+
+            session()->setFlashdata('success', 'Foto profil berhasil diperbarui.');
+            return redirect()->to('/employee/profile');
+        }
+
+        session()->setFlashdata('message', 'Gagal mengunggah foto. Silakan coba lagi.');
+        return redirect()->to('/employee/profile');
     }
 }

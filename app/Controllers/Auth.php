@@ -19,7 +19,6 @@ class Auth extends BaseController
 
     public function index()
     {
-        // Cek apakah user sudah login
         if (session()->get('logged_in')) {
             // Arahkan sesuai dengan role user
             $userRoleId = session()->get('user_role_id');
@@ -75,14 +74,14 @@ class Auth extends BaseController
 
             // Jika user ditemukan
             if ($user) {
-                // Verifikasi password
                 if (password_verify($password, $user->password)) {
-                    // Set session
                     session()->set([
-                        'username'     => $user->username,
-                        'user_role_id' => $user->user_role_id,
-                        'role'         => $user->user_role_name,
-                        'logged_in'    => true,
+                        'username'      => $user->username,
+                        'user_role_id'  => $user->user_role_id,
+                        'role'          => $user->user_role_name,
+                        'rptra_name'    => $user->rptra_name,
+                        'rptra_address' => $user->rptra_address,
+                        'logged_in'     => true,
                     ]);
 
                     // Redirect sesuai role user

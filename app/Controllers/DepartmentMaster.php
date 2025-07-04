@@ -4,7 +4,6 @@ namespace App\Controllers;
 
 use App\Models\DepartmentModel;
 use App\Models\AuthModel;
-use CodeIgniter\Controller;
 
 class DepartmentMaster extends BaseController
 {
@@ -59,11 +58,11 @@ class DepartmentMaster extends BaseController
             ];
 
             if (!$this->validate($rules)) {
-                $data['validation'] = $this->validator; // Kirimkan validasi ke view
+                $data['validation'] = $this->validator;
             } else {
                 // Ambil data dari form
                 $d_id = strtoupper($this->request->getPost('d_id'));
-                $d_name = ucwords(strtolower($this->request->getPost('d_name')));
+                $d_name = $this->request->getPost('d_name');
 
                 $insertData = [
                     'department_id' => $d_id,
@@ -105,7 +104,7 @@ class DepartmentMaster extends BaseController
             $rules = ['d_name' => 'required'];
 
             if ($this->validate($rules)) {
-                $name = ucwords(strtolower($this->request->getPost('d_name')));
+                $name = $this->request->getPost('d_name');
                 $this->departmentModel->update($d_id, ['department_name' => $name]);
                 session()->setFlashdata('message', '<div class="alert alert-success" role="alert">Berhasil mengedit department!</div>');
                 return redirect()->to('admin/master/department');

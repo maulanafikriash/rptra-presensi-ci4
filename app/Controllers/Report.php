@@ -43,15 +43,26 @@ class Report extends BaseController
         $start = $this->request->getGet('start');
         $end = $this->request->getGet('end');
         $dept = $this->request->getGet('dept');
+        $rptraName = session()->get('rptra_name');
+
+        // filter sesuai RPTRA
+        if ($start && $end) {
+            $raw = $this->attendanceDetails($start, $end, $dept);
+            $attendance = array_filter($raw, function ($row) use ($rptraName) {
+                return isset($row['rptra_name']) && $row['rptra_name'] === $rptraName;
+            });
+        } else {
+            $attendance = [];
+        }
 
         $data = [
-            'title' => 'Laporan Kehadiran',
-            'account' => $this->authModel->getAccount(session()->get('username')),
+            'title'      => 'Laporan Kehadiran',
+            'account'    => $this->authModel->getAccount(session()->get('username')),
             'department' => $this->employeeModel->getDepartments(),
-            'start' => $start,
-            'end' => $end,
-            'dept' => $dept,
-            'attendance' => ($start && $end) ? $this->attendanceDetails($start, $end, $dept) : [],
+            'start'      => $start,
+            'end'        => $end,
+            'dept'       => $dept,
+            'attendance' => $attendance,
         ];
 
         echo view('layout/header', $data);
@@ -80,6 +91,7 @@ class Report extends BaseController
 
     public function printPdfAttendanceByDepartment($start, $end, $dept)
     {
+        $rptraName = session()->get('rptra_name') ?: 'tidak ditemukan';
         // Panggil fungsi baru untuk mendapatkan data lengkap
         $attendance = $this->attendanceModel->getAttendanceReportData($start, $end, $dept);
         $department = $this->departmentModel->getDepartmentById($dept);
@@ -87,6 +99,7 @@ class Report extends BaseController
             'start' => $start,
             'end' => $end,
             'dept' => $dept,
+            'rptra_name' => $rptraName,
             'dept_name' => $department['department_name'] ?? 'Semua Department',
             'attendance' => $this->groupAttendanceByDate($attendance),
         ];
@@ -103,7 +116,7 @@ class Report extends BaseController
             'default_font_size' => 10,
             'default_font' => 'Arial'
         ]);
-        $mpdf->SetHeader('RPTRA Cibubur Berseri');
+        $mpdf->SetHeader('RPTRA ' . $rptraName);
         $mpdf->SetFooter('Dicetak pada: {DATE j-m-Y H:i:s}');
         $mpdf->WriteHTML($html);
         $mpdf->Output('Laporan_Kehadiran_Seluruh_Pengelola.pdf', 'I');
@@ -111,6 +124,7 @@ class Report extends BaseController
 
     public function printExcelAttendanceByDepartment($start, $end, $dept)
     {
+        $rptraName = session()->get('rptra_name') ?: 'tidak ditemukan';
         $attendanceData = $this->attendanceModel->getAttendanceReportData($start, $end, $dept);
         $department = $this->departmentModel->getDepartmentById($dept);
         $startDate = new \DateTime($start);
@@ -121,7 +135,7 @@ class Report extends BaseController
 
         // Header Laporan
         $sheet->mergeCells('A1:G1');
-        $sheet->setCellValue('A1', 'LAPORAN KEHADIRAN SELURUH ' . strtoupper(($department['department_name'] ?? 'Semua Departemen')) . ' RPTRA CIBUBUR BERSERI');
+        $sheet->setCellValue('A1', 'LAPORAN KEHADIRAN SELURUH ' . strtoupper(($department['department_name'])) . ' ' . strtoupper($rptraName));
         $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
         $sheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
@@ -272,6 +286,7 @@ class Report extends BaseController
             throw new \CodeIgniter\Exceptions\PageNotFoundException('Employee not found');
         }
 
+        $rptraName = session()->get('rptra_name') ?: 'tidak ditemukan';
         $month = (int) ($this->request->getGet('month') ?: date('m'));
         $year = (int) ($this->request->getGet('year') ?: date('Y'));
 
@@ -301,7 +316,7 @@ class Report extends BaseController
             'default_font_size' => 10,
             'default_font' => 'Arial'
         ]);
-        $pdf->SetHeader('RPTRA Cibubur Berseri');
+        $pdf->SetHeader('RPTRA ' . $rptraName);
         $pdf->SetFooter('Dicetak pada: {DATE j-m-Y H:i:s}');
         $pdf->WriteHTML($html);
 
@@ -317,6 +332,7 @@ class Report extends BaseController
         if (!$employee) {
             throw new \CodeIgniter\Exceptions\PageNotFoundException('Employee not found');
         }
+        $rptraName = session()->get('rptra_name') ?: 'tidak ditemukan';
 
         $month = (int) ($this->request->getGet('month') ?: date('m'));
         $year = (int) ($this->request->getGet('year') ?: date('Y'));
@@ -346,7 +362,7 @@ class Report extends BaseController
 
         // --- Header Laporan ---
         $sheet->mergeCells('A1:F1');
-        $sheet->setCellValue('A1', 'Daftar Hadir ' . $dept_name . ' RPTRA Cibubur Berseri');
+        $sheet->setCellValue('A1', 'Daftar Hadir ' . $dept_name . $rptraName);
         $sheet->mergeCells('A2:F2');
         $sheet->setCellValue('A2', 'Nama: ' . $employee['employee_name']);
         $sheet->mergeCells('A3:F3');
@@ -456,7 +472,7 @@ class Report extends BaseController
 
     public function printWorkSchedulePdf($employeeId)
     {
-        // Mengambil parameter bulan dan tahun dari query string
+        $rptraName = session()->get('rptra_name') ?: 'tidak ditemukan';
         $month = (int) ($this->request->getGet('month') ?: date('m'));
         $year = (int) ($this->request->getGet('year') ?: date('Y'));
 
@@ -511,7 +527,7 @@ class Report extends BaseController
                 'margin_footer' => 9,
             ]);
 
-            $mpdf->SetHeader('RPTRA Cibubur Berseri');
+            $mpdf->SetHeader('RPTRA ' . $rptraName);
             $mpdf->SetFooter('Dicetak pada: {DATE j-m-Y H:i:s}');
             $mpdf->WriteHTML($html);
             $filename = "Jadwal_Kerja_{$employee['employee_name']}_{$month}_{$year}.pdf";
@@ -528,13 +544,12 @@ class Report extends BaseController
         $month = (int) ($this->request->getGet('month') ?: date('m'));
         $year = (int) ($this->request->getGet('year') ?: date('Y'));
 
-        // Mengambil data pegawai
         $employee = $this->employeeModel->find($employeeId);
         if (!$employee) {
             throw new \CodeIgniter\Exceptions\PageNotFoundException("Pegawai tidak ditemukan");
         }
+        $rptraName = session()->get('rptra_name') ?: 'tidak ditemukan';
 
-        // Mengambil data departemen
         $department = $this->departmentModel->find($employee['department_id']);
         if (!$department) {
             $department = [
@@ -543,7 +558,6 @@ class Report extends BaseController
             ];
         }
 
-        // Mengambil jadwal kerja
         $workSchedules = $this->workScheduleModel->getWorkSchedulesByEmployeeAndMonth(
             $employeeId,
             $month,
@@ -560,13 +574,12 @@ class Report extends BaseController
         ];
         $indonesianDays = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
 
-        // Membuat spreadsheet baru
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
 
         // Mengatur judul
         $sheet->mergeCells('A1:C1');
-        $sheet->setCellValue('A1', "Jadwal Kerja {$department['department_name']}");
+        $sheet->setCellValue('A1', strtoupper("Jadwal Kerja {$department['department_name']} - {$rptraName}"));
         $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(16);
         $sheet->getStyle('A1')->getAlignment()->setHorizontal('center');
 
@@ -656,7 +669,7 @@ class Report extends BaseController
         if (!$employee) {
             throw new \CodeIgniter\Exceptions\PageNotFoundException("Pegawai tidak ditemukan");
         }
-
+        $rptraName = session()->get('rptra_name') ?: 'tidak ditemukan';
         $department = $this->departmentModel->find($employee['department_id']);
         $departmentName = $department['department_name'] ?? 'Tidak Diketahui';
 
@@ -679,7 +692,7 @@ class Report extends BaseController
             'orientation' => 'P',
         ]);
 
-        $mpdf->SetHeader('RPTRA Cibubur Berseri');
+        $mpdf->SetHeader('RPTRA ' . $rptraName);
         $mpdf->SetFooter('Dicetak pada: {DATE j-m-Y H:i:s}');
 
         $mpdf->SetTitle('Biodata ' . $departmentName);
