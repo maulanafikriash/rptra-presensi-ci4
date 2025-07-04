@@ -6,21 +6,18 @@
             <i class="fas fa-user-check"></i>
         </div>
         <div class="sidebar-brand-text">
-            RPTRA <br> <span style="font-size: 0.8em;">Cibubur Berseri</span>
+            RPTRA <br> <span style="font-size: 0.8em;"><?= esc(session()->get('rptra_name') ?? '—'); ?></span>
         </div>
     </a>
 
-    <!-- Divider -->
     <hr class="sidebar-divider my-0">
 
     <?php
-    // Get user role from session
     $session = \Config\Services::session();
     $role_id = $session->get('user_role_id');
 
-    // Define menus for each role with non-hierarchical structure
     $menus = [
-        1 => [ // Admin menus
+        1 => [ // Admin menu
             [
                 'title' => 'Dashboard',
                 'url' => 'admin/dashboard',
@@ -58,7 +55,7 @@
                 'section' => 'Laporan'
             ],
         ],
-        2 => [ // Employee menus
+        2 => [ // Employee menu
             [
                 'title' => 'Form Presensi',
                 'url' => 'employee/attendance',
@@ -92,8 +89,8 @@
         ],
     ];
 
-    // Function to render menu sections and items
-    function renderMenu($menus, $currentPath) {
+    function renderMenu($menus, $currentPath)
+    {
         $currentSection = '';
         foreach ($menus as $menu) {
             // Check if section has changed
@@ -133,7 +130,6 @@
 </ul>
 
 <?php if ($role_id == 2): ?>
-    <!-- Bottom Menu for Employee -->
     <div class="bottom-menu bg-light d-flex justify-content-around py-2" style="display: none;">
         <a href="<?= base_url('employee/attendance'); ?>" class="text-center <?= (current_url() == base_url('employee/attendance')) ? 'active' : ''; ?>">
             <i class="fas fa-calendar-check"></i><br>
@@ -159,68 +155,62 @@
 <?php endif; ?>
 
 <style>
-    /* Bottom menu for Employee on small screens */
-    <?php if ($role_id == 2): ?>
-        @media (max-width: 500px) {
-            .bottom-menu {
-                display: flex !important;
-                position: fixed;
-                bottom: 0;
-                width: 100%;
-                z-index: 1000;
-                border-top: 1px solid #ddd;
-            }
-
-            .bottom-menu a {
-                color: #63625d;
-                text-decoration: none;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                font-size: 14px;
-                transition: color 0.3s ease;
-            }
-
-            .bottom-menu a i {
-                font-size: 20px;
-            }
-
-            .bottom-menu a small {
-                margin-top: -15px !important;
-            }
-
-            .bottom-menu a.active {
-                color: #0d6efd;
-                /* Warna biru Bootstrap */
-                font-weight: bolder;
-            }
-
-            .sidebar {
-                display: none;
-            }
+    /* Bottom menu small screens */
+    <?php if ($role_id == 2): ?>@media (max-width: 500px) {
+        .bottom-menu {
+            display: flex !important;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            z-index: 1000;
+            border-top: 1px solid #ddd;
         }
 
-        /* Show sidebar on larger screens */
-        @media (min-width: 501px) {
-            .sidebar {
-                display: block !important;
-            }
-
-            .bottom-menu {
-                display: none !important;
-            }
+        .bottom-menu a {
+            color: #63625d;
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 14px;
+            transition: color 0.3s ease;
         }
+
+        .bottom-menu a i {
+            font-size: 20px;
+        }
+
+        .bottom-menu a small {
+            margin-top: -15px !important;
+        }
+
+        .bottom-menu a.active {
+            color: #0d6efd;
+            font-weight: bolder;
+        }
+
+        .sidebar {
+            display: none;
+        }
+    }
+
+    @media (min-width: 501px) {
+        .sidebar {
+            display: block !important;
+        }
+
+        .bottom-menu {
+            display: none !important;
+        }
+    }
+
     <?php endif; ?>
-
-    /* Sidebar active link styles */
+    /* Side bar style */
     @media (min-width: 501px) {
         .sidebar .nav-link.active {
             color: #ffffff;
-            /* Warna teks putih */
             background-color: rgba(0, 123, 255, 0.2);
-            /* Optional: Tambahkan latar belakang biru terang */
             font-weight: bold;
-            /* Teks tebal */
         }
 
         /* Mengubah ikon aktif menjadi putih */
@@ -239,21 +229,19 @@
         color: #ffffff;
     }
 
-    /* Adjustments for better spacing */
     .nav-item {
-        margin-bottom: 0px; /* Kurangi jarak antar menu */
+        margin-bottom: 0px;
+        /* Kurangi jarak antar menu */
     }
 
     .nav-link {
         padding: 0px;
     }
 
-    /* Optional: Adjust icon size */
     .nav-link i {
         margin-right: 0px;
     }
 
-    /* Optional: Adjust font size */
     .nav-link span {
         font-size: 0.9rem;
         padding-left: 5px;
