@@ -13,17 +13,36 @@ class AdminModel extends Model
         $this->db = \Config\Database::connect();
     }
 
-    public function getDataForDashboard()
+    public function getDataForDashboard($rptraName)
     {
-        // Ambil data employee, department, dan user
+        // Hitung shift (global)
+        $c_shift     = $this->db->table('shift')->countAllResults();
+
+        // Ambil pegawai hanya untuk rptra yang sama
+        $employeeBuilder = $this->db->table('employee')
+            ->where('rptra_name', $rptraName);
+        $employees      = $employeeBuilder->get()->getResultArray();
+        $c_employee     = count($employees);
+
+        $department      = $this->db->table('department')->get()->getResultArray();
+        $c_department    = count($department);
+
+        // User account untuk pegawai di rptra yang sama
+        $userBuilder = $this->db->table('user_account ua')
+            ->select('ua.username, ua.employee_id, e.rptra_name')
+            ->join('employee e', 'ua.employee_id = e.employee_id')
+            ->where('e.rptra_name', $rptraName);
+        $users       = $userBuilder->get()->getResultArray();
+        $c_users     = count($users);
+
         return [
-            'c_shift' => $this->db->table('shift')->countAllResults(),
-            'employee' => $this->db->table('employee')->get()->getResultArray(),
-            'c_employee' => $this->db->table('employee')->countAllResults(),
-            'department' => $this->db->table('department')->get()->getResultArray(),
-            'c_department' => $this->db->table('department')->countAllResults(),
-            'users' => $this->db->table('user_account')->get()->getResultArray(),
-            'c_users' => $this->db->table('user_account')->countAllResults(),
+            'c_shift'     => $c_shift,
+            'employee'    => $employees,
+            'c_employee'  => $c_employee,
+            'department'  => $department,
+            'c_department' => $c_department,
+            'users'       => $users,
+            'c_users'     => $c_users,
         ];
     }
 
@@ -53,11 +72,19 @@ class AdminModel extends Model
             ->getResultArray();
     }
 
-    public function getEmployeeCountByDepartment()
+    public function getEmployeeCountByDepartment(string $rptraName)
     {
         return $this->db->table('department d')
-            ->select('d.department_id AS d_id, d.department_name AS d_name, COUNT(e.employee_id) AS qty')
-            ->join('employee e', 'd.department_id = e.department_id', 'left')
+            ->select('
+            d.department_id AS d_id,
+            d.department_name AS d_name,
+            COUNT(e.employee_id)   AS qty
+        ')
+            ->join(
+                'employee e',
+                'd.department_id = e.department_id AND e.rptra_name = ' . $this->db->escape($rptraName),
+                'left'
+            )
             ->groupBy('d.department_id')
             ->orderBy('d.department_id', 'ASC')
             ->get()
@@ -69,7 +96,6 @@ class AdminModel extends Model
         return $this->db->table('shift')->countAllResults();
     }
 
-    // Metode baru untuk mengambil semua shift
     public function getAllShifts()
     {
         return $this->db->table('shift')

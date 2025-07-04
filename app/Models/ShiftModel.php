@@ -30,13 +30,9 @@ class ShiftModel extends Model
     public function deleteShift($s_id)
     {
         $db = \Config\Database::connect();
-
-        // Update tabel 'schedule' untuk menghapus referensi shift_id
         $db->table('schedule')->where('shift_id', $s_id)->update(['shift_id' => NULL]);
 
         $this->delete($s_id);
-
-        // Reset AUTO_INCREMENT pada tabel shift
         $db->query('ALTER TABLE `shift` AUTO_INCREMENT = 1');
     }
 }
