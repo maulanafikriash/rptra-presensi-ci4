@@ -1,205 +1,199 @@
+<?php
+$bulanIndonesia = [
+    1 => 'Januari',
+    2 => 'Februari',
+    3 => 'Maret',
+    4 => 'April',
+    5 => 'Mei',
+    6 => 'Juni',
+    7 => 'Juli',
+    8 => 'Agustus',
+    9 => 'September',
+    10 => 'Oktober',
+    11 => 'November',
+    12 => 'Desember',
+];
+?>
+
 <div class="container-fluid">
-    <h4 class="mb-4 text-gray-800 font-weight-bold"><?= esc($title); ?></h4>
-    <div class="row">
-        <div class="col-lg-3">
-            <a href="<?= base_url('admin/master/employee/detail/' . esc($employee['employee_id'])); ?>" class="btn btn-secondary btn-icon-split mb-4">
-                <span class="icon text-white">
-                    <i class="fas fa-chevron-left"></i>
-                </span>
-                <span class="text">Kembali</span>
-            </a>
-        </div>
-        <div class="col-lg-5 offset-lg-4" id="flashdataMessage">
-            <?php if (session()->getFlashdata('success')): ?>
-                <div class="alert alert-success" role="alert">
-                    <?= session()->getFlashdata('success'); ?>
-                </div>
-            <?php endif; ?>
 
-            <?php if (session()->getFlashdata('error')): ?>
-                <div class="alert alert-danger" role="alert">
-                    <?= session()->getFlashdata('error'); ?>
-                </div>
-            <?php endif; ?>
-        </div>
-    </div>
-
-    <!-- Detail Pegawai -->
-    <div class="mb-5">
-        <div class="row">
-            <div class="col-3 text-end font-weight-bold">Nama :</div>
-            <div class="col font-weight-bold"><?= esc($employee['employee_name']); ?></div>
-        </div>
-        <div class="row">
-            <div class="col-3 text-end font-weight-bold">Department :</div>
-            <div class="col font-weight-bold"><?= esc($department_current['department_name']); ?></div>
-        </div>
-    </div>
-    <?php
-    $bulanIndonesia = [
-        1 => 'Januari',
-        2 => 'Februari',
-        3 => 'Maret',
-        4 => 'April',
-        5 => 'Mei',
-        6 => 'Juni',
-        7 => 'Juli',
-        8 => 'Agustus',
-        9 => 'September',
-        10 => 'Oktober',
-        11 => 'November',
-        12 => 'Desember',
-    ];
-    ?>
-    <!-- Filter Bulan dan Tahun -->
-    <form action="" method="get" class="form-inline mb-3">
-        <div class="form-group mr-2">
-            <label for="month" class="mr-2">Bulan:</label>
-            <select name="month" id="month" class="form-control">
-                <?php for ($m = 1; $m <= 12; $m++) : ?>
-                    <option value="<?= $m; ?>" <?= ($m == $month) ? 'selected' : ''; ?>>
-                        <?= $bulanIndonesia[$m]; ?>
-                    </option>
-                <?php endfor; ?>
-            </select>
-        </div>
-        <div class="form-group mr-2">
-            <label for="year" class="mr-2">Tahun:</label>
-            <select name="year" id="year" class="form-control">
-                <?php for ($y = date('Y') - 5; $y <= date('Y') + 5; $y++) : ?>
-                    <option value="<?= $y; ?>" <?= ($y == $year) ? 'selected' : ''; ?>><?= $y; ?></option>
-                <?php endfor; ?>
-            </select>
-        </div>
-        <button type="submit" class="btn btn-primary">Filter</button>
-    </form>
-
-    <!-- Tombol Export -->
-    <div class="d-flex justify-content-end mb-2">
-        <a href="<?= base_url('admin/report/print_work_schedule/pdf/' . esc($employee['employee_id']) . '?month=' . esc($month) . '&year=' . esc($year)); ?>" class="btn btn-danger btn-icon-split mr-2" target="_blank">
-            <span class="icon text-white">
-                <i class="fas fa-file-pdf"></i>
-            </span>
-            <span class="text">Cetak PDF</span>
-        </a>
-        <a href="<?= base_url('admin/report/print_work_schedule/excel/' . esc($employee['employee_id']) . '?month=' . esc($month) . '&year=' . esc($year)); ?>" class="btn btn-success btn-icon-split">
-            <span class="icon text-white">
-                <i class="fas fa-file-excel"></i>
-            </span>
-            <span class="text">Cetak Excel</span>
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800 font-weight-bold"><?= esc($title); ?></h1>
+        <a href="<?= base_url('admin/master/employee/detail/' . esc($employee['employee_id'])); ?>" class="btn btn-md btn-secondary shadow-sm">
+            <i class="fas fa-arrow-left fa-md text-white-50"></i> Kembali ke Detail
         </a>
     </div>
 
-    <!-- Tabel Kalender -->
-    <div class="table-responsive">
-        <table class="table table-bordered">
-            <thead>
-                <tr>
-                    <th>Minggu</th>
-                    <th>Senin</th>
-                    <th>Selasa</th>
-                    <th>Rabu</th>
-                    <th>Kamis</th>
-                    <th>Jumat</th>
-                    <th>Sabtu</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php
-                $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $month, $year);
-                $firstDayOfMonth = date('w', strtotime("$year-$month-01"));
-                $currentDate = date('Y-m-d');
+    <?php if (session()->getFlashdata('message')) : ?>
+        <div class="alert alert-success" role="alert" id="flashdataMessage">
+            <?= session()->getFlashdata('message'); ?>
+        </div>
+    <?php endif; ?>
 
-                $dayCounter = 0;
-
-                for ($i = 0; $i < 6; $i++) {
-                    echo "<tr>";
-                    for ($j = 0; $j < 7; $j++) {
-                        if ($i === 0 && $j < $firstDayOfMonth) {
-                            echo "<td></td>";
-                        } elseif (++$dayCounter <= $daysInMonth) {
-                            $currentLoopDate = date('Y-m-d', strtotime("$year-$month-$dayCounter"));
-
-                            // Mendapatkan status jadwal kerja
-                            if (isset($workSchedules[$dayCounter])) {
-                                $status = $workSchedules[$dayCounter]['schedule_status'];
-                                $schedule_id = $workSchedules[$dayCounter]['schedule_id'];
-                                $shift_id = $workSchedules[$dayCounter]['shift_id'];
-                            } else {
-                                $status = null; // Tidak ada jadwal
-                                $schedule_id = null;
-                                $shift_id = null;
-                            }
-
-                            // Menentukan teks status dan kelas badge
-                            if (is_null($status) && !empty($shift_id)) {
-                                // Cari shift berdasarkan shift_id
-                                $shiftTime = 'Tidak ada jadwal';
-                                foreach ($shifts as $shift) {
-                                    if ($shift['shift_id'] == $shift_id) {
-                                        // Format waktu shift menjadi 'HH:MM'
-                                        $startTime = date('H:i', strtotime($shift['start_time']));
-                                        $endTime = date('H:i', strtotime($shift['end_time']));
-                                        $shiftTime = esc($startTime) . ' - ' . esc($endTime);
-                                        break;
-                                    }
-                                }
-                                $statusText = $shiftTime;
-                                $badgeClass = 'badge-success';
-                            } elseif ($status == 4) {
-                                $statusText = 'Cuti';
-                                $badgeClass = 'badge-dark';
-                            } elseif ($status == 5) {
-                                $statusText = 'Libur';
-                                $badgeClass = 'badge-primary';
-                            } else {
-                                $statusText = 'Tidak Ada Jadwal';
-                                $badgeClass = 'badge-secondary';
-                            }
-
-                            // Menentukan apakah dapat menambah atau mengedit jadwal
-                            // Mengizinkan edit untuk tanggal hari ini dan masa depan
-                            $canEdit = $currentLoopDate >= date('Y-m-d');
-
-                            echo "<td>
-                                    <strong class='h5'>$dayCounter</strong><br>
-                                    <span class='badge $badgeClass'>$statusText</span>
-                                    <br>";
-                            if ($canEdit) {
-                                if ($schedule_id) {
-                                    echo "<a href='#' class='btn btn-sm btn-warning mt-2 edit-schedule' data-schedule-id='$schedule_id' data-date='$currentLoopDate' data-status='$status' data-shift-id='$shift_id'>
-                                            <i class='fas fa-edit'></i>
-                                          </a>";
-                                } else {
-                                    echo "<a href='#' class='btn btn-sm btn-primary mt-2 add-schedule' data-date='$currentLoopDate' data-employee-id='" . esc($employee['employee_id']) . "' data-department-id='" . esc($employee['department_id']) . "'>
-                                            <i class='fas fa-plus'></i>
-                                          </a>";
-                                }
-                            }
-                            echo "</td>";
-                        } else {
-                            echo "<td></td>";
-                        }
-                    }
-                    echo "</tr>";
-                    if ($dayCounter >= $daysInMonth) {
-                        break;
-                    }
-                }
-                ?>
-            </tbody>
-        </table>
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Informasi Pegawai</h6>
+        </div>
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <div class="row">
+                        <div class="col-4 col-md-3"><strong>Nama</strong></div>
+                        <div class="col-8 col-md-9">: <?= esc($employee['employee_name']); ?></div>
+                    </div>
+                    <div class="row">
+                        <div class="col-4 col-md-3"><strong>Departemen</strong></div>
+                        <div class="col-8 col-md-9">: <?= esc($department_current['department_name']) . ' ' . esc($employee['rptra_name']); ?></div>
+                    </div>
+                </div>
+            </div>
+            <hr>
+            <form method="get" class="mt-3">
+                <div class="form-row align-items-end">
+                    <div class="col-md-3 col-6 mb-2">
+                        <label for="month">Bulan</label>
+                        <select name="month" id="month" class="form-control">
+                            <?php foreach ($bulanIndonesia as $m => $nama): ?>
+                                <option value="<?= $m ?>" <?= ($m == $month) ? 'selected' : '' ?>><?= $nama ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="col-md-2 col-6 mb-2">
+                        <label for="year">Tahun</label>
+                        <select name="year" id="year" class="form-control">
+                            <?php for ($y = date('Y') - 2; $y <= date('Y') + 1; $y++): ?>
+                                <option value="<?= $y ?>" <?= ($y == $year) ? 'selected' : '' ?>><?= $y ?></option>
+                            <?php endfor; ?>
+                        </select>
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <button type="submit" class="btn btn-primary btn-block"><i class="fas fa-filter"></i> Filter</button>
+                    </div>
+                </div>
+            </form>
+        </div>
     </div>
 
-    <div class="mt-4">
-        <h5>Keterangan:</h5>
-        <ul class="list-unstyled">
-            <li><i class="fas fa-edit text-warning"></i> <strong>Ikon Edit:</strong> Edit Jadwal Kerja</li>
-            <li><i class="fas fa-plus text-primary"></i> <strong>Ikon +:</strong> Tambah Jadwal Kerja</li>
-            <li><span class="badge badge-success">Shift Kerja</span> Shift Kerja</li>
-            <li><span class="badge badge-dark">Cuti</span> Cuti</li>
-            <li><span class="badge badge-primary">Libur</span> Libur</li>
-            <li><span class="badge badge-secondary">Tidak Ada Jadwal</span> Tidak Ada Jadwal</li>
-        </ul>
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex align-items-center justify-content-between">
+            <h6 class="m-0 font-weight-bold text-primary">
+                Kalender Jadwal Kerja - <?= esc($bulanIndonesia[$month] . ' ' . $year) ?>
+            </h6>
+            <div>
+                <a href="<?= base_url('admin/report/print_work_schedule/pdf/' . esc($employee['employee_id']) . '?month=' . esc($month) . '&year=' . esc($year)); ?>" class="btn btn-sm btn-danger shadow-sm" target="_blank">
+                    <i class="fas fa-file-pdf fa-sm text-white-50"></i> Cetak PDF
+                </a>
+                <a href="<?= base_url('admin/report/print_work_schedule/excel/' . esc($employee['employee_id']) . '?month=' . esc($month) . '&year=' . esc($year)); ?>" class="btn btn-sm btn-success shadow-sm">
+                    <i class="fas fa-file-excel fa-sm text-white-50"></i> Cetak Excel
+                </a>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered calendar-table">
+                    <thead class="thead-light">
+                        <tr class="text-center">
+                            <th style="width: 14.28%;">Minggu</th>
+                            <th style="width: 14.28%;">Senin</th>
+                            <th style="width: 14.28%;">Selasa</th>
+                            <th style="width: 14.28%;">Rabu</th>
+                            <th style="width: 14.28%;">Kamis</th>
+                            <th style="width: 14.28%;">Jumat</th>
+                            <th style="width: 14.28%;">Sabtu</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php
+                        $daysInMonth     = cal_days_in_month(CAL_GREGORIAN, $month, $year);
+                        $firstDayOfMonth = date('w', strtotime("$year-$month-01"));
+                        $dayCounter      = 1;
+                        ?>
+                        <?php for ($i = 0; $i < 6; $i++) : ?>
+                            <tr>
+                                <?php for ($j = 0; $j < 7; $j++) : ?>
+                                    <?php if (($i === 0 && $j < $firstDayOfMonth) || $dayCounter > $daysInMonth) : ?>
+                                        <td class="bg-light"></td>
+                                    <?php else :
+                                        $currentLoopDate = date('Y-m-d', strtotime("$year-$month-$dayCounter"));
+                                        $isToday         = ($currentLoopDate == date('Y-m-d'));
+                                        $canEdit         = $currentLoopDate >= date('Y-m-d');
+                                        $schedule        = $workSchedules[$dayCounter] ?? null;
+
+                                        $statusText = 'Tidak Ada Jadwal';
+                                        $badgeClass = 'badge-secondary';
+                                        if ($schedule) {
+                                            $status = $schedule['schedule_status'];
+                                            if ($status == '4') {
+                                                $statusText = 'Cuti';
+                                                $badgeClass = 'badge-dark text-white';
+                                            } elseif ($status == '5') {
+                                                $statusText = 'Libur';
+                                                $badgeClass = 'badge-primary';
+                                            } elseif ($schedule['shift_info']) {
+                                                $shift = $schedule['shift_info'];
+                                                $statusText = date('H:i', strtotime($shift['start_time'])) . ' - ' . date('H:i', strtotime($shift['end_time']));
+                                                $badgeClass = 'badge-success';
+                                            } else {
+                                                $statusText = 'Shift Dihapus';
+                                                $badgeClass = 'badge-warning';
+                                            }
+                                        }
+                                    ?>
+                                        <td class="day-cell <?= $isToday ? 'bg-primary text-white' : '' ?>" style="height: 120px; vertical-align: top;">
+                                            <div class="d-flex flex-column justify-content-between h-100 p-1">
+                                                <div class="d-flex justify-content-between align-items-start">
+                                                    <strong class="h5"><?= $dayCounter ?></strong>
+                                                    <?php if ($canEdit) : ?>
+                                                        <?php
+                                                        $editButtonClass = $isToday ? 'btn-outline-light' : 'btn-outline-warning';
+                                                        $addButtonClass  = $isToday ? 'btn-outline-light' : 'btn-outline-primary';
+                                                        ?>
+                                                        <?php if ($schedule) : ?>
+                                                            <a href="#" class="btn btn-sm <?= $editButtonClass ?> edit-schedule" title="Edit Jadwal"
+                                                                data-schedule-id="<?= esc($schedule['schedule_id']) ?>"
+                                                                data-date="<?= esc($currentLoopDate) ?>"
+                                                                data-status="<?= esc($schedule['schedule_status']) ?>"
+                                                                data-shift-id="<?= esc($schedule['shift_id']) ?>">
+                                                                <i class="fas fa-edit"></i>
+                                                            </a>
+                                                        <?php else : ?>
+                                                            <a href="#" class="btn btn-sm <?= $addButtonClass ?> add-schedule" title="Tambah Jadwal"
+                                                                data-date="<?= esc($currentLoopDate) ?>"
+                                                                data-employee-id="<?= esc($employee['employee_id']) ?>">
+                                                                <i class="fas fa-plus"></i>
+                                                            </a>
+                                                        <?php endif; ?>
+                                                    <?php endif; ?>
+                                                </div>
+                                                <div class="text-center">
+                                                    <span class="badge <?= $badgeClass ?> d-block p-1"><?= esc($statusText) ?></span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    <?php $dayCounter++;
+                                    endif; ?>
+                                <?php endfor; ?>
+                            </tr>
+                            <?php if ($dayCounter > $daysInMonth) break; ?>
+                        <?php endfor; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Keterangan</h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6 col-lg-3 mb-2"><span class="badge badge-success p-2 mr-2">&nbsp;</span> Jadwal Kerja Aktif</div>
+                <div class="col-md-6 col-lg-3 mb-2"><span class="badge badge-primary p-2 mr-2">&nbsp;</span> Hari Libur</div>
+                <div class="col-md-6 col-lg-3 mb-2"><span class="badge badge-dark p-2 mr-2">&nbsp;</span> Cuti Pegawai</div>
+                <div class="col-md-6 col-lg-3 mb-2"><span class="badge badge-secondary p-2 mr-2">&nbsp;</span> Belum Ada Jadwal</div>
+            </div>
+        </div>
     </div>
 </div>

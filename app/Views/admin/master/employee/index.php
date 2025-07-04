@@ -58,19 +58,19 @@
                                         </span>
                                     </a>
                                     |
-                                    <a href="<?= base_url('admin/master/employee/edit/' . $emp['employee_id']); ?>" class="btn btn-primary btn-circle" title="Edit">
-                                        <span class="icon text-white">
-                                            <i class="fas fa-edit"></i>
-                                        </span>
-                                    </a>
-                                    |
-                                    <button type="button"
-                                        class="btn btn-danger btn-circle delete-button"
-                                        data-url="<?= base_url('admin/master/employee/delete/' . $emp['employee_id']); ?>"
-                                        data-entity="pegawai"
-                                        title="Delete">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </button>
+                                    <?php if (isset($emp['department_id']) && $emp['department_id'] === 'ADM') : ?>
+                                        <button type="button" class="btn btn-danger btn-circle" title="Tidak dapat dihapus" disabled>
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    <?php else : ?>
+                                        <button type="button"
+                                            class="btn btn-danger btn-circle delete-button"
+                                            data-url="<?= base_url('admin/master/employee/delete/' . $emp['employee_id']); ?>"
+                                            data-entity="pegawai"
+                                            title="Delete">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    <?php endif; ?>
                                 </td>
                             </tr>
                         <?php endforeach; ?>

@@ -1,14 +1,12 @@
 <div class="container-fluid">
 
-  <div class="d-sm-flex align-items-center justify-content-between mb-4">
-    <h3 class="mb-0 text-gray-700 font-weight-bold"><?= esc($title); ?></h3>
-  </div>
+
 
   <div class="row">
     <div class="col">
       <div class="card shadow mb-4" style="min-height: 543px">
         <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-          <h6 class="m-0 font-weight-bold text-primary">Isi Kehadiran Anda!</h6>
+          <h6 class="m-0 font-weight-bold text-primary"><?= esc($title); ?></h6>
         </div>
         <div class="card-body">
 
@@ -26,40 +24,83 @@
             <input type="hidden" name="latitude" id="latitude">
             <input type="hidden" name="longitude" id="longitude">
             <input type="hidden" name="location_remark" id="location_remark">
-            <input type="hidden" name="work_shift" value="<?= $has_shift ? esc($shift_details['shift_id']) : ''; ?>">
-
             <div class="row">
               <div class="col-lg-5">
-                <label for="work_shift" class="col-form-label">Shift Kerja</label>
-                <?php if ($has_shift && $shift_details) : ?>
-                  <input class="form-control" type="text"
-                    value="<?= $is_flexible_shift ? 'Shift Fleksibel (00:00 - 23:59)' : 'Shift ' . esc($shift_details['shift_id']) . ' = ' . esc($shift_start_time) . ' - ' . esc($shift_end_time) . ''; ?>" readonly>
+                <label for="work_shift_dropdown" class="col-form-label">Shift Kerja</label>
+
+                <?php if ($can_check_in) : ?>
+                  <select class="form-control" id="work_shift_dropdown" name="work_shift" required>
+                    <option value="" disabled <?= !$has_shift ? 'selected' : ''; ?>>-- Pilih Shift Kerja --</option>
+
+                    <?php foreach ($all_shifts as $shift) : ?>
+                      <?php
+                      $shift_text = '';
+                      if ($shift['start_time'] == '05:00:00' && $shift['end_time'] == '23:59:00') {
+                        $shift_text = 'Shift Fleksibel (Tugas Luar)';
+                      } else {
+                        $shift_text = 'Shift ' . esc($shift['shift_id']) . ' (' . date('H:i', strtotime($shift['start_time'])) . ' - ' . date('H:i', strtotime($shift['end_time'])) . ')';
+                      }
+
+                      // menentukan shift yang terpilih secara default
+                      $isSelected = ($has_shift && isset($schedule_shift['shift_id']) && $schedule_shift['shift_id'] == $shift['shift_id']) ? 'selected' : '';
+                      ?>
+                      <option value="<?= esc($shift['shift_id']); ?>"
+                        data-start="<?= esc($shift['start_time']); ?>"
+                        data-end="<?= esc($shift['end_time']); ?>"
+                        <?= $isSelected; ?>>
+                        <?= $shift_text; ?>
+                      </option>
+                    <?php endforeach; ?>
+                  </select>
+                  <?php if (!$has_shift && $presence_status === null) : ?>
+                    <small class="form-text text-muted">Status jadwal awal: <span class="font-weight-bold">Tidak Ada Jadwal</span></small>
+                  <?php endif; ?>
                 <?php else : ?>
-                  <?php
-                  $statusMap = [
-                    5 => ['icon' => 'fa-calendar-day', 'color' => 'text-primary', 'text' => 'Hari ini Libur'],
-                    4 => ['icon' => 'fa-calendar-check', 'color' => 'text-dark', 'text' => 'Hari ini Cuti'],
-                    2 => ['icon' => 'fa-user-clock', 'color' => 'text-warning', 'text' => 'Hari ini Izin'],
-                    3 => ['icon' => 'fa-medkit', 'color' => 'text-warning', 'text' => 'Hari ini Sakit'],
-                    'default' => ['icon' => 'fa-calendar-alt', 'color' => 'text-secondary', 'text' => 'Tidak Ada Jadwal']
-                  ];
-                  $currentStatus = $statusMap[$presence_status] ?? $statusMap['default'];
-                  ?>
-                  <div class="d-flex align-items-center">
-                    <i class="fas <?= $currentStatus['icon'] ?> fa-2x <?= $currentStatus['color'] ?> mr-2"></i>
-                    <span class="<?= $currentStatus['color'] ?> font-weight-bold"><?= $currentStatus['text'] ?></span>
-                  </div>
+                  <?php if ($has_shift && $shift_details) : ?>
+                    <input class="form-control" type="text" value="<?= $is_flexible_shift ? 'Shift Fleksibel (00:00 - 23:59)' : 'Shift ' . esc($shift_details['shift_id']) . ' = ' . esc($shift_start_time) . ' - ' . esc($shift_end_time) . ''; ?>" readonly>
+                  <?php else : ?>
+                    <?php
+                    $statusMap = [
+                      5 => ['icon' => 'fa-calendar-day', 'color' => 'text-primary', 'text' => 'Hari ini Libur'],
+                      4 => ['icon' => 'fa-calendar-check', 'color' => 'text-dark', 'text' => 'Hari ini Cuti'],
+                      2 => ['icon' => 'fa-user-clock', 'color' => 'text-warning', 'text' => 'Hari ini Izin'],
+                      3 => ['icon' => 'fa-medkit', 'color' => 'text-warning', 'text' => 'Hari ini Sakit'],
+                      'default' => ['icon' => 'fa-calendar-alt', 'color' => 'text-secondary', 'text' => 'Tidak Ada Jadwal']
+                    ];
+                    $currentStatus = $statusMap[$presence_status] ?? $statusMap['default'];
+                    ?>
+                    <div class="d-flex align-items-center">
+                      <i class="fas <?= $currentStatus['icon'] ?> fa-2x <?= $currentStatus['color'] ?> mr-2"></i>
+                      <span class="<?= $currentStatus['color'] ?> font-weight-bold"><?= $currentStatus['text'] ?></span>
+                    </div>
+                  <?php endif; ?>
                 <?php endif; ?>
               </div>
 
               <div class="col-lg-5 offset-lg-1 location-container">
-                <?php if ($can_check_in || $can_check_out) : ?>
+
+                <?php
+                if (isset($attendance_message) && $attendance_message) :
+                ?>
+                  <div class="card bg-light text-center p-3 h-100 shadow-sm">
+                    <div class="d-flex flex-column justify-content-center align-items-center">
+
+                      <i class="fas <?= esc($attendance_message['icon']) ?> <?= esc($attendance_message['color']) ?> fa-2x mb-3"></i>
+
+                      <p class="mb-0 text-gray-800" style="font-size: 15px;"><?= esc($attendance_message['text']); ?></p>
+
+                    </div>
+                  </div>
+
+                <?php elseif ($can_check_in || $can_check_out) : ?>
                   <label for="location" class="col-form-label">Aktifkan Lokasi Saat Ini</label>
                   <button type="button" class="btn btn-primary btn-lg btn-block shadow-sm" id="activate-location-btn" style="display: flex; align-items: center; justify-content: center; font-size: 16px;">
                     <i class="fas fa-map-marker-alt mr-2"></i> Aktifkan Lokasi
                   </button>
                   <p id="location-status" class="mt-2 text-muted text-center" style="font-size: 14px;">Lokasi belum diaktifkan</p>
+
                 <?php endif; ?>
+
               </div>
             </div>
 
@@ -79,7 +120,6 @@
                       5 => ['label' => 'Libur', 'class' => 'btn-primary', 'icon' => 'fa-calendar-times', 'text_class' => 'text-primary'],
                       'default' => ['label' => 'Tidak Hadir', 'class' => 'btn-danger', 'icon' => 'fa-times', 'text_class' => 'text-danger']
                     ];
-
                     $status = $presenceStatuses[$presence_status] ?? $presenceStatuses['default'];
                     if ($already_checked_out) {
                       $status = ['label' => 'Sudah Keluar', 'class' => 'btn-secondary', 'icon' => 'fa-check-circle', 'text_class' => 'text-secondary'];
@@ -106,13 +146,11 @@
                         <i class="fas fa-fw fa-sign-out-alt fa-2x"></i>
                       </button>
                       <p class="font-weight-bold text-danger pt-2">Keluar</p>
-
                     <?php elseif ($shift_status === 'belum mulai') : ?>
                       <button type="button" class="btn btn-dark btn-circle" style="width: 100px; height: 100px;" disabled>
                         <i class="fas fa-fw fa-sign-in-alt fa-2x"></i>
                       </button>
                       <p class="font-weight-bold text-dark pt-2">Belum Mulai</p>
-
                     <?php elseif ($already_checked_in && !$already_checked_out) : ?>
                       <button type="button" class="btn btn-dark btn-circle" style="width: 100px; height: 100px;" disabled>
                         <i class="fas fa-fw fa-clock fa-2x"></i>
@@ -129,15 +167,13 @@
     </div>
   </div>
 </div>
+
 <script>
   document.addEventListener("DOMContentLoaded", function() {
     // --- Variabel dari PHP ---
     const isFlexibleShift = <?= json_encode($is_flexible_shift); ?>;
     const canCheckIn = <?= json_encode($can_check_in); ?>;
     const canCheckOut = <?= json_encode($can_check_out); ?>;
-    const csrfName = "<?= csrf_token() ?>";
-    const csrfHash = "<?= csrf_hash() ?>";
-    const shiftStatus = "<?= esc($shift_status, 'js'); ?>";
     const alreadyCheckedIn = <?= json_encode($already_checked_in); ?>;
 
     // --- Elemen DOM ---
@@ -149,14 +185,65 @@
     const longitudeInput = document.getElementById("longitude");
     const locationRemarkInput = document.getElementById("location_remark");
     const attendanceForm = document.getElementById('attendance-form');
+    const workShiftDropdown = document.getElementById('work_shift_dropdown');
+    let isLocationActive = false;
 
-    if (shiftStatus === 'sudah selesai' && !alreadyCheckedIn) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Waktu Shift Sudah Berakhir',
-        text: 'Anda terlambat melakukan presensi.',
-        confirmButtonText: 'Oke'
-      });
+    /**
+     * Memeriksa shift yang dipilih dan mengaktifkan/menonaktifkan tombol check-in.
+     */
+    function validateSelectedShift() {
+      if (!workShiftDropdown) return;
+
+      const selectedOption = workShiftDropdown.options[workShiftDropdown.selectedIndex];
+      const shiftValue = selectedOption.value;
+
+      if (!shiftValue) {
+        if (checkInBtn) checkInBtn.disabled = true;
+        return;
+      }
+
+      const shiftStartTimeString = selectedOption.getAttribute('data-start');
+      const shiftEndTime = selectedOption.getAttribute('data-end');
+      if (shiftEndTime === '23:59:00') { // Shift Fleksibel selalu valid
+        if (isLocationActive && checkInBtn) checkInBtn.disabled = false;
+        return;
+      }
+
+      const now = new Date();
+      const startShiftTime = new Date();
+      const endShiftTime = new Date();
+
+      const [startHours, startMinutes, startSeconds] = shiftStartTimeString.split(':');
+      startShiftTime.setHours(startHours, startMinutes, startSeconds, 0);
+
+      if (now < startShiftTime) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Peringatan',
+          text: 'Shift yang anda pilih belum mulai!',
+          confirmButtonText: 'Oke'
+        });
+        if (checkInBtn) checkInBtn.disabled = true;
+        return;
+      }
+
+      const [hours, minutes, seconds] = shiftEndTime.split(':');
+      endShiftTime.setHours(hours, minutes, seconds, 0);
+
+      if (now > endShiftTime) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Peringatan',
+          text: 'Shift yang Anda pilih sudah berakhir!',
+          confirmButtonText: 'Oke'
+        });
+        if (checkInBtn) checkInBtn.disabled = true;
+      } else {
+        // Aktifkan tombol check-in jika lokasi sudah aktif
+        if (isLocationActive && checkInBtn) {
+          checkInBtn.disabled = false;
+        }
+      }
     }
 
     /**
@@ -179,23 +266,17 @@
         });
 
         if (!response.ok) {
-          // Jika server merespon dengan status error (spt 400, 500)
           const errorData = await response.json();
           throw new Error(errorData.message || 'Network response was not ok');
         }
-
         const data = await response.json();
-
         if (data.status === 'success') {
           return data.address;
         } else {
-          // Jika ada error yang dikirim dari backend (status 200 tapi ada 'message' error)
           throw new Error(data.message || 'Gagal mengambil alamat dari server.');
         }
-
       } catch (error) {
-        console.error('Error fetching address from backend:', error);
-        // Tampilkan pesan error yang lebih informatif ke console atau UI jika perlu
+        console.error('Error fetching address:', error);
         return `Gagal mengambil nama alamat: ${error.message}`;
       }
     }
@@ -211,7 +292,7 @@
 
       locationStatusEl.textContent = "Mencari lokasi Anda...";
       locationStatusEl.className = "mt-2 text-primary text-center";
-      activateLocationBtn.disabled = true; // Nonaktifkan tombol selama proses
+      activateLocationBtn.disabled = true;
 
       navigator.geolocation.getCurrentPosition(
         async (position) => {
@@ -220,24 +301,21 @@
 
             latitudeInput.value = lat;
             longitudeInput.value = lon;
-
             locationStatusEl.textContent = "Lokasi didapat. Mengambil nama alamat...";
 
-            // Ambil nama alamat
             const address = await getAddressFromCoordinates(lat, lon);
             locationRemarkInput.value = address;
-
-            // Tampilkan alamat ke pengguna
             locationStatusEl.innerHTML = `<span class="font-weight-bold text-success">${address}</span>`;
 
-            // Aktifkan tombol yang sesuai
-            if (canCheckIn && checkInBtn) checkInBtn.disabled = false;
+            isLocationActive = true;
+
             if (canCheckOut && checkOutBtn) checkOutBtn.disabled = false;
 
-            // Ganti ikon & teks tombol aktivasi menjadi tanda sukses
+            // Cek ulang validasi shift untuk mengaktifkan tombol masuk
+            validateSelectedShift();
+
             activateLocationBtn.innerHTML = '<i class="fas fa-check-circle mr-2"></i> Lokasi Diaktifkan';
-            activateLocationBtn.classList.remove('btn-primary');
-            activateLocationBtn.classList.add('btn-success');
+            activateLocationBtn.classList.replace('btn-primary', 'btn-success');
           },
           (error) => {
             let errorMessage = 'Gagal mendapatkan lokasi. Harap izinkan akses lokasi dan coba lagi.';
@@ -248,6 +326,7 @@
               case error.POSITION_UNAVAILABLE:
                 errorMessage = "Informasi lokasi tidak tersedia.";
                 break;
+
               case error.TIMEOUT:
                 errorMessage = "Waktu permintaan lokasi habis.";
                 break;
@@ -256,10 +335,11 @@
             locationStatusEl.textContent = "Gagal mendapatkan lokasi.";
             locationStatusEl.className = "mt-2 text-danger text-center";
             activateLocationBtn.disabled = false;
+            isLocationActive = false;
           }, {
             enableHighAccuracy: true,
             timeout: 15000,
-            maximumAge: 0 // ambil lokasi baru
+            maximumAge: 0
           }
       );
     }
@@ -273,8 +353,14 @@
         return;
       }
 
+      // Tambahan validasi untuk check-in
+      if (action === 'check_in' && (!workShiftDropdown || !workShiftDropdown.value)) {
+        Swal.fire('Peringatan', 'Harap pilih shift kerja terlebih dahulu.', 'warning');
+        return;
+      }
+
       const formData = new FormData(attendanceForm);
-      formData.append(action, '1'); // Menambah 'check_in' atau 'check_out'
+      formData.append(action, '1');
 
       fetch("<?= base_url('employee/attendance'); ?>", {
           method: "POST",
@@ -287,13 +373,7 @@
         .then(data => {
           if (data.status === 'success') {
             const actionText = (action === 'check_in') ? 'masuk' : 'keluar';
-            const timeString = new Date().toLocaleTimeString('id-ID', {
-              hour: '2-digit',
-              minute: '2-digit'
-            });
-            const successMessage = `Berhasil presensi ${actionText} pada pukul ${timeString}.`;
-
-            Swal.fire('Berhasil!', successMessage, 'success').then(() => location.reload());
+            Swal.fire('Berhasil!', `Berhasil presensi ${actionText}.`, 'success').then(() => location.reload());
           } else {
             Swal.fire('Gagal!', data.message || 'Terjadi kesalahan.', 'error');
           }
@@ -307,6 +387,10 @@
     // --- Event Listeners ---
     if (activateLocationBtn) {
       activateLocationBtn.addEventListener("click", activateLocationAndGetAddress);
+    }
+
+    if (workShiftDropdown) {
+      workShiftDropdown.addEventListener('change', validateSelectedShift);
     }
 
     if (checkInBtn) {
@@ -335,5 +419,6 @@
         }
       });
     }
+    validateSelectedShift();
   });
 </script>

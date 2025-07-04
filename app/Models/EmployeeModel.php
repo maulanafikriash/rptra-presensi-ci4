@@ -20,6 +20,7 @@ class EmployeeModel extends Model
         'employee_address',
         'telephone',
         'email',
+        'birth_place',
         'birth_date',
         'hire_date',
         'contraceptive_use',
@@ -39,15 +40,6 @@ class EmployeeModel extends Model
         return $this->db->table('department')->get()->getResultArray();
     }
 
-    public function find($id = null)
-    {
-        return $this->db->table($this->table)
-            ->where($this->primaryKey, $id)
-            ->get()
-            ->getRowArray();
-    }
-
-
     public function findEmployeeWithRelations($id)
     {
         return $this->db->table($this->table)
@@ -61,17 +53,16 @@ class EmployeeModel extends Model
     // Mengambil semua data karyawan berdasarkan username
     public function getAllEmployeeData($username)
     {
-        // Mengambil data user berdasarkan username
         $user = $this->db->table('user_account')
             ->where('username', $username)
             ->get()
             ->getRowArray();
 
         if (!$user) {
-            return null; // Mengembalikan null jika username tidak ditemukan
+            return null;
         }
 
-        // Mengambil data karyawan berdasarkan employee_id
+        // Mengambil data pegawai berdasarkan employee_id
         return $this->db->table('employee')
             ->select('employee.employee_id AS id,
             employee.employee_name AS name,
@@ -83,6 +74,7 @@ class EmployeeModel extends Model
             employee.employee_address,
             employee.telephone,
             employee.email,
+            employee.birth_place,
             employee.birth_date,
             employee.hire_date,
             employee.contraceptive_use,
@@ -98,14 +90,9 @@ class EmployeeModel extends Model
     public function deleteEmployeeWithRelations($id)
     {
         $db = db_connect();
-
-        // Delete related attendance records
         $db->table('attendance')->where('employee_id', $id)->delete();
-
-        // Delete related user accounts
         $db->table('user_account')->where('employee_id', $id)->delete();
 
-        // Delete the employee
         $this->delete($id);
     }
 }

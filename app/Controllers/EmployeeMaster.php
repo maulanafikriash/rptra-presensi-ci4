@@ -30,9 +30,12 @@ class EmployeeMaster extends BaseController
 
     public function index()
     {
+        $rptraName = session()->get('rptra_name');
         $data = [
             'title' => 'Pegawai',
-            'employee' => $this->employeeModel->findAll(),
+            'employee' => $this->employeeModel
+                ->where('rptra_name', $rptraName)
+                ->findAll(),
             'account' => $this->authModel->getAccount(session()->get('username')),
         ];
 
@@ -45,11 +48,15 @@ class EmployeeMaster extends BaseController
 
     public function add()
     {
+        $rptraName = session()->get('rptra_name');
+        $rptraAddress = session()->get('rptra_address');
         $data = [
             'title' => 'Tambah Pegawai',
             'department' => $this->employeeModel->getDepartments(),
             'account' => $this->authModel->getAccount(session()->get('username')),
             'validation' => \Config\Services::validation(),
+            'rptra_name' => $rptraName,
+            'rptra_address' => $rptraAddress,
         ];
 
         if ($this->request->getMethod() === 'POST') {
@@ -71,6 +78,12 @@ class EmployeeMaster extends BaseController
                     'rules' => 'required',
                     'errors' => [
                         'required' => 'Jenis kelamin wajib diisi.',
+                    ],
+                ],
+                'birth_place' => [
+                    'rules'  => 'required',
+                    'errors' => [
+                        'required' => 'Tempat lahir wajib diisi.',
                     ],
                 ],
                 'birth_date' => [
@@ -152,6 +165,7 @@ class EmployeeMaster extends BaseController
                 $employeeName = ucwords(strtolower($this->request->getPost('employee_name')));
                 $email = $this->request->getPost('email');
                 $gender = $this->request->getPost('gender');
+                $birthPlace  = $this->request->getPost('birth_place');
                 $birthDate = $this->request->getPost('birth_date');
                 $hireDate = $this->request->getPost('hire_date');
                 $departmentId = $this->request->getPost('department_id');
@@ -160,8 +174,9 @@ class EmployeeMaster extends BaseController
                 $education = $this->request->getPost('education');
                 $employeeAddress = $this->request->getPost('employee_address');
                 $telephone = $this->request->getPost('telephone');
-                $rptraName = $this->request->getPost('rptra_name');
-                $rptraAddress = $this->request->getPost('rptra_address');
+                $rptraName = session()->get('rptra_name');
+                $rptraAddress = session()->get('rptra_address');
+
 
                 $file = $this->request->getFile('image');
                 $imageName = 'default.png';
@@ -175,6 +190,7 @@ class EmployeeMaster extends BaseController
                     'employee_name' => $employeeName,
                     'email' => $email,
                     'gender' => $gender,
+                    'birth_place' => $birthPlace,
                     'birth_date' => $birthDate,
                     'hire_date' => $hireDate,
                     'department_id' => $departmentId,
@@ -207,17 +223,24 @@ class EmployeeMaster extends BaseController
 
     public function edit($id)
     {
-        $employee = $this->employeeModel->find($id);
+        $employee = $this->employeeModel->findEmployeeWithRelations($id);
+
         if (!$employee) {
             throw new \CodeIgniter\Exceptions\PageNotFoundException("Pegawai tidak ditemukan");
         }
 
+        $departmentSelected = array_column($this->employeeModel->getDepartments(), 'department_id');
+        $selectedDepartment = in_array($employee['department_id'], $departmentSelected) ? $employee['department_id'] : null;
+
         $data = [
-            'title' => 'Edit Pegawai',
+            'title' => 'Edit Data Pegawai', // Judul bisa dibuat lebih deskriptif
             'employee' => $employee,
             'department' => $this->employeeModel->getDepartments(),
+            'selectedDepartment' => $selectedDepartment, // Kirim ke view
             'account' => $this->authModel->getAccount(session()->get('username')),
-            'validation' => \Config\Services::validation()
+            'validation' => \Config\Services::validation(),
+            'rptra_name' => session()->get('rptra_name'),
+            'rptra_address' => session()->get('rptra_address'),
         ];
 
         if ($this->request->getMethod() === 'POST') {
@@ -239,6 +262,12 @@ class EmployeeMaster extends BaseController
                     'rules' => 'required',
                     'errors' => [
                         'required' => 'Jenis kelamin wajib diisi.',
+                    ],
+                ],
+                'birth_place' => [
+                    'rules'  => 'required',
+                    'errors' => [
+                        'required' => 'Tempat lahir wajib diisi.',
                     ],
                 ],
                 'birth_date' => [
@@ -333,7 +362,6 @@ class EmployeeMaster extends BaseController
                     }
                 }
 
-                // Ambil data department_id sebelumnya
                 $currentDepartmentId = $employee['department_id'];
                 $newDepartmentId = $this->request->getPost('department_id');
 
@@ -345,7 +373,6 @@ class EmployeeMaster extends BaseController
                     // Tentukan user_role_id berdasarkan department_id
                     $newUserRoleId = ($newDepartmentId === 'ADM') ? 1 : 2;
 
-                    // Update username dan user_role_id di tabel user_account
                     $this->authModel->updateUserAccount($employee['employee_id'], [
                         'username' => $newUsername,
                         'user_role_id' => $newUserRoleId,
@@ -356,6 +383,7 @@ class EmployeeMaster extends BaseController
                     'employee_name' => ucwords(strtolower($this->request->getPost('employee_name'))),
                     'email' => $this->request->getPost('email'),
                     'gender' => $this->request->getPost('gender'),
+                    'birth_place' => $this->request->getPost('birth_place'),
                     'birth_date' => $this->request->getPost('birth_date'),
                     'hire_date' => $this->request->getPost('hire_date'),
                     'department_id' => $this->request->getPost('department_id'),
@@ -365,13 +393,13 @@ class EmployeeMaster extends BaseController
                     'education' => $this->request->getPost('education'),
                     'employee_address' => $this->request->getPost('employee_address'),
                     'telephone' => $this->request->getPost('telephone'),
-                    'rptra_name' => $this->request->getPost('rptra_name'),
-                    'rptra_address' => $this->request->getPost('rptra_address'),
+                    'rptra_name'    => session()->get('rptra_name'),
+                    'rptra_address' => session()->get('rptra_address'),
                     'image' => $imageName
                 ]);
 
                 session()->setFlashdata('message', '<div class="alert alert-success" role="alert">Data pegawai berhasil diperbarui!</div>');
-                return redirect()->to('/admin/master/employee');
+                return redirect()->to('/admin/master/employee/detail/' . $id);
             }
         }
 
@@ -412,6 +440,10 @@ class EmployeeMaster extends BaseController
         $employee = $this->employeeModel->find($employeeId);
         if (!$employee) {
             throw new \CodeIgniter\Exceptions\PageNotFoundException("Pegawai tidak ditemukan");
+        }
+
+        if ($employee['rptra_name'] !== session()->get('rptra_name')) {
+            throw new \CodeIgniter\Exceptions\PageNotFoundException("Anda tidak memiliki akses ke data presensi pegawai ini");
         }
 
         $data = [
@@ -455,6 +487,49 @@ class EmployeeMaster extends BaseController
         }
         $data['attendance'] = $attendanceData;
 
+        $summary = [
+            'hadir'      => 0,
+            'izin_sakit' => 0,
+            'alpha'      => 0,
+            'libur_cuti' => 0,
+        ];
+
+        $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $data['month'], $data['year']);
+        $todayTimestamp = strtotime(date('Y-m-d'));
+
+        for ($day = 1; $day <= $daysInMonth; $day++) {
+            $currentDateStr = "{$data['year']}-{$data['month']}-{$day}";
+            $currentTimestamp = strtotime($currentDateStr);
+
+            if ($currentTimestamp > $todayTimestamp) {
+                continue;
+            }
+
+            // Cek apakah ada data di hari ini
+            if (isset($attendanceData[$day])) {
+                $status = $attendanceData[$day]['presence_status'];
+                switch ($status) {
+                    case 1: // Hadir
+                        $summary['hadir']++;
+                        break;
+                    case 2: // Izin
+                    case 3: // Sakit
+                        $summary['izin_sakit']++;
+                        break;
+                    case 4: // Cuti
+                    case 5: // Libur
+                        $summary['libur_cuti']++;
+                        break;
+                    case 0: // Tidak Hadir (dianggap Alpha)
+                        $summary['alpha']++;
+                        break;
+                }
+            } else {
+                $summary['alpha']++;
+            }
+        }
+        $data['summary'] = $summary;
+
         echo view('layout/attendance_header', $data);
         echo view('layout/sidebar');
         echo view('layout/topbar');
@@ -472,16 +547,17 @@ class EmployeeMaster extends BaseController
         $date = $request->getPost('date');
         $presenceStatus = $request->getPost('presence_status');
 
-        // Ambil data department_id dan shift_id dari tabel employee
-        $employeeModel = new EmployeeModel();
-        $employee = $employeeModel->find($employeeId);
+        $employee = $this->employeeModel->find($employeeId);
+        if (!$employee || $employee['rptra_name'] !== session()->get('rptra_name')) {
+            session()->setFlashdata('message', '<div class="alert alert-danger" role="alert">Akses ditolak: pegawai tidak berada di RPTRA Anda.</div>');
+            return redirect()->to('admin/master/employee/attendance/' . $employeeId);
+        }
 
         if ($employee) {
             $departmentId = $employee['department_id'];
 
             $attendanceModel = new AttendanceModel();
 
-            // Cek apakah data presensi untuk `employee_id` dan `date` sudah ada
             $existingAttendance = $attendanceModel->where([
                 'employee_id' => $employeeId,
                 'attendance_date' => $date,
@@ -527,73 +603,77 @@ class EmployeeMaster extends BaseController
     {
         $employee = $this->employeeModel->find($employeeId);
         if (!$employee) {
-            throw new \CodeIgniter\Exceptions\PageNotFoundException("Pegawai tidak ditemukan");
+            throw new \CodeIgniter\Exceptions\PageNotFoundException("Pegawai dengan ID: $employeeId tidak ditemukan.");
         }
 
-        $month = (int) ($this->request->getGet('month') ?: date('m'));
-        $year = (int) ($this->request->getGet('year') ?: date('Y'));
-
-        $data = [
-            'title' => 'Jadwal Kerja Pegawai',
-            'employee' => $employee,
-            'employeeId' => $employeeId,
-            'department_current' => $this->employeeModel->getDepartments($employee['department_id']),
-            'month' => $month,
-            'year' => $year,
-            'account' => $this->authModel->getAccount(session()->get('username')),
-            'shifts' => $this->shiftModel->findAll(),
-        ];
-
-        if (!$data['department_current']) {
-            $data['department_current'] = [
-                'department_id' => 'Not assigned',
-                'department_name' => 'Department not assigned'
-            ];
+        if ($employee['rptra_name'] !== session()->get('rptra_name')) {
+            return redirect()->to('admin/dashboard')->with('error', 'Anda tidak memiliki akses ke jadwal pegawai ini.');
         }
 
-        // Mengambil jadwal kerja berdasarkan bulan dan tahun
-        $workSchedules = $this->workScheduleModel->getWorkSchedulesByEmployeeAndMonth(
-            $employeeId,
-            $month,
-            $year
-        );
+        $month = (int)($this->request->getGet('month') ?? date('m'));
+        $year  = $this->request->getGet('year') ?? date('Y');
 
-        // Membuat array jadwal kerja berdasarkan hari
+        $allShifts = $this->shiftModel->findAll();
+        $shiftsById = array_column($allShifts, null, 'shift_id');
+
+        $workSchedules = $this->workScheduleModel->getWorkSchedulesByEmployeeAndMonth($employeeId, $month, $year);
+
         $workScheduleData = [];
         foreach ($workSchedules as $ws) {
-            $day = (int) date('j', strtotime($ws['schedule_date']));
-            $workScheduleData[$day] = [
-                'schedule_id' => $ws['schedule_id'],
-                'schedule_status' => $ws['schedule_status'] === '' ? null : $ws['schedule_status'],
-                'shift_id' => $ws['shift_id'],
-            ];
+            $day = (int)date('j', strtotime($ws['schedule_date']));
+            $ws['shift_info'] = $shiftsById[$ws['shift_id']] ?? null;
+            $workScheduleData[$day] = $ws;
         }
-        $data['workSchedules'] = $workScheduleData;
+
+        $data = [
+            'title'              => 'Jadwal Kerja Pegawai',
+            'employee'           => $employee,
+            'department_current' => $this->employeeModel->getDepartments($employee['department_id']) ?? ['department_name' => 'Tidak Ditemukan'],
+            'month'              => $month,
+            'year'               => $year,
+            'account'            => $this->authModel->getAccount(session()->get('username')),
+            'shifts'             => $allShifts,
+            'workSchedules'      => $workScheduleData,
+        ];
 
         echo view('layout/attendance_header', $data);
         echo view('layout/sidebar');
         echo view('layout/topbar');
         echo view('admin/master/employee/work_schedule', $data);
-        echo view('layout/attendance_footer', $data);
+        echo view('layout/schedule_footer');
     }
 
     public function storeWorkSchedule()
     {
-        // Mendapatkan data dari POST
-        $username = session()->get('username');
-        $employee_id = $this->request->getPost('employee_id');
-        $department_id = $this->request->getPost('department_id');
-        $schedule_date = $this->request->getPost('schedule_date');
-        $schedule_status_input = $this->request->getPost('schedule_status');
-        $schedule_status = $schedule_status_input === 'NULL' ? null : (int)$schedule_status_input;
-        $shift_id = $schedule_status_input === 'NULL' ? $this->request->getPost('shift_id') : null;
+        $username       = session()->get('username');
+        $employee_id    = $this->request->getPost('employee_id');
+        $schedule_date  = $this->request->getPost('schedule_date');
+        $status_input   = $this->request->getPost('schedule_status');
+        $shift_id_input = $this->request->getPost('shift_id');
 
-        // Validasi tambahan: jika schedule_status adalah shift, pastikan shift_id valid
+        $schedule_status = null;
+        $shift_id        = null;
+
+        if ($status_input === 'shift') {
+            $schedule_status = null;
+            $shift_id        = !empty($shift_id_input) ? (int)$shift_id_input : null;
+        } elseif (in_array($status_input, ['4', '5'])) {
+            $schedule_status = (int)$status_input; // Status 4 (Cuti) atau 5 (Libur)
+            $shift_id        = null;
+        }
+
         if (is_null($schedule_status) && is_null($shift_id)) {
             return $this->response->setJSON(['status' => 'error', 'message' => 'Shift harus dipilih untuk jadwal shift kerja.']);
         }
+        if (empty($status_input)) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Status Jadwal harus dipilih.']);
+        }
 
-        // Cek apakah jadwal sudah ada
+        $emp = $this->employeeModel->find($employee_id);
+        if (!$emp || $emp['rptra_name'] !== session()->get('rptra_name')) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Akses ditolak: pegawai tidak berada di RPTRA Anda.']);
+        }
+
         $existingSchedule = $this->workScheduleModel->where('employee_id', $employee_id)
             ->where('schedule_date', $schedule_date)
             ->first();
@@ -602,65 +682,40 @@ class EmployeeMaster extends BaseController
             return $this->response->setJSON(['status' => 'error', 'message' => 'Jadwal sudah ada untuk tanggal tersebut.']);
         }
 
-        // Mulai transaksi
+        $department_id = $emp['department_id'];
+
         $this->db->transStart();
 
-        // Simpan jadwal
-        $schedule_id = $this->workScheduleModel->insert([
-            'employee_id' => $employee_id,
-            'department_id' => $department_id,
-            'schedule_date' => $schedule_date,
+        $schedule_id_new = $this->workScheduleModel->insert([
+            'employee_id'     => $employee_id,
+            'department_id'   => $department_id,
+            'schedule_date'   => $schedule_date,
             'schedule_status' => $schedule_status,
-            'shift_id' => $shift_id,
+            'shift_id'        => $shift_id,
         ]);
 
-        if ($schedule_id) {
-            // Jika status adalah 'Cuti' (4) atau 'Libur' (5), tambahkan ke attendance
+        if ($schedule_id_new) {
             if (in_array($schedule_status, [4, 5])) {
-                $presence_status = $schedule_status; // Sesuaikan dengan nilai yang diinginkan
-
-                // Cek apakah sudah ada record di attendance untuk tanggal tersebut
-                $existingAttendance = $this->attendanceModel->where('employee_id', $employee_id)
-                    ->where('attendance_date', $schedule_date)
-                    ->first();
-
-                if ($existingAttendance) {
-                    // Update record yang ada
-                    $this->attendanceModel->update($existingAttendance['attendance_id'], [
-                        'username' => $username,
-                        'schedule_id' => $schedule_id,
-                        'presence_status' => $presence_status,
-                    ]);
-                } else {
-                    // Insert record baru
-                    $this->attendanceModel->insert([
-                        'username' => $username,
-                        'employee_id' => $employee_id,
-                        'department_id' => $department_id,
-                        'schedule_id' => $schedule_id,
-                        'attendance_date' => $schedule_date,
-                        'presence_status' => $presence_status,
-                    ]);
-                }
+                $this->attendanceModel->insert([
+                    'username'        => $username,
+                    'employee_id'     => $employee_id,
+                    'department_id'   => $department_id,
+                    'schedule_id'     => $schedule_id_new,
+                    'attendance_date' => $schedule_date,
+                    'presence_status' => $schedule_status,
+                ]);
             }
-
-            $this->db->transComplete();
-
-            if ($this->db->transStatus() === FALSE) {
-                log_message('error', 'Transaksi gagal saat menambahkan jadwal kerja. Schedule ID: ' . $schedule_id);
-                session()->setFlashdata('error', 'Gagal menambahkan jadwal kerja.');
-                return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal menambahkan jadwal kerja.']);
-            }
-
-            session()->setFlashdata('success', 'Jadwal kerja berhasil ditambahkan.');
-            return $this->response->setJSON(['status' => 'success', 'message' => 'Jadwal kerja berhasil ditambahkan.']);
-        } else {
-            // Rollback transaksi jika gagal
-            $this->db->transRollback();
-            log_message('error', 'Gagal insert jadwal kerja. Employee ID: ' . $employee_id . ', Tanggal: ' . $schedule_date);
-            session()->setFlashdata('error', 'Gagal menambahkan jadwal kerja.');
-            return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal menambahkan jadwal kerja.']);
         }
+
+        $this->db->transComplete();
+
+        if ($this->db->transStatus() === FALSE) {
+            log_message('error', 'Transaksi gagal saat menambahkan jadwal kerja. Employee ID: ' . $employee_id);
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal menambahkan jadwal kerja karena kesalahan server.']);
+        }
+
+        session()->setFlashdata('message', '<div class="alert alert-success alert-dismissible fade show" role="alert">Jadwal kerja berhasil ditambahkan.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>');
+        return $this->response->setJSON(['status' => 'success', 'message' => 'Jadwal kerja berhasil ditambahkan.']);
     }
 
     public function updateWorkSchedule($scheduleId)
@@ -669,71 +724,67 @@ class EmployeeMaster extends BaseController
         if (!$schedule) {
             return $this->response->setJSON(['status' => 'error', 'message' => 'Jadwal kerja tidak ditemukan.']);
         }
-        $username = session()->get('username');
-        $schedule_status_input = $this->request->getPost('schedule_status');
-        $schedule_status = $schedule_status_input === 'NULL' ? null : (int)$schedule_status_input;
-        $shift_id = $schedule_status_input === 'NULL' ? $this->request->getPost('shift_id') : null;
 
-        // Validasi tambahan: jika schedule_status adalah shift, pastikan shift_id valid
+        $emp = $this->employeeModel->find($schedule['employee_id']);
+        if (!$emp || $emp['rptra_name'] !== session()->get('rptra_name')) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Akses ditolak: pegawai tidak berada di RPTRA Anda.']);
+        }
+
+        $username       = session()->get('username');
+        $status_input   = $this->request->getPost('schedule_status');
+        $shift_id_input = $this->request->getPost('shift_id');
+
+        $schedule_status = null;
+        $shift_id        = null;
+
+        if ($status_input === 'shift') {
+            $schedule_status = null;
+            $shift_id        = !empty($shift_id_input) ? (int)$shift_id_input : null;
+        } elseif (in_array($status_input, ['4', '5'])) {
+            $schedule_status = (int)$status_input;
+            $shift_id        = null;
+        }
+
         if (is_null($schedule_status) && is_null($shift_id)) {
             return $this->response->setJSON(['status' => 'error', 'message' => 'Shift harus dipilih untuk jadwal shift kerja.']);
         }
-
-        // Mulai transaksi
+        if (empty($status_input)) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Status Jadwal harus dipilih.']);
+        }
         $this->db->transStart();
 
-        $data = [
+        $this->workScheduleModel->update($scheduleId, [
             'schedule_status' => $schedule_status,
-            'shift_id' => $shift_id,
-        ];
+            'shift_id'        => $shift_id,
+        ]);
 
-        if ($this->workScheduleModel->update($scheduleId, $data)) {
-            // Jika status baru adalah 'Cuti' (4) atau 'Libur' (5), tambahkan atau update ke attendance
-            if (in_array($schedule_status, [4, 5])) {
-                $presence_status = $schedule_status; // Sesuaikan dengan nilai yang diinginkan
+        // Hapus data absensi Cuti/Libur lama jika ada
+        $this->attendanceModel->where('schedule_id', $scheduleId)
+            ->whereIn('presence_status', [4, 5])
+            ->delete();
 
-                // Cek apakah sudah ada record di attendance untuk schedule_id dan tanggal tersebut
-                $existingAttendance = $this->attendanceModel->where('schedule_id', $scheduleId)->first();
-
-                if ($existingAttendance) {
-                    $this->attendanceModel->update($existingAttendance['attendance_id'], [
-                        'username' => $username,
-                        'presence_status' => $presence_status,
-                    ]);
-                } else {
-                    $this->attendanceModel->insert([
-                        'username' => $username,
-                        'employee_id' => $schedule['employee_id'],
-                        'department_id' => $schedule['department_id'],
-                        'schedule_id' => $scheduleId,
-                        'attendance_date' => $schedule['schedule_date'],
-                        'presence_status' => $presence_status,
-                    ]);
-                }
-            } else {
-                $this->attendanceModel->where('schedule_id', $scheduleId)
-                    ->whereIn('presence_status', [4, 5])
-                    ->delete();
-            }
-
-            $this->db->transComplete();
-
-            if ($this->db->transStatus() === FALSE) {
-                log_message('error', 'Transaksi gagal saat mengupdate jadwal kerja. Schedule ID: ' . $scheduleId);
-                session()->setFlashdata('error', 'Gagal memperbarui jadwal kerja.');
-                return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal memperbarui jadwal kerja.']);
-            }
-
-            session()->setFlashdata('success', 'Jadwal kerja berhasil diperbarui.');
-            return $this->response->setJSON(['status' => 'success', 'message' => 'Jadwal kerja berhasil diperbarui.']);
-        } else {
-            $this->db->transRollback();
-            log_message('error', 'Gagal update jadwal kerja. Schedule ID: ' . $scheduleId);
-            session()->setFlashdata('error', 'Gagal memperbarui jadwal kerja.');
-            return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal memperbarui jadwal kerja.']);
+        // Jika status baru adalah Cuti/Libur, masukkan data absensi baru
+        if (in_array($schedule_status, [4, 5])) {
+            $this->attendanceModel->insert([
+                'username'        => $username,
+                'employee_id'     => $schedule['employee_id'],
+                'department_id'   => $schedule['department_id'],
+                'schedule_id'     => $scheduleId,
+                'attendance_date' => $schedule['schedule_date'],
+                'presence_status' => $schedule_status,
+            ]);
         }
-    }
 
+        $this->db->transComplete();
+
+        if ($this->db->transStatus() === FALSE) {
+            log_message('error', 'Transaksi gagal saat mengupdate jadwal kerja. Schedule ID: ' . $scheduleId);
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal memperbarui jadwal kerja karena kesalahan server.']);
+        }
+
+        session()->setFlashdata('message', '<div class="alert alert-success alert-dismissible fade show" role="alert">Jadwal kerja berhasil diperbarui.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>');
+        return $this->response->setJSON(['status' => 'success', 'message' => 'Jadwal kerja berhasil diperbarui.']);
+    }
 
     public function delete($id)
     {

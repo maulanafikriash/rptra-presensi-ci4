@@ -74,7 +74,7 @@ $routes->group('employee', ['filter' => 'userRole'], function ($routes) {
     $routes->get('attendance_history', 'EmployeeAttendance::attendanceHistory');
     $routes->get('work_schedule', 'EmployeeAttendance::workSchedule');
     $routes->get('change_password', 'EmployeeChangePassword::index');
-    $routes->post('change_password', 'EmployeeChangePassword::index');
+    $routes->post('change_password', 'EmployeeChangePassword::update');
     $routes->post('get_location', 'EmployeeGetLocation::getAddress');
 });
 

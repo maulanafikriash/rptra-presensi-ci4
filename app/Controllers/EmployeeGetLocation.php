@@ -35,11 +35,11 @@ class EmployeeGetLocation extends BaseController
                     'format' => 'json',
                     'lat' => $lat,
                     'lon' => $lon,
-                    'zoom' => 18,
+                    'zoom'   => 18,
                     'addressdetails' => 1
                 ],
                 'headers' => [
-                    'User-Agent' => 'RPTRAPresensi/1.0 (https://rptrapresensi.rf.gd; maulanafikriash@gmail.com)'
+                    'User-Agent' => 'RPTRAPresensi/1.0 (https://rptrapresensi.web.id/; maulanafikriash@gmail.com)'
                 ],
                 'timeout' => 10, // Timeout dalam detik
             ]);

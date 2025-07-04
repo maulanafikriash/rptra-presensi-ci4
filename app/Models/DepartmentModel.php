@@ -8,7 +8,6 @@ class DepartmentModel extends Model
     protected $table = 'department';
     protected $primaryKey = 'department_id';
     protected $allowedFields = ['department_id', 'department_name'];
-    // protected $returnType = 'array';
 
     public function deleteDepartmentWithRelations($d_id)
     {

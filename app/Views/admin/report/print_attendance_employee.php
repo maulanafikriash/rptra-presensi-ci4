@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Riwayat Kehadiran - <?= htmlspecialchars($employee['employee_name']) ?></title>
+    <title>Riwayat Kehadiran - <?= htmlspecialchars($employee['employee_name']) ?>- RPTRA <?= htmlspecialchars(session()->get('rptra_name')) ?></title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -50,7 +50,6 @@
 
 <body>
     <?php
-    // tanggal format Indonesia
     function formatTanggalIndonesia($tanggal)
     {
         $fmt = new IntlDateFormatter(
@@ -78,7 +77,7 @@
     ?>
 
     <div class="header-section">
-        <h3>DAFTAR HADIR <?= strtoupper(htmlspecialchars($dept_name)) ?> CIBUBUR BERSERI</h3>
+        <h3>DAFTAR HADIR <?= strtoupper(htmlspecialchars($dept_name)) ?> <?= strtoupper(htmlspecialchars(session()->get('rptra_name'))) ?></h3>
     </div>
 
     <div class="info-section">

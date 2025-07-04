@@ -12,33 +12,61 @@ class UserAccountModel extends Model
 
     public function getAllUsersWithEmployee()
     {
-        $query = "
-            SELECT 
-                user_account.username AS u_username,
-                employee.employee_id AS e_id,
-                employee.employee_name AS e_name,
-                employee.department_id AS d_id
-            FROM employee
-            LEFT JOIN user_account ON user_account.employee_id = employee.employee_id
-        ";
-        return $this->db->query($query)->getResultArray();
+        return $this->db->table('user_account ua')
+            ->select([
+                'ua.username AS u_username',
+                'e.employee_id    AS e_id',
+                'e.employee_name  AS e_name',
+                'e.department_id  AS d_id',
+                'e.rptra_name     AS rptra_name',
+            ])
+            ->join('employee e', 'ua.employee_id = e.employee_id', 'right')
+            ->orderBy('e.employee_id')
+            ->get()
+            ->getResultArray();
     }
 
     public function getUserByEmployeeId($employeeId)
     {
-        return $this->where('employee_id', $employeeId)->first();
+        return $this->db->table('user_account ua')
+            ->select([
+                'ua.username',
+                'ua.user_role_id',
+                'e.employee_id',
+                'e.rptra_name',
+                'e.department_id'
+            ])
+            ->join('employee e', 'ua.employee_id = e.employee_id')
+            ->where('ua.employee_id', $employeeId)
+            ->get()
+            ->getRowArray();
     }
 
     public function getEmployeeById($employeeId)
     {
-        return $this->db->table('employee')->where('employee_id', $employeeId)->get()->getRowArray();
+        return $this->db->table('employee')
+            ->select(['employee_id', 'employee_name', 'department_id', 'rptra_name'])
+            ->where('employee_id', $employeeId)
+            ->get()
+            ->getRowArray();
     }
 
     public function getUserByUsername($username)
     {
-        return $this->where('username', $username)->first();
+        return $this->db->table('user_account ua')
+            ->select([
+                'ua.username',
+                'ua.password',
+                'ua.user_role_id',
+                'e.employee_id',
+                'e.rptra_name',
+                'e.department_id'
+            ])
+            ->join('employee e', 'ua.employee_id = e.employee_id')
+            ->where('ua.username', $username)
+            ->get()
+            ->getRowArray();
     }
-
     public function addUser($data)
     {
         $this->insert($data);

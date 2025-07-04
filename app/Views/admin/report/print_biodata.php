@@ -35,6 +35,7 @@
         .details td {
             padding: 8px;
             border: 1px solid #ddd;
+            vertical-align: top;
         }
 
         .details th {
@@ -56,16 +57,16 @@
         $details = [
             'Nama' => $employee['employee_name'],
             'Jenis Kelamin' => $employee['gender'] == 'Laki-Laki' ? 'Laki-Laki' : 'Perempuan',
+            'Tempat/Tanggal Lahir' => ($employee['birth_place'] ?? '[Belum diisi]') . ', ' . date('d F Y', strtotime($employee['birth_date'])),
             'Status Perkawinan' => $employee['marital_status'],
-            'Jumlah Anak' => $employee['num_children'],
-            'Tanggal Lahir' => date('d-m-Y', strtotime($employee['birth_date'])),
-            'Tanggal Bergabung' => date('d-m-Y', strtotime($employee['hire_date'])),
+            'Jumlah Anak' => $employee['num_children'] ?? 0,
             'Pendidikan' => $employee['education'],
             'Email' => $employee['email'],
             'No. Telepon' => $employee['telephone'],
             'Alamat' => $employee['employee_address'],
+            'Tanggal Bergabung' => date('d F Y', strtotime($employee['hire_date'])),
             'Penggunaan Kontrasepsi' => $employee['contraceptive_use'] ?? 'Tidak',
-            'Department' => $department_current['department_id'] . ' - ' . $department_current['department_name'],
+            'Department' => $department_current['department_name'],
         ];
 
         $rptraDetails = [
@@ -74,7 +75,7 @@
         ];
         ?>
 
-        <?php foreach ($details as $label => $value): ?>
+        <?php foreach ($details as $label => $value) : ?>
             <tr>
                 <th><?= esc($label); ?></th>
                 <td><?= esc($value); ?></td>
@@ -82,9 +83,9 @@
         <?php endforeach; ?>
 
         <tr>
-            <th colspan="2"><strong>Saat ini Mengelola:</strong></th>
+            <th colspan="2" style="background-color: #e9ecef; text-align: center;"><strong>Saat ini Mengelola:</strong></th>
         </tr>
-        <?php foreach ($rptraDetails as $label => $value): ?>
+        <?php foreach ($rptraDetails as $label => $value) : ?>
             <tr>
                 <th><?= esc($label); ?></th>
                 <td><?= esc($value); ?></td>

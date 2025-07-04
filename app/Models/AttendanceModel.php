@@ -82,11 +82,13 @@ class AttendanceModel extends Model
     public function getAttendanceReportData($start, $end, $dept = null)
     {
         $db = Database::connect();
+        $rptraName = session()->get('rptra_name');
 
         $employeeBuilder = $db->table('employee');
         if (!is_null($dept) && $dept !== 'all') {
             $employeeBuilder->where('department_id', $dept);
         }
+        $employeeBuilder->where('rptra_name', $rptraName);
         $employees = $employeeBuilder->get()->getResultArray();
 
         $reportData = [];
@@ -124,6 +126,7 @@ class AttendanceModel extends Model
                 $rowData = [
                     'employee_id'       => $employee['employee_id'],
                     'employee_name'     => $employee['employee_name'],
+                    'rptra_name'        => $employee['rptra_name'], 
                     'attendance_date'   => $attendanceDate,
                     'in_time'           => null,
                     'in_status'         => null,
