@@ -3,7 +3,8 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Laporan Kehadiran Seluruh Pengelola</title>
+    <title>Laporan Kehadiran Seluruh <?= htmlspecialchars($dept_name) ?>
+        <?= htmlspecialchars($rptra_name) ?></title>
     <style>
         body {
             font-family: 'Helvetica', 'Arial', sans-serif;
@@ -68,9 +69,11 @@
             return date('d-m-Y', strtotime($tanggal));
         }
         $isSingleDay = ($start === $end);
+        $rptraName = isset($rptra_name) ? htmlspecialchars($rptra_name) : htmlspecialchars(session()->get('rptra_name'));
         ?>
+
         <div class="header-section">
-            <h3>LAPORAN KEHADIRAN SELURUH <?= strtoupper(htmlspecialchars($dept_name)) ?> CIBUBUR BERSERI </h3>
+            <h3>LAPORAN KEHADIRAN SELURUH <?= strtoupper(htmlspecialchars($dept_name)) ?> <?= strtoupper($rptraName) ?></h3>
             <?php if ($isSingleDay): ?>
                 <p><strong>Tanggal:</strong> <?= formatTanggalID($start); ?></p>
             <?php else: ?>
