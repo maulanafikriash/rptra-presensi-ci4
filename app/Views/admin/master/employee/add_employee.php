@@ -97,7 +97,7 @@
                             <div class="form-group row">
                                 <label for="contraceptive_use" class="col-form-label col-lg-4">Kontrasepsi yang dipakai</label>
                                 <div class="col p-0">
-                                    <input type="text" class="form-control col-lg" name="contraceptive_use" id="contraceptive_use" value="<?= set_value('contraceptive_use', 'Tidak'); ?>">
+                                    <input type="text" class="form-control col-lg" name="contraceptive_use" id="contraceptive_use" value="<?= set_value('contraceptive_use'); ?>">
                                 </div>
                             </div>
                             <div class="form-group row">
@@ -121,6 +121,20 @@
                         </div>
                         <div class="col-lg-6">
                             <div class="form-group row">
+                                <label for="birth_place" class="col-form-label col-lg-4">Tempat Lahir</label>
+                                <div class="col-lg p-0">
+                                    <input
+                                        type="text"
+                                        class="form-control"
+                                        name="birth_place"
+                                        id="birth_place"
+                                        value="<?= set_value('birth_place'); ?>">
+                                    <?php if (isset($validation) && $validation->hasError('birth_place')) : ?>
+                                        <small class="text-danger"><?= esc($validation->getError('birth_place')); ?></small>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                            <div class="form-group row">
                                 <label for="birth_date" class="col-form-label col-lg-4">Tanggal Lahir</label>
                                 <div class="col-lg p-0">
                                     <input type="date" class="form-control col-lg" name="birth_date" id="birth_date" value="<?= set_value('birth_date'); ?>">
@@ -141,7 +155,7 @@
                             <div class="form-group row">
                                 <label for="rptra_name" class="col-form-label col-lg-4">Nama RPTRA</label>
                                 <div class="col p-0">
-                                    <input type="text" class="form-control col-lg" name="rptra_name" id="rptra_name" value="<?= set_value('rptra_name'); ?>">
+                                    <input type="text" class="form-control col-lg" name="rptra_name" id="rptra_name" value="<?= esc($rptra_name ?? '-'); ?>" readonly>
                                     <?php if (isset($validation) && $validation->hasError('rptra_name')) : ?>
                                         <small class="text-danger"><?= esc($validation->getError('rptra_name')); ?></small>
                                     <?php endif; ?>
@@ -150,10 +164,15 @@
                             <div class="form-group row">
                                 <label for="rptra_address" class="col-form-label col-lg-4">Alamat RPTRA</label>
                                 <div class="col p-0">
-                                    <textarea class="form-control col-lg" rows="4" name="rptra_address" id="rptra_address"><?= set_value('rptra_address'); ?></textarea>
-                                    <?php if (isset($validation) && $validation->hasError('rptra_address')) : ?>
-                                        <small class="text-danger"><?= esc($validation->getError('rptra_address')); ?></small>
-                                    <?php endif; ?>
+                                    <textarea
+                                        class="form-control col-lg"
+                                        id="rptra_address"
+                                        rows="4"
+                                        readonly><?= esc($rptra_address); ?></textarea>
+                                    <input
+                                        type="hidden"
+                                        name="rptra_address"
+                                        value="<?= esc($rptra_address); ?>">
                                 </div>
                             </div>
 

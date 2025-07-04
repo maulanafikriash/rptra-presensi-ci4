@@ -46,13 +46,19 @@
                                                 <i class="fas fa-edit"></i>
                                             </span>
                                         </a> |
-                                        <button type="button"
-                                            class="btn btn-danger btn-circle delete-button"
-                                            data-url="<?= base_url('admin/master/user_account/delete/' . $dt['u_username']); ?>"
-                                            data-entity="akun pegawai"
-                                            title="Delete">
-                                            <i class="fas fa-trash-alt"></i>
-                                        </button>
+                                        <?php if ($dt['d_id'] === 'ADM') : ?>
+                                            <button type="button" class="btn btn-danger btn-circle" title="Tidak dapat dihapus" disabled>
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        <?php else : ?>
+                                            <button type="button"
+                                                class="btn btn-danger btn-circle delete-button"
+                                                data-url="<?= base_url('admin/master/user_account/delete/' . $dt['u_username']); ?>"
+                                                data-entity="akun pegawai"
+                                                title="Delete">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        <?php endif; ?>
                                     </td>
                                 <?php else : ?>
                                     <td class="align-middle text-center">
@@ -78,9 +84,7 @@
             </div>
         </div>
     </div>
-
 </div>
 <!-- /.container-fluid -->
-
 </div>
 <!-- End of Main Content -->

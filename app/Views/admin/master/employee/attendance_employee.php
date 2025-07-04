@@ -1,221 +1,289 @@
+<?php
+$bulanIndonesia = [
+    1 => 'Januari',
+    2 => 'Februari',
+    3 => 'Maret',
+    4 => 'April',
+    5 => 'Mei',
+    6 => 'Juni',
+    7 => 'Juli',
+    8 => 'Agustus',
+    9 => 'September',
+    10 => 'Oktober',
+    11 => 'November',
+    12 => 'Desember',
+];
+
+$statusMap = [
+    1 => ['class' => 'badge-success', 'text' => 'Hadir'],
+    0 => ['class' => 'badge-danger', 'text' => 'Tidak Hadir'],
+    2 => ['class' => 'badge-warning', 'text' => 'Izin'],
+    3 => ['class' => 'badge-warning', 'text' => 'Sakit'],
+    4 => ['class' => 'badge-dark', 'text' => 'Cuti'],
+    5 => ['class' => 'badge-primary', 'text' => 'Libur'],
+];
+?>
+
 <div class="container-fluid">
-    <h4 class="mb-4 text-gray-800 font-weight-bold"><?= esc($title); ?></h4>
-    <div class="row">
-        <div class="col-lg-3">
-            <a href="<?= base_url('admin/master/employee/detail/' . esc($employee['employee_id'])); ?>" class="btn btn-secondary btn-icon-split mb-4">
-                <span class="icon text-white">
-                    <i class="fas fa-chevron-left"></i>
-                </span>
-                <span class="text">Kembali</span>
-            </a>
-        </div>
-        <div class="col-lg-5 offset-lg-4" id="flashdataMessage">
+
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800 font-weight-bold"><?= esc($title); ?></h1>
+        <a href="<?= base_url('admin/master/employee/detail/' . esc($employee['employee_id'])); ?>" class="btn btn-md btn-secondary shadow-sm">
+            <i class="fas fa-arrow-left fa-md text-white-50"></i> Kembali ke Detail
+        </a>
+    </div>
+
+    <?php if (session()->getFlashdata('message')) : ?>
+        <div class="alert alert-success" role="alert" id="flashdataMessage">
             <?= session()->getFlashdata('message'); ?>
         </div>
+    <?php endif; ?>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Informasi Pegawai</h6>
+        </div>
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <div class="row">
+                        <div class="col-4 col-md-3"><strong>Nama</strong></div>
+                        <div class="col-8 col-md-9">: <?= esc($employee['employee_name']); ?></div>
+                    </div>
+                    <div class="row">
+                        <div class="col-4 col-md-3"><strong>Departemen</strong></div>
+                        <div class="col-8 col-md-9">: <?= esc($department_current['department_name']) . ' ' . esc($employee['rptra_name']); ?></div>
+                    </div>
+                </div>
+            </div>
+
+            <hr>
+
+            <form method="get" class="mt-3">
+                <div class="form-row align-items-end">
+                    <div class="col-md-3 col-6 mb-2">
+                        <label for="month">Bulan</label>
+                        <select name="month" id="month" class="form-control">
+                            <?php for ($m = 1; $m <= 12; $m++) : ?>
+                                <option value="<?= $m; ?>" <?= ($m == $month) ? 'selected' : ''; ?>>
+                                    <?= $bulanIndonesia[$m]; ?>
+                                </option>
+                            <?php endfor; ?>
+                        </select>
+                    </div>
+                    <div class="col-md-2 col-6 mb-2">
+                        <label for="year">Tahun</label>
+                        <select name="year" id="year" class="form-control">
+                            <?php for ($y = date('Y'); $y >= date('Y') - 5; $y--) : ?>
+                                <option value="<?= $y; ?>" <?= ($y == $year) ? 'selected' : ''; ?>><?= $y; ?></option>
+                            <?php endfor; ?>
+                        </select>
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <button type="submit" class="btn btn-primary btn-block"><i class="fas fa-filter"></i> Filter</button>
+                    </div>
+                </div>
+            </form>
+        </div>
     </div>
 
-    <!-- Detail Pegawai -->
-    <div class="mb-5">
-        <div class="row">
-            <div class="col-3 text-end font-weight-bold">Nama :</div>
-            <div class="col font-weight-bold"><?= esc($employee['employee_name']); ?></div>
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+            <h6 class="m-0 font-weight-bold text-primary">
+                Kalender Presensi - <?= $bulanIndonesia[(int)$month] ?> <?= esc($year) ?>
+            </h6>
+            <div>
+                <a href="<?= base_url('admin/report/print_attendance_employee/pdf/' . esc($employee['employee_id']) . '?month=' . esc($month) . '&year=' . esc($year)); ?>" class="btn btn-sm btn-danger shadow-sm" target="_blank">
+                    <i class="fas fa-file-pdf fa-sm text-white-50"></i> Cetak PDF
+                </a>
+                <a href="<?= base_url('admin/report/print_attendance_employee/excel/' . esc($employee['employee_id']) . '?month=' . esc($month) . '&year=' . esc($year)); ?>" class="btn btn-sm btn-success shadow-sm">
+                    <i class="fas fa-file-excel fa-sm text-white-50"></i> Cetak Excel
+                </a>
+            </div>
         </div>
-        <div class="row">
-            <div class="col-3 text-end font-weight-bold">Department :</div>
-            <div class="col font-weight-bold"><?= esc($department_current['department_name']); ?></div>
-        </div>
-    </div>
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-6 col-lg-3 mb-4">
+                    <div class="card border-left-success shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Hadir</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800"><?= $summary['hadir'] ?></div>
+                                </div>
+                                <div class="col-auto"><i class="fas fa-check-circle fa-2x text-gray-300"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-lg-3 mb-4">
+                    <div class="card border-left-warning shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Izin/Sakit</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800"><?= $summary['izin_sakit'] ?></div>
+                                </div>
+                                <div class="col-auto"><i class="fas fa-exclamation-circle fa-2x text-gray-300"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-lg-3 mb-4">
+                    <div class="card border-left-danger shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Alpha</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800"><?= $summary['alpha'] ?></div>
+                                </div>
+                                <div class="col-auto"><i class="fas fa-times-circle fa-2x text-gray-300"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-lg-3 mb-4">
+                    <div class="card border-left-info shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Libur/Cuti</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800"><?= $summary['libur_cuti'] ?></div>
+                                </div>
+                                <div class="col-auto"><i class="fas fa-calendar-alt fa-2x text-gray-300"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <hr>
+            <div class="table-responsive">
+                <table class="table table-bordered text-center" id="attendance-calendar">
+                    <thead class="thead-light">
+                        <tr>
+                            <th style="width: 14.28%;">Minggu</th>
+                            <th style="width: 14.28%;">Senin</th>
+                            <th style="width: 14.28%;">Selasa</th>
+                            <th style="width: 14.28%;">Rabu</th>
+                            <th style="width: 14.28%;">Kamis</th>
+                            <th style="width: 14.28%;">Jumat</th>
+                            <th style="width: 14.28%;">Sabtu</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php
+                        $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $month, $year);
+                        $firstDayOfMonth = date('w', strtotime("$year-$month-01"));
+                        $todayDate = date('Y-m-d');
+                        $dayCounter = 1;
+                        ?>
 
-    <?php
-    $bulanIndonesia = [
-        1 => 'Januari',
-        2 => 'Februari',
-        3 => 'Maret',
-        4 => 'April',
-        5 => 'Mei',
-        6 => 'Juni',
-        7 => 'Juli',
-        8 => 'Agustus',
-        9 => 'September',
-        10 => 'Oktober',
-        11 => 'November',
-        12 => 'Desember',
-    ];
-    ?>
-    <!-- Filter Bulan dan Tahun -->
-    <form action="" method="get" class="form-inline mb-3">
-        <div class="form-group mr-2">
-            <label for="month" class="mr-2">Bulan:</label>
-            <select name="month" id="month" class="form-control">
-                <?php for ($m = 1; $m <= 12; $m++) : ?>
-                    <option value="<?= $m; ?>" <?= ($m == $month) ? 'selected' : ''; ?>>
-                        <?= $bulanIndonesia[$m]; ?>
-                    </option>
-                <?php endfor; ?>
-            </select>
-        </div>
-        <div class="form-group mr-2">
-            <label for="year" class="mr-2">Tahun:</label>
-            <select name="year" id="year" class="form-control">
-                <?php for ($y = date('Y') - 5; $y <= date('Y') + 5; $y++) : ?>
-                    <option value="<?= $y; ?>" <?= ($y == $year) ? 'selected' : ''; ?>><?= $y; ?></option>
-                <?php endfor; ?>
-            </select>
-        </div>
-        <button type="submit" class="btn btn-primary">Filter</button>
-    </form>
+                        <?php for ($i = 0; $i < 6; $i++) : ?>
+                            <tr>
+                                <?php for ($j = 0; $j < 7; $j++) : ?>
+                                    <?php
+                                    if (($i === 0 && $j < $firstDayOfMonth) || $dayCounter > $daysInMonth) {
+                                        echo '<td class="bg-light"></td>';
+                                    } else {
+                                        $currentLoopDateStr = "$year-$month-$dayCounter";
+                                        $currentLoopDate = date('Y-m-d', strtotime($currentLoopDateStr));
+                                        $isToday = ($currentLoopDate == $todayDate);
+                                        $isFuture = ($currentLoopDate > $todayDate);
 
-    <!-- Tombol Export -->
-    <div class="d-flex justify-content-end mb-2">
-        <a href="<?= base_url('admin/report/print_attendance_employee/pdf/' . esc($employee['employee_id']) . '?month=' . esc($month) . '&year=' . esc($year)); ?>" class="btn btn-danger btn-icon-split mr-2" target="_blank">
-            <span class="icon text-white">
-                <i class="fas fa-file-pdf"></i>
-            </span>
-            <span class="text">Cetak PDF</span>
-        </a>
-        <a href="<?= base_url('admin/report/print_attendance_employee/excel/' . esc($employee['employee_id']) . '?month=' . esc($month) . '&year=' . esc($year)); ?>" class="btn btn-success btn-icon-split">
-            <span class="icon text-white">
-                <i class="fas fa-file-excel"></i>
-            </span>
-            <span class="text">Cetak Excel</span>
-        </a>
-    </div>
+                                        $td_class = $isToday ? 'bg-primary text-white font-weight-bold' : '';
+                                        echo "<td class='day-cell {$td_class}' style='min-height: 120px; vertical-align: top;'>";
+                                    ?>
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <strong class="h5"><?= $dayCounter ?></strong>
+                                            <?php
+                                            $status = $attendance[$dayCounter]['presence_status'] ?? null;
+                                            if (!$isFuture && !in_array($status, [4, 5])) { // Can't edit leave/holiday
+                                                echo "<a href='#' title='Edit Presensi' data-target='#editAttendanceModal' data-toggle='modal' data-day='{$dayCounter}'><i class='fas fa-edit text-info'></i></a>";
+                                            }
+                                            ?>
+                                        </div>
 
-    <!-- Tabel Kalender -->
-    <div class="table-responsive">
-        <table class="table table-bordered">
-            <thead>
-                <tr>
-                    <th>Minggu</th>
-                    <th>Senin</th>
-                    <th>Selasa</th>
-                    <th>Rabu</th>
-                    <th>Kamis</th>
-                    <th>Jumat</th>
-                    <th>Sabtu</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php
-                $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $month, $year);
-                $firstDayOfMonth = date('w', strtotime("$year-$month-01"));
-                $currentDate = date('Y-m-d');
+                                        <div class="mt-2">
+                                            <?php
+                                            if ($isFuture) {
+                                                echo "<span class='badge badge-secondary'>Belum Ada Data</span>";
+                                            } elseif (isset($attendance[$dayCounter])) {
+                                                $attData = $attendance[$dayCounter];
+                                                $statusInfo = $statusMap[$attData['presence_status']] ?? null;
 
-                // Membuat array status presensi berdasarkan hari
-                $attendanceData = [];
-                foreach ($attendance as $att) {
-                    if (isset($att['date'])) {
-                        $day = (int) date('j', strtotime($att['date']));
-                        $attendanceData[$day] = [
-                            'presence_status' => $att['presence_status'],
-                            'check_in_latitude' => $att['check_in_latitude'],
-                            'check_in_longitude' => $att['check_in_longitude'],
-                            'check_out_latitude' => $att['check_out_latitude'],
-                            'check_out_longitude' => $att['check_out_longitude'],
-                        ];
-                    }
-                }
+                                                if ($statusInfo) {
+                                                    echo "<span class='badge {$statusInfo['class']} d-block'>{$statusInfo['text']}</span>";
+                                                }
 
-                $dayCounter = 0;
-
-                for ($i = 0; $i < 6; $i++) {
-                    echo "<tr>";
-                    for ($j = 0; $j < 7; $j++) {
-                        if ($i === 0 && $j < $firstDayOfMonth) {
-                            echo "<td></td>";
-                        } elseif (++$dayCounter <= $daysInMonth) {
-                            $currentLoopDate = date('Y-m-d', strtotime("$year-$month-$dayCounter"));
-
-                            echo "<td><strong class='h5'>$dayCounter</strong><br>";
-
-                            // Tampilkan ikon edit dan lokasi hanya jika tanggal saat ini atau sebelumnya
-                            if ($currentLoopDate <= $currentDate) {
-                                // Cek presence_status
-                                $canEdit = true;
-                                if (isset($attendanceData[$dayCounter]['presence_status'])) {
-                                    $status = $attendanceData[$dayCounter]['presence_status'];
-                                    if (in_array($status, [4, 5])) {
-                                        $canEdit = false;
+                                                // Location Icons for 'Hadir'
+                                                if ($attData['presence_status'] == 1) {
+                                                    echo "<div class='mt-2'>";
+                                                    if (!empty($attData['check_in_latitude'])) {
+                                                        echo "<a href='#' data-target='#mapModal' title='Lokasi Masuk' class='mx-1' onclick=\"showMap({$attData['check_in_latitude']}, {$attData['check_in_longitude']}, '{$employee['employee_name']} - Check In')\">
+                                                                <i class='fas fa-map-marker-alt' style='font-size: 1.2rem; color: #0af06d !important;;'></i>
+                                                              </a>";
+                                                    }
+                                                    if (!empty($attData['check_out_latitude'])) {
+                                                        echo "<a href='#' data-target='#mapModal' title='Lokasi Keluar' class='mx-1' onclick=\"showMap({$attData['check_out_latitude']}, {$attData['check_out_longitude']}, '{$employee['employee_name']} - Check Out')\">
+                                                                <i class='fas fa-map-marker-alt' style='font-size: 1.2rem; color: #f5253a !important;;'></i>
+                                                              </a>";
+                                                    }
+                                                    echo "</div>";
+                                                }
+                                            } else {
+                                                echo "<span class='badge badge-danger d-block'>Tidak Hadir</span>";
+                                            }
+                                            ?>
+                                        </div>
+                                    <?php
+                                        echo "</td>";
+                                        $dayCounter++;
                                     }
-                                }
+                                    ?>
+                                <?php endfor; ?>
+                            </tr>
+                            <?php if ($dayCounter > $daysInMonth) break; ?>
+                        <?php endfor; ?>
+                    </tbody>
+                </table>
+            </div>
 
-                                if ($canEdit) {
-                                    echo "<a href='#' class='float-right' data-target='#editAttendanceModal' data-toggle='modal' data-day='$dayCounter'><i class='fas fa-edit'></i></a><br>";
-                                }
-
-                                if (isset($attendanceData[$dayCounter]) && $attendanceData[$dayCounter]['presence_status'] == 1) {
-
-                                    echo "<div class='d-flex justify-content-start align-items-center gap-2'>";
-
-                                    // Tampilkan ikon lokasi presensi masuk jika tersedia
-                                    $checkInLocationEmpty = empty($attendanceData[$dayCounter]['check_in_latitude']) || empty($attendanceData[$dayCounter]['check_in_longitude']);
-                                    if (!$checkInLocationEmpty) {
-                                        echo "<a href='#' data-target='#mapModal' title='Lihat Lokasi Presensi Masuk' class='mx-1' onclick=\"showMap(" . ($attendanceData[$dayCounter]['check_in_latitude'] ?? 'null') . ", " . ($attendanceData[$dayCounter]['check_in_longitude'] ?? 'null') . ", '{$employee['employee_name']} - Check In')\">
-                                                <i class='fas fa-map-marker-alt text-success' style='font-size: 1.1rem;'></i>
-                                            </a>";
-                                    }
-
-                                    // Tampilkan ikon lokasi presensi keluar jika tersedia
-                                    $checkOutLocationEmpty = empty($attendanceData[$dayCounter]['check_out_latitude']) || empty($attendanceData[$dayCounter]['check_out_longitude']);
-                                    if (!$checkOutLocationEmpty) {
-                                        echo "<a href='#' data-target='#mapModal' title='Lihat Lokasi Presensi Keluar' class='mx-1' onclick=\"showMap(" . ($attendanceData[$dayCounter]['check_out_latitude'] ?? 'null') . ", " . ($attendanceData[$dayCounter]['check_out_longitude'] ?? 'null') . ", '{$employee['employee_name']} - Check Out')\">
-                                                <i class='fas fa-map-marker-alt text-danger' style='font-size: 1.1rem;'></i>
-                                            </a>";
-                                    }
-
-                                    echo "</div>";
-                                }
-                            }
-
-                            if ($currentLoopDate > $currentDate) {
-                                echo "<span class='badge badge-secondary'>Tidak Ada Data</span>";
-                            } elseif (isset($attendanceData[$dayCounter])) {
-                                switch ($attendanceData[$dayCounter]['presence_status']) {
-                                    case 1:
-                                        echo "<span class='badge badge-success'>Hadir</span>";
-                                        break;
-                                    case 0:
-                                        echo "<span class='badge badge-danger'>Tidak Hadir</span>";
-                                        break;
-                                    case 2:
-                                        echo "<span class='badge badge-warning'>Izin</span>";
-                                        break;
-                                    case 3:
-                                        echo "<span class='badge badge-warning'>Sakit</span>";
-                                        break;
-                                    case 4:
-                                        echo "<span class='badge badge-dark'>Cuti</span>";
-                                        break;
-                                    case 5:
-                                        echo "<span class='badge badge-primary'>Libur</span>";
-                                        break;
-                                    default:
-                                        echo "<span class='badge badge-secondary'>Tidak Ada Data</span>";
-                                        break;
-                                }
-                            } else {
-                                echo "<span class='badge badge-danger'>Tidak Hadir</span>";
-                            }
-                            echo "</td>";
-                        } else {
-                            echo "<td></td>";
-                        }
-                    }
-                    echo "</tr>";
-                    if ($dayCounter >= $daysInMonth) {
-                        break;
-                    }
-                }
-                ?>
-            </tbody>
-        </table>
-    </div>
-    <div class="mt-4">
-        <h5>Keterangan:</h5>
-        <ul class="list-unstyled">
-            <li><i class="fas fa-map-marker-alt text-success"></i> <strong>Ikon Lokasi Hijau:</strong> Lokasi Presensi Masuk</li>
-            <li><i class="fas fa-map-marker-alt text-danger"></i> <strong>Ikon Lokasi Merah:</strong> Lokasi Presensi Keluar</li>
-            <li><i class="fas fa-edit"></i> <strong>Ikon Edit:</strong> Edit Status Presensi</li>
-        </ul>
+            <hr>
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Keterangan Ikon:</h5>
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-edit text-info"></i> : Edit Status Presensi</li>
+                        <li><i class="fas fa-map-marker-alt text-success"></i> : Lokasi Presensi Masuk</li>
+                        <li><i class="fas fa-map-marker-alt text-danger"></i> : Lokasi Presensi Keluar</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h5>Keterangan Status:</h5>
+                    <span class="badge badge-success">Hadir</span>
+                    <span class="badge badge-danger">Tidak Hadir</span>
+                    <span class="badge badge-warning">Izin/Sakit</span>
+                    <span class="badge badge-dark">Cuti</span>
+                    <span class="badge badge-primary">Libur</span>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+
+<style>
+    #attendance-calendar .day-cell {
+        min-height: 120px;
+        vertical-align: top;
+        padding: 8px;
+    }
+
+    #attendance-calendar a {
+        color: inherit;
+    }
+
+    #attendance-calendar .bg-primary a,
+    #attendance-calendar .bg-primary i {
+        color: #fff !important;
+    }
+</style>
