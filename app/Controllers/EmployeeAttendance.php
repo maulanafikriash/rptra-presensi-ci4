@@ -76,7 +76,7 @@ class EmployeeAttendance extends BaseController
             $shiftDetails = $this->shiftModel->find($schedule['shift_id']);
             $data['shift_details'] = $shiftDetails;
 
-            if ($shiftDetails && $shiftDetails['start_time'] == '05:00:00' && $shiftDetails['end_time'] == '23:59:00') {
+            if ($shiftDetails && $shiftDetails['start_time'] == '05:00:00' && $shiftDetails['end_time'] == '22:00:00') {
                 $isFlexibleShift = true;
             }
             $data['is_flexible_shift'] = $isFlexibleShift;
@@ -125,12 +125,16 @@ class EmployeeAttendance extends BaseController
         $data['can_check_out'] = false;
         if ($data['already_checked_in'] && !$data['already_checked_out']) {
             if ($isFlexibleShift) {
-                // Untuk shift fleksibel, tombol keluar aktif setelah 8 jam kerja.
-                $checkInTimestamp = strtotime($attendance['in_time']);
-                $eightHoursInSeconds = 8 * 60 * 60;
+                $checkInTimestamp = strtotime($today . ' ' . $attendance['in_time']);
+                $shiftEndTimestamp = strtotime($today . ' 22:00:00');
 
-                // Tombol keluar aktif jika waktu saat ini sudah melewati waktu masuk + 8 jam
-                if ($currentTime >= ($checkInTimestamp + $eightHoursInSeconds)) {
+                // waktu paling cepat untuk bisa presensi keluar
+                $eightHoursAfterCheckIn = $checkInTimestamp + (8 * 60 * 60);
+
+                // waktu yang lebih awal antara (waktu masuk + 8 jam) atau (akhir shift jam 22:00)
+                $validCheckOutTime = min($eightHoursAfterCheckIn, $shiftEndTimestamp);
+
+                if ($currentTime >= $validCheckOutTime) {
                     $data['can_check_out'] = true;
                 }
             } elseif (isset($data['shift_status']) && $data['shift_status'] == 'sudah selesai') {
@@ -152,10 +156,12 @@ class EmployeeAttendance extends BaseController
             $messageText = '';
 
             if ($isFlexibleShift) {
-                $checkInTimestamp = strtotime($attendance['in_time']);
-                $checkOutAvailableTimestamp = $checkInTimestamp + (8 * 60 * 60);
-                $checkOutAvailableTimeFormatted = date('H:i', $checkOutAvailableTimestamp);
-                $messageText = "Berhasil presensi masuk pada pukul {$checkInTimeFormatted}, presensi keluar bisa dilakukan pukul {$checkOutAvailableTimeFormatted}. Selamat bekerja.";
+                $checkInTimestamp = strtotime($today . ' ' . $attendance['in_time']);
+                $shiftEndTimestamp = strtotime($today . ' 22:00:00');
+                $eightHoursAfterCheckIn = $checkInTimestamp + (8 * 60 * 60);
+                $validCheckOutTime = min($eightHoursAfterCheckIn, $shiftEndTimestamp);
+                $checkOutAvailableTimeFormatted = date('H:i', $validCheckOutTime);
+                $messageText = "Berhasil presensi masuk pada pukul {$checkInTimeFormatted}. Presensi keluar dapat dilakukan pada pukul {$checkOutAvailableTimeFormatted}. Selamat bekerja.";
             } else {
                 $messageText = "Berhasil presensi masuk pada pukul {$checkInTimeFormatted}. Selamat bekerja.";
             }

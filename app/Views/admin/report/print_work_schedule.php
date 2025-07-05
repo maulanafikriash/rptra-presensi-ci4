@@ -179,7 +179,7 @@
                                     $endTime = date('H:i', strtotime($schedule['end_time']));
                                     $shiftCellContent = esc($startTime) . ' - ' . esc($endTime);
 
-                                    if ($startTime == '05:00' && $endTime == '23:59') {
+                                    if ($startTime == '05:00' && $endTime == '22:00') {
                                         $shiftCellContent .= ' (tugas luar)';
                                     }
                                 }

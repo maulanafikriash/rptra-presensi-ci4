@@ -35,7 +35,7 @@
                     <?php foreach ($all_shifts as $shift) : ?>
                       <?php
                       $shift_text = '';
-                      if ($shift['start_time'] == '05:00:00' && $shift['end_time'] == '23:59:00') {
+                      if ($shift['start_time'] == '05:00:00' && $shift['end_time'] == '22:00:00') {
                         $shift_text = 'Shift Fleksibel (Tugas Luar)';
                       } else {
                         $shift_text = 'Shift ' . esc($shift['shift_id']) . ' (' . date('H:i', strtotime($shift['start_time'])) . ' - ' . date('H:i', strtotime($shift['end_time'])) . ')';
@@ -57,7 +57,7 @@
                   <?php endif; ?>
                 <?php else : ?>
                   <?php if ($has_shift && $shift_details) : ?>
-                    <input class="form-control" type="text" value="<?= $is_flexible_shift ? 'Shift Fleksibel (00:00 - 23:59)' : 'Shift ' . esc($shift_details['shift_id']) . ' = ' . esc($shift_start_time) . ' - ' . esc($shift_end_time) . ''; ?>" readonly>
+                    <input class="form-control" type="text" value="<?= $is_flexible_shift ? 'Shift Fleksibel (05:00 - 22:00)' : 'Shift ' . esc($shift_details['shift_id']) . ' = ' . esc($shift_start_time) . ' - ' . esc($shift_end_time) . ''; ?>" readonly>
                   <?php else : ?>
                     <?php
                     $statusMap = [
@@ -170,7 +170,6 @@
 
 <script>
   document.addEventListener("DOMContentLoaded", function() {
-    // --- Variabel dari PHP ---
     const isFlexibleShift = <?= json_encode($is_flexible_shift); ?>;
     const canCheckIn = <?= json_encode($can_check_in); ?>;
     const canCheckOut = <?= json_encode($can_check_out); ?>;
@@ -204,7 +203,7 @@
 
       const shiftStartTimeString = selectedOption.getAttribute('data-start');
       const shiftEndTime = selectedOption.getAttribute('data-end');
-      if (shiftEndTime === '23:59:00') { // Shift Fleksibel selalu valid
+      if (shiftEndTime === '22:00:00') { // Shift Fleksibel selalu valid
         if (isLocationActive && checkInBtn) checkInBtn.disabled = false;
         return;
       }
