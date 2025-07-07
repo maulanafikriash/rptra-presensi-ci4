@@ -24,12 +24,6 @@ $bulanIndonesia = [
         </a>
     </div>
 
-    <?php if (session()->getFlashdata('message')) : ?>
-        <div class="alert alert-success" role="alert" id="flashdataMessage">
-            <?= session()->getFlashdata('message'); ?>
-        </div>
-    <?php endif; ?>
-
     <div class="card shadow mb-4">
         <div class="card-header py-3">
             <h6 class="m-0 font-weight-bold text-primary">Informasi Pegawai</h6>
@@ -73,6 +67,13 @@ $bulanIndonesia = [
             </form>
         </div>
     </div>
+
+    <?php if (session()->getFlashdata('message')) : ?>
+        <div class="alert alert-success" role="alert" id="flashdataMessage">
+            <button class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <?= session()->getFlashdata('message'); ?>
+        </div>
+    <?php endif; ?>
 
     <div class="card shadow mb-4">
         <div class="card-header py-3 d-flex align-items-center justify-content-between">

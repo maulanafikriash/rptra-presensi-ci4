@@ -17,6 +17,10 @@ class ShiftSeeder extends Seeder
                 'start_time' => '10:00:00',
                 'end_time'   => '18:00:00',
             ],
+            [
+                'start_time' => '05:00:00',
+                'end_time'   => '22:00:00',
+            ],
         ];
 
         // Insert batch data ke tabel shift

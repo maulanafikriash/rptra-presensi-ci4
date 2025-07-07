@@ -258,7 +258,7 @@ class EmployeeAttendance extends BaseController
         }
 
         $in_time = date('H:i:s');
-        $isFlexibleShift = ($shiftData['start_time'] == '05:00:00' && $shiftData['end_time'] == '23:59:00');
+        $isFlexibleShift = ($shiftData['start_time'] == '05:00:00' && $shiftData['end_time'] == '22:00:00');
 
         if ($isFlexibleShift) {
             $inStatus = 'Tugas Luar';
@@ -404,10 +404,7 @@ class EmployeeAttendance extends BaseController
                         break; // Libur
                 }
             } else {
-                $dayName = date('N', strtotime($date));
-                if ($dayName < 6) {
-                    $summary['alpha']++;
-                }
+                $summary['alpha']++;
             }
         }
         $data['summary'] = $summary;

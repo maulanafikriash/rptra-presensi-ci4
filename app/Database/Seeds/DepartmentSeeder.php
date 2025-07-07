@@ -15,7 +15,7 @@ class DepartmentSeeder extends Seeder
             ],
             [
                 'department_id'   => 'PLA',
-                'department_name' => 'Pengelola',
+                'department_name' => 'Pengelola RPTRA',
             ],
         ];
         // Insert batch data ke tabel department
