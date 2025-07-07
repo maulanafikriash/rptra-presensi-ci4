@@ -570,7 +570,7 @@ class EmployeeMaster extends BaseController
                 ]);
 
                 if ($updated) {
-                    $session->setFlashdata('message', '<div class="alert alert-success" role="alert">Status presensi berhasil diperbarui!</div>');
+                    $session->setFlashdata('message', 'Status presensi berhasil diperbarui!');
                 } else {
                     $session->setFlashdata('message', '<div class="alert alert-danger" role="alert">Gagal memperbarui status presensi!</div>');
                 }
@@ -587,7 +587,7 @@ class EmployeeMaster extends BaseController
                 ]);
 
                 if ($inserted) {
-                    $session->setFlashdata('message', '<div class="alert alert-success" role="alert">Status presensi berhasil ditambahkan!</div>');
+                    $session->setFlashdata('message', 'Status presensi berhasil ditambahkan!');
                 } else {
                     $session->setFlashdata('message', '<div class="alert alert-danger" role="alert">Gagal menambahkan status presensi!</div>');
                 }
@@ -714,7 +714,7 @@ class EmployeeMaster extends BaseController
             return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal menambahkan jadwal kerja karena kesalahan server.']);
         }
 
-        session()->setFlashdata('message', '<div class="alert alert-success alert-dismissible fade show" role="alert">Jadwal kerja berhasil ditambahkan.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>');
+        session()->setFlashdata('message', 'Jadwal kerja berhasil ditambahkan.');
         return $this->response->setJSON(['status' => 'success', 'message' => 'Jadwal kerja berhasil ditambahkan.']);
     }
 
@@ -782,7 +782,7 @@ class EmployeeMaster extends BaseController
             return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal memperbarui jadwal kerja karena kesalahan server.']);
         }
 
-        session()->setFlashdata('message', '<div class="alert alert-success alert-dismissible fade show" role="alert">Jadwal kerja berhasil diperbarui.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>');
+        session()->setFlashdata('message', 'Jadwal kerja berhasil diperbarui.');
         return $this->response->setJSON(['status' => 'success', 'message' => 'Jadwal kerja berhasil diperbarui.']);
     }
 

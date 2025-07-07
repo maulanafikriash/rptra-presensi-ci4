@@ -32,9 +32,10 @@ $statusMap = [
             <i class="fas fa-arrow-left fa-md text-white-50"></i> Kembali ke Detail
         </a>
     </div>
-
+    
     <?php if (session()->getFlashdata('message')) : ?>
         <div class="alert alert-success" role="alert" id="flashdataMessage">
+            <button class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
             <?= session()->getFlashdata('message'); ?>
         </div>
     <?php endif; ?>
