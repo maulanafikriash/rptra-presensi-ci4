@@ -263,8 +263,19 @@ class EmployeeAttendance extends BaseController
         if ($isFlexibleShift) {
             $inStatus = 'Tugas Luar';
         } else {
-            $allowedTime = date('H:i:s', strtotime($shiftData['start_time'] . '+15 minutes +59 seconds'));
-            $inStatus = (strtotime($in_time) <= strtotime($allowedTime)) ? 'Tepat Waktu' : 'Terlambat';
+            $checkInTimestamp = strtotime($in_time);
+            $shiftStartTimestamp = strtotime($shiftData['start_time']);
+
+            // Batas waktu untuk dianggap "Tepat Waktu" (jam masuk + 15 menit)
+            $onTimeLimitTimestamp = $shiftStartTimestamp + (15 * 60);
+
+            if ($checkInTimestamp < $shiftStartTimestamp) {
+                $inStatus = 'Lebih Awal';
+            } elseif ($checkInTimestamp >= $shiftStartTimestamp && $checkInTimestamp <= $onTimeLimitTimestamp) {
+                $inStatus = 'Tepat Waktu';
+            } else {
+                $inStatus = 'Terlambat';
+            }
         }
 
         $attendanceData = [
