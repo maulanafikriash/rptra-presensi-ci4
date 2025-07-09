@@ -1,7 +1,4 @@
 <div class="container-fluid">
-
-
-
   <div class="row">
     <div class="col">
       <div class="card shadow mb-4" style="min-height: 543px">
@@ -215,11 +212,17 @@
       const [startHours, startMinutes, startSeconds] = shiftStartTimeString.split(':');
       startShiftTime.setHours(startHours, startMinutes, startSeconds, 0);
 
-      if (now < startShiftTime) {
+      // waktu paling awal bisa presensi (1 jam sebelum shift mulai)
+      const earlyCheckInTime = new Date(startShiftTime.getTime() - 60 * 60 * 1000);
+
+      if (now < earlyCheckInTime) {
+        // Format waktu untuk pesan error
+        const earlyHours = earlyCheckInTime.getHours().toString().padStart(2, '0');
+        const earlyMinutes = earlyCheckInTime.getMinutes().toString().padStart(2, '0');
         Swal.fire({
           icon: 'warning',
-          title: 'Peringatan',
-          text: 'Shift yang anda pilih belum mulai!',
+          title: 'Belum Waktunya Presensi',
+          text: `Anda baru bisa presensi masuk mulai pukul ${earlyHours}:${earlyMinutes}.`,
           confirmButtonText: 'Oke'
         });
         if (checkInBtn) checkInBtn.disabled = true;
