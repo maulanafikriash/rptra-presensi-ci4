@@ -61,6 +61,14 @@
             </div>
         </div>
 
+    <?php elseif (isset($start) && $start != '' && isset($end) && $end != '' && empty($dept)) : ?>
+        <div class="card shadow mb-4">
+            <div class="card-body">
+                <h5 class="text-center text-danger">Data kehadiran tidak ditemukan.</h5>
+                <p class="text-center">Pastikan departemen sudah dipilih.</p>
+            </div>
+        </div>
+
     <?php elseif (empty($attendance) && (isset($start) && isset($end))) : ?>
         <div class="card shadow mb-4">
             <div class="card-body">
