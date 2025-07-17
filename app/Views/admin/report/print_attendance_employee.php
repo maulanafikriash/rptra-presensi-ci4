@@ -106,8 +106,8 @@
                 <th style="width: 25%;">Tanggal</th>
                 <th>Shift</th>
                 <th>Check In</th>
-                <th>Status Masuk</th>
                 <th>Check Out</th>
+                <th>Status Masuk</th>
             </tr>
         </thead>
         <tbody>
@@ -129,8 +129,7 @@
                             }
                             ?>
                         </td>
-                        <td><?= $att['in_time'] ? date('H:i:s', strtotime($att['in_time'])) : '-'; ?></td>
-                        <td><?= htmlspecialchars($att['in_status'] ?? '-'); ?></td>
+                        <td><?= $att['in_time'] ? date('H:i:s', strtotime($att['in_time'])) : '-'; ?></td> 
                         <td>
                             <?php
                             if (function_exists('get_checkout_status')) {
@@ -145,6 +144,7 @@
                             }
                             ?>
                         </td>
+                        <td><?= htmlspecialchars($att['in_status'] ?? '-'); ?></td>
 
                     <?php else : // Kondisi jika status BUKAN 'Hadir' (Izin, Sakit, Libur, dll) 
                     ?>

@@ -89,8 +89,8 @@
                     <th>Nama</th>
                     <th>Shift</th>
                     <th>Check In</th>
-                    <th>Status Masuk</th>
                     <th>Check Out</th>
+                    <th>Status Masuk</th>
                 </tr>
             </thead>
             <tbody>
@@ -127,8 +127,8 @@
                                     <td class="text-left"><?= htmlspecialchars($atd['employee_name']); ?></td>
                                     <td><?= (!empty($atd['shift_id'])) ? htmlspecialchars($atd['shift_id']) . " (" . substr($atd['shift_start'], 0, 5) . "-" . substr($atd['shift_end'], 0, 5) . ")" : 'N/A'; ?></td>
                                     <td><?= $atd['in_time'] ? substr($atd['in_time'], 0, 5) : '-'; ?></td>
-                                    <td><?= htmlspecialchars($atd['in_status'] ?? '-'); ?></td>
                                     <td><?= $atd['out_time'] ? substr($atd['out_time'], 0, 5) : '-'; ?></td>
+                                    <td><?= htmlspecialchars($atd['in_status'] ?? '-'); ?></td>
                                 <?php
                                     break;
 
