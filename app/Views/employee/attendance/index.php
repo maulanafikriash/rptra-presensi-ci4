@@ -95,16 +95,14 @@
                     <i class="fas fa-map-marker-alt mr-2"></i> Aktifkan Lokasi
                   </button>
                   <p id="location-status" class="mt-2 text-muted text-center" style="font-size: 14px;">Lokasi belum diaktifkan</p>
-
                 <?php endif; ?>
-
               </div>
             </div>
 
             <hr class="mb-5">
             <div class="row justify-content-center mb-3">
               <div class="col-lg-8 text-center">
-                <div class="d-flex justify-content-center align-items-center">
+                <div id="status-flex-container" class="d-flex justify-content-center align-items-center">
 
                   <div class="text-center">
                     <?php
@@ -122,37 +120,34 @@
                       $status = ['label' => 'Sudah Keluar', 'class' => 'btn-secondary', 'icon' => 'fa-check-circle', 'text_class' => 'text-secondary'];
                     }
                     ?>
-                    <button class="btn <?= esc($status['class']); ?> btn-circle" style="width: 100px; height: 100px;" disabled>
-                      <i class="fas <?= esc($status['icon']); ?> fa-2x"></i>
+                    <button id="main-status-btn" class="btn <?= esc($status['class']); ?> btn-circle" style="width: 100px; height: 100px;" disabled>
+                      <i id="main-status-icon" class="fas <?= esc($status['icon']); ?> fa-2x"></i>
                     </button>
-                    <p class="font-weight-bold <?= esc($status['text_class']); ?> pt-2"><?= esc($status['label']); ?></p>
+                    <p id="main-status-text" class="font-weight-bold <?= esc($status['text_class']); ?> pt-2"><?= esc($status['label']); ?></p>
                   </div>
 
                   <?php if ($can_check_in || $can_check_out || $already_checked_in && !$already_checked_out || $shift_status === 'belum mulai') : ?>
                     <div class="mx-4"></div>
                   <?php endif; ?>
 
-                  <div class="text-center">
+                  <div class="text-center" id="attendance-action-container">
                     <?php if ($can_check_in) : ?>
-                      <button type="button" name="check_in" id="check-in-btn" class="btn btn-primary btn-circle" style="width: 100px; height: 100px;" disabled>
-                        <i class="fas fa-fw fa-sign-in-alt fa-2x"></i>
-                      </button>
-                      <p class="font-weight-bold text-primary pt-2">Masuk!</p>
+                      <div id="check-in-wrapper">
+                        <button type="button" name="check_in" id="check-in-btn" class="btn btn-primary btn-circle" style="width: 100px; height: 100px;" disabled>
+                          <i class="fas fa-fw fa-sign-in-alt fa-2x"></i>
+                        </button>
+                        <p id="check-in-text" class="font-weight-bold text-primary pt-2">Masuk!</p>
+                      </div>
                     <?php elseif ($can_check_out) : ?>
                       <button type="button" name="check_out" id="check-out-btn" class="btn btn-danger btn-circle" style="width: 100px; height: 100px;" disabled>
                         <i class="fas fa-fw fa-sign-out-alt fa-2x"></i>
                       </button>
                       <p class="font-weight-bold text-danger pt-2">Keluar</p>
-                    <?php elseif ($shift_status === 'belum mulai') : ?>
-                      <button type="button" class="btn btn-dark btn-circle" style="width: 100px; height: 100px;" disabled>
-                        <i class="fas fa-fw fa-sign-in-alt fa-2x"></i>
-                      </button>
-                      <p class="font-weight-bold text-dark pt-2">Belum Mulai</p>
                     <?php elseif ($already_checked_in && !$already_checked_out) : ?>
                       <button type="button" class="btn btn-dark btn-circle" style="width: 100px; height: 100px;" disabled>
                         <i class="fas fa-fw fa-clock fa-2x"></i>
                       </button>
-                      <p class="text-dark pt-2" style="font-size: small;">Belum Waktu Pulang</p>
+                      <p class="text-dark pt-2 font-weight-bold" style="font-size: small;">Belum Waktu Pulang</p>
                     <?php endif; ?>
                   </div>
                 </div>
@@ -175,6 +170,7 @@
     // --- Elemen DOM ---
     const activateLocationBtn = document.getElementById("activate-location-btn");
     const checkInBtn = document.getElementById("check-in-btn");
+    const checkInWrapper = document.getElementById('check-in-wrapper');
     const checkOutBtn = document.getElementById("check-out-btn");
     const locationStatusEl = document.getElementById("location-status");
     const latitudeInput = document.getElementById("latitude");
@@ -182,69 +178,101 @@
     const locationRemarkInput = document.getElementById("location_remark");
     const attendanceForm = document.getElementById('attendance-form');
     const workShiftDropdown = document.getElementById('work_shift_dropdown');
+    // Elemen Status Utama
+    const mainStatusBtn = document.getElementById('main-status-btn');
+    const mainStatusIcon = document.getElementById('main-status-icon');
+    const mainStatusText = document.getElementById('main-status-text');
+    const statusFlexContainer = document.getElementById('status-flex-container');
+    const originalFlexClass = statusFlexContainer ? statusFlexContainer.className : '';
+
     let isLocationActive = false;
+    let originalStatusState = {};
+
+    // Menyimpan status awal dari elemen status utama jika ada
+    if (mainStatusBtn) {
+      originalStatusState = {
+        btnClass: mainStatusBtn.className,
+        iconClass: mainStatusIcon.className,
+        text: mainStatusText.textContent,
+        textClass: mainStatusText.className
+      };
+    }
 
     /**
-     * Memeriksa shift yang dipilih dan mengaktifkan/menonaktifkan tombol check-in.
+     * Mengembalikan status utama ke kondisi semula (misal: "Tidak Hadir").
+     */
+    function restoreMainStatus() {
+      if (!mainStatusBtn) return;
+      mainStatusBtn.className = originalStatusState.btnClass;
+      mainStatusIcon.className = originalStatusState.iconClass;
+      mainStatusText.textContent = originalStatusState.text;
+      mainStatusText.className = originalStatusState.textClass;
+      if (statusFlexContainer) statusFlexContainer.className = originalFlexClass;
+    }
+
+    /**
+     * Mengubah status utama untuk menampilkan pesan kustom.
+     */
+    function setCustomMainStatus(text, icon, colorClass = 'secondary') {
+      if (!mainStatusBtn) return;
+      mainStatusBtn.className = `btn btn-${colorClass} btn-circle`;
+      mainStatusIcon.className = `fas ${icon} fa-2x`;
+      mainStatusText.textContent = text;
+      mainStatusText.className = `font-weight-bold text-${colorClass} pt-2`;
+    }
+
+    /**
+     * Memeriksa shift, lalu mengubah tampilan status utama dan tombol aksi.
      */
     function validateSelectedShift() {
-      if (!workShiftDropdown) return;
+      // Hanya jalankan jika elemen utama ada dan pegawai bisa check-in
+      if (!workShiftDropdown || !canCheckIn) return;
 
       const selectedOption = workShiftDropdown.options[workShiftDropdown.selectedIndex];
       const shiftValue = selectedOption.value;
 
+      // Jika tidak ada shift dipilih, kembali ke state awal
       if (!shiftValue) {
+        restoreMainStatus();
+        if (checkInWrapper) checkInWrapper.style.display = 'block';
         if (checkInBtn) checkInBtn.disabled = true;
         return;
       }
 
       const shiftStartTimeString = selectedOption.getAttribute('data-start');
-      const shiftEndTime = selectedOption.getAttribute('data-end');
-      if (shiftEndTime === '22:00:00') { // Shift Fleksibel selalu valid
-        if (isLocationActive && checkInBtn) checkInBtn.disabled = false;
-        return;
-      }
+      const shiftEndTimeString = selectedOption.getAttribute('data-end');
 
       const now = new Date();
       const startShiftTime = new Date();
-      const endShiftTime = new Date();
+      const [startHours, startMinutes] = shiftStartTimeString.split(':');
+      startShiftTime.setHours(startHours, startMinutes, 0, 0);
 
-      const [startHours, startMinutes, startSeconds] = shiftStartTimeString.split(':');
-      startShiftTime.setHours(startHours, startMinutes, startSeconds, 0);
-
-      // waktu paling awal bisa presensi (1 jam sebelum shift mulai)
+      // Waktu paling awal bisa presensi (1 jam sebelum shift mulai)
       const earlyCheckInTime = new Date(startShiftTime.getTime() - 60 * 60 * 1000);
 
+      // case 1: Waktu shift belum mulai
       if (now < earlyCheckInTime) {
-        // Format waktu untuk pesan error
-        const earlyHours = earlyCheckInTime.getHours().toString().padStart(2, '0');
-        const earlyMinutes = earlyCheckInTime.getMinutes().toString().padStart(2, '0');
-        Swal.fire({
-          icon: 'warning',
-          title: 'Belum Waktunya Presensi',
-          text: `Anda baru bisa presensi masuk mulai pukul ${earlyHours}:${earlyMinutes}.`,
-          confirmButtonText: 'Oke'
-        });
-        if (checkInBtn) checkInBtn.disabled = true;
+        setCustomMainStatus('Shift Belum Mulai', 'fa-clock');
+        if (checkInWrapper) checkInWrapper.style.display = 'none';
+        if (statusFlexContainer) statusFlexContainer.className = 'd-flex flex-column justify-content-center align-items-center';
         return;
       }
 
-      const [hours, minutes, seconds] = shiftEndTime.split(':');
-      endShiftTime.setHours(hours, minutes, seconds, 0);
+      const endShiftTime = new Date();
+      const [endHours, endMinutes] = shiftEndTimeString.split(':');
+      endShiftTime.setHours(endHours, endMinutes, 0, 0);
 
+      // case 2: Waktu shift sudah berakhir
       if (now > endShiftTime) {
-        Swal.fire({
-          icon: 'warning',
-          title: 'Peringatan',
-          text: 'Shift yang Anda pilih sudah berakhir!',
-          confirmButtonText: 'Oke'
-        });
-        if (checkInBtn) checkInBtn.disabled = true;
+        setCustomMainStatus('Shift Telah Berakhir', 'fa-calendar-times');
+
+        if (checkInWrapper) checkInWrapper.style.display = 'none';
+        if (statusFlexContainer) statusFlexContainer.className = 'd-flex flex-column justify-content-center align-items-center';
       } else {
-        // Aktifkan tombol check-in jika lokasi sudah aktif
-        if (isLocationActive && checkInBtn) {
-          checkInBtn.disabled = false;
-        }
+        // case 3: Waktu presensi valid
+        restoreMainStatus();
+        if (checkInWrapper) checkInWrapper.style.display = 'block';
+        if (checkInBtn) checkInBtn.disabled = !isLocationActive; // Atur disabled berdasarkan lokasi
       }
     }
 
