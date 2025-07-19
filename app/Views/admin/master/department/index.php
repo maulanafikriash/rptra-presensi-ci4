@@ -48,11 +48,12 @@
                                             <i class="fas fa-edit"></i>
                                         </span>
                                     </a>
-                                    |
-                                    <button type="button" class="btn btn-danger btn-circle delete-button" data-url="<?= base_url('admin/master/department/delete/' . $dpt['department_id']); ?>"
-                                    data-entity="department" title="Delete">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </button>
+                                    <?php if ($dpt['department_id'] != 'ADM') : ?>
+                                        |
+                                        <button type="button" class="btn btn-danger btn-circle delete-button" data-url="<?= base_url('admin/master/department/delete/' . $dpt['department_id']); ?>" data-entity="department" title="Delete">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    <?php endif; ?>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -64,4 +65,3 @@
 
 </div>
 <!-- /.container-fluid -->
-
