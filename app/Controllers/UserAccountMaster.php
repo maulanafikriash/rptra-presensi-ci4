@@ -53,9 +53,10 @@ class UserAccountMaster extends BaseController
         $role_id   = $session->get('user_role_id');
         $employee  = $this->userAccountModel->getEmployeeById($employeeId);
         $user = $this->userAccountModel->getUserByEmployeeId($employeeId);
+        $title = $role_id == 1 ? 'Admin' : 'User';
 
         $data = [
-            'title'      => 'Tambah Akun User',
+            'title'      => $title,
             'e_id'       => $employeeId,
             'username'   => $employee['department_id'] . $employee['employee_id'],
             'role_id'    => $role_id,
@@ -125,9 +126,10 @@ class UserAccountMaster extends BaseController
         $session = session();
         $role_id = $session->get('user_role_id');
         $userRec = $this->userAccountModel->getUserByUsername($username);
+        $title = $role_id == 1 ? 'Admin' : 'User';
 
         $data = [
-            'title'      => 'Edit User Account',
+            'title'      => $title,
             'users'      => $userRec,
             'role_id'    => $role_id,
             'account'    => $this->authModel->getAccount(session()->get('username')),

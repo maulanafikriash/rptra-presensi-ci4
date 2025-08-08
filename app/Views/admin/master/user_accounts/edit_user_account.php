@@ -2,7 +2,7 @@
 <div class="container-fluid">
     <?php $role_id = session()->get('user_role_id'); ?>
     <!-- Page Heading -->
-    <h1 class="h3 mb-4 text-gray-800"><?= esc($title); ?></h1>
+    <h1 class="h3 mb-4 text-gray-800">Edit <?= esc($title); ?> Account</h1>
 
     <a href="<?= base_url(
                     $role_id == 1
@@ -16,10 +16,10 @@
     </a>
     <form action="" method="POST" class="col-lg-5 p-0">
         <div class="card">
-            <h5 class="card-header">Users Master Data</h5>
+            <h5 class="card-header"><?= esc($title); ?> Master Data</h5>
             <div class="card-body">
-                <h5 class="card-title">Edit Akun User</h5>
-                <p class="card-text">Form edit akun user di sistem</p>
+                <h5 class="card-title">Edit Akun <?= esc($title); ?></h5>
+                <p class="card-text">Form edit akun <?= esc($title); ?> di sistem</p>
                 <div class="form-group">
                     <label for="u_username" class="col-form-label-md">Username</label>
                     <?php if ($role_id == 1): ?>
