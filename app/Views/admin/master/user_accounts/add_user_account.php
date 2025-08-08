@@ -3,7 +3,7 @@
     <?php $role_id = session()->get('user_role_id'); ?>
 
     <!-- Page Heading -->
-    <h1 class="h3 mb-4 text-gray-800"><?= esc($title); ?></h1>
+    <h1 class="h3 mb-4 text-gray-800">Tambah Akun <?= esc($title); ?></h1>
 
     <a href="<?= base_url(
                     $role_id == 1
@@ -24,10 +24,10 @@
                         ); ?>" method="POST">
 
             <div class="card">
-                <h5 class="card-header">Users Master Data</h5>
+                <h5 class="card-header"><?= esc($title); ?> Master Data</h5>
                 <div class="card-body">
-                    <h5 class="card-title">Tambah akun user</h5>
-                    <p class="card-text">Form untuk menambahkan akun user baru ke sistem</p>
+                    <h5 class="card-title">Tambah akun <?= esc($title); ?></h5>
+                    <p class="card-text">Form untuk menambahkan akun <?= esc($title); ?> baru ke sistem</p>
                     <input type="hidden" name="e_id" value="<?= esc($e_id); ?>">
                     <div class="form-group row">
                         <label for="u_username" class="col-form-label col-md-3">Username :</label>
