@@ -1,17 +1,28 @@
 <!-- Begin Page Content -->
 <div class="container-fluid">
+    <?php $role_id = session()->get('user_role_id'); ?>
 
     <!-- Page Heading -->
     <h1 class="h3 mb-4 text-gray-800"><?= esc($title); ?></h1>
 
-    <a href="<?= base_url('admin/master/user_account'); ?>" class="btn btn-secondary btn-icon-split mb-4">
+    <a href="<?= base_url(
+                    $role_id == 1
+                        ? 'superadmin/master/admin_account'
+                        : 'admin/master/user_account'
+                ); ?>" class="btn btn-secondary btn-icon-split mb-3">
         <span class="icon text-white">
             <i class="fas fa-chevron-left"></i>
         </span>
         <span class="text">Kembali</span>
     </a>
     <div class="col-lg-5 p-0">
-        <form action="<?= base_url('admin/master/user_account/add/' . $e_id); ?>" method="POST">
+        <form action="<?= base_url(
+                            ($role_id == 1
+                                ? 'superadmin/master/admin_account/add/'
+                                : 'admin/master/user_account/add/')
+                                . esc($e_id)
+                        ); ?>" method="POST">
+
             <div class="card">
                 <h5 class="card-header">Users Master Data</h5>
                 <div class="card-body">
@@ -21,7 +32,22 @@
                     <div class="form-group row">
                         <label for="u_username" class="col-form-label col-md-3">Username :</label>
                         <div class="col pr-3">
-                            <input type="text" readonly class="form-control-plaintext col-md" name="u_username" id="u_username" value="<?= esc($username); ?>">
+                            <?php if ($role_id == 1): ?>
+                                <!-- Super Admin: input manual -->
+                                <input type="text"
+                                    class="form-control col-md"
+                                    name="u_username"
+                                    id="u_username"
+                                    value="<?= set_value('u_username', $username); ?>">
+                            <?php else: ?>
+                                <!-- Admin biasa: fixed, readonly -->
+                                <input type="text"
+                                    readonly
+                                    class="form-control-plaintext col-md"
+                                    name="u_username"
+                                    id="u_username"
+                                    value="<?= esc($username); ?>">
+                            <?php endif; ?>
                             <small class="text-danger"><?= esc($validation->getError('u_username') ?? ''); ?></small>
                         </div>
                     </div>

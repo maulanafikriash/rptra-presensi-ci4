@@ -28,8 +28,11 @@ $statusMap = [
 
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
         <h1 class="h3 mb-0 text-gray-800 font-weight-bold"><?= esc($title); ?></h1>
-        <a href="<?= base_url('admin/master/employee/detail/' . esc($employee['employee_id'])); ?>" class="btn btn-md btn-secondary shadow-sm">
-            <i class="fas fa-arrow-left fa-md text-white-50"></i> Kembali ke Detail
+        <a href="<?= base_url('admin/master/employee/detail/' . esc($employee['employee_id'])); ?>" class="btn btn-secondary btn-icon-split">
+            <span class="icon text-white">
+                <i class="fas fa-chevron-left"></i>
+            </span>
+            <span class="text">Kembali ke detail</span>
         </a>
     </div>
     

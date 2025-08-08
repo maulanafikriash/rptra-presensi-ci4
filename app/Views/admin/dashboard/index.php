@@ -1,56 +1,66 @@
 <!-- Begin Page Content -->
 <div class="container-fluid">
+    <?php $role_id = session()->get('user_role_id'); ?>
 
     <!-- Page Heading -->
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
         <h1 class="h3 mb-0 text-gray-800"><?= esc($title); ?></h1>
     </div>
 
-    <!-- Content Row (4 Cards) -->
+    <!-- Content Row (Cards) -->
     <div class="row">
 
-        <!-- Departments Card -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-primary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Departments</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800"><?= esc($display['c_department']); ?> Departments</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-building fa-2x text-gray-300"></i>
+        <?php if ($role_id != 1): // Tampilkan Departments & Shift untuk non-Super Admin 
+        ?>
+            <!-- Departments Card -->
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-primary shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Departments</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800"><?= esc($display['c_department']); ?> Departments</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-building fa-2x text-gray-300"></i>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Shift Card -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-info shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Shift Kerja</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800"><?= esc($display['c_shift']); ?> Shifts</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-exchange-alt fa-2x text-gray-300"></i>
+            <!-- Shift Card -->
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-info shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Shift Kerja</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800"><?= esc($display['c_shift']); ?> Shifts</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-exchange-alt fa-2x text-gray-300"></i>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        <?php endif; ?>
+
+        <?php if ($role_id == 1):
+            $colClass = 'col-xl-6 col-md-6 mb-4';
+        else:
+            $colClass = 'col-xl-3 col-md-6 mb-4';
+        endif; ?>
 
         <!-- Pegawai Card -->
-        <div class="col-xl-3 col-md-6 mb-4">
+        <div class="<?= $colClass; ?>">
             <div class="card border-left-success shadow h-100 py-2">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Pegawai</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800"><?= esc($display['c_employee']); ?> Pegawai</div>
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1"><?= esc($role_name); ?></div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800"><?= esc($display['c_employee']); ?> <?= esc($role_name); ?></div>
                         </div>
                         <div class="col-auto">
                             <i class="fas fa-id-badge fa-2x text-gray-300"></i>
@@ -61,7 +71,7 @@
         </div>
 
         <!-- Users Card -->
-        <div class="col-xl-3 col-md-6 mb-4">
+        <div class="<?= $colClass; ?>">
             <div class="card border-left-danger shadow h-100 py-2">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
@@ -79,69 +89,68 @@
 
     </div>
 
-    <!-- Content Row: Department Pegawai and Pegawai per Shift -->
-    <div class="row">
-        <!-- Department Table -->
-        <div class="col-lg-6 mb-4">
-            <div class="card shadow">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Department Pegawai</h6>
-                </div>
-                <div class="card-body" style="max-height: 400px; overflow-y: auto;">
-                    <table class="table table-bordered">
-                        <thead class="bg-primary text-white">
-                            <tr>
-                                <th>ID Department</th>
-                                <th>Nama Department</th>
-                                <th>Pegawai</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($d_list as $dept) : ?>
+    <?php if ($role_id != 1): // Tampilkan tabel hanya untuk non-Super Admin 
+    ?>
+        <!-- Content Row: Department Pegawai and Daftar Shift -->
+        <div class="row">
+            <!-- Department Table -->
+            <div class="col-lg-6 mb-4">
+                <div class="card shadow">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Department Pegawai</h6>
+                    </div>
+                    <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                        <table class="table table-bordered">
+                            <thead class="bg-primary text-white">
                                 <tr>
-                                    <td><?= esc($dept['d_id']); ?></td>
-                                    <td><?= esc($dept['d_name']); ?></td>
-                                    <td><?= esc($dept['qty']); ?></td>
+                                    <th>ID Department</th>
+                                    <th>Nama Department</th>
+                                    <th>Pegawai</th>
                                 </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($d_list as $dept) : ?>
+                                    <tr>
+                                        <td><?= esc($dept['d_id']); ?></td>
+                                        <td><?= esc($dept['d_name']); ?></td>
+                                        <td><?= esc($dept['qty']); ?></td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Shift Table -->
-        <div class="col-lg-6 mb-4">
-            <div class="card shadow">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Daftar Shift</h6>
-                </div>
-                <div class="card-body" style="max-height: 400px; overflow-y: auto;">
-                    <table class="table table-bordered">
-                        <thead class="bg-primary text-white">
-                            <tr>
-                                <th>ID Shift</th>
-                                <th>Waktu Shift</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($s_list as $shift) : ?>
+            <!-- Shift Table -->
+            <div class="col-lg-6 mb-4">
+                <div class="card shadow">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Daftar Shift</h6>
+                    </div>
+                    <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                        <table class="table table-bordered">
+                            <thead class="bg-primary text-white">
                                 <tr>
-                                    <td><?= esc($shift['shift_id']); ?></td>
-                                    <td>
-                                        <?= date('H:i', strtotime(esc($shift['start_time'])))
-                                            . ' - ' .
-                                            date('H:i', strtotime(esc($shift['end_time']))) ?>
-                                    </td>
+                                    <th>ID Shift</th>
+                                    <th>Waktu Shift</th>
                                 </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($s_list as $shift) : ?>
+                                    <tr>
+                                        <td><?= esc($shift['shift_id']); ?></td>
+                                        <td><?= date('H:i', strtotime(esc($shift['start_time']))) . ' - ' . date('H:i', strtotime(esc($shift['end_time']))) ?></td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-        </div>
 
-    </div>
+        </div>
+    <?php endif; ?>
 
 </div>
 <!-- /.container-fluid -->

@@ -14,6 +14,28 @@ $routes->group('auth', function ($routes) {
     $routes->get('blocked', 'Auth::blocked');
 });
 
+$routes->group('superadmin', ['filter' => 'userRole'], function ($routes) {
+    $routes->get('dashboard', 'DashboardAdmin::index');
+
+    $routes->get('master/admin', 'EmployeeMaster::index');
+    $routes->get('master/admin/add', 'EmployeeMaster::add');
+    $routes->post('master/admin/add', 'EmployeeMaster::add');
+    $routes->get('master/admin/edit/(:segment)', 'EmployeeMaster::edit/$1');
+    $routes->post('master/admin/edit/(:segment)', 'EmployeeMaster::edit/$1');
+    $routes->get('master/admin/detail/(:segment)', 'EmployeeMaster::detail/$1');
+    $routes->post('master/employee/delete/(:segment)', 'EmployeeMaster::delete/$1');
+
+    $routes->get('master/admin_account', 'UserAccountMaster::index');
+    $routes->get('master/admin_account/add/(:segment)', 'UserAccountMaster::add/$1');
+    $routes->post('master/admin_account/add/(:segment)', 'UserAccountMaster::add/$1');
+    $routes->get('master/admin_account/edit/(:segment)', 'UserAccountMaster::edit/$1');
+    $routes->post('master/admin_account/edit/(:segment)', 'UserAccountMaster::edit/$1');
+    $routes->post('master/admin_account/delete/(:segment)', 'UserAccountMaster::delete/$1');
+
+    $routes->get('report/print_biodata/pdf/(:segment)', 'Report::printBiodataPdf/$1');
+});
+
+
 $routes->group('admin', ['filter' => 'userRole'], function ($routes) {
     $routes->get('dashboard', 'DashboardAdmin::index');
 
@@ -77,4 +99,3 @@ $routes->group('employee', ['filter' => 'userRole'], function ($routes) {
     $routes->post('change_password', 'EmployeeChangePassword::update');
     $routes->post('get_location', 'EmployeeGetLocation::getAddress');
 });
-

@@ -1,12 +1,16 @@
 <div class="container-fluid">
-
+    <?php $role_id = session()->get('user_role_id'); ?>
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800"><?= esc($title); ?></h1>
-        <a href="<?= base_url('admin/master/employee/detail/' . $employee['employee_id']); ?>" class="btn btn-secondary btn-icon-split">
-            <span class="icon text-white-50">
+        <h1 class="h3 mb-0 text-gray-800">Edit <?= esc($title); ?></h1>
+        <a href="<?= base_url(
+                        $role_id == 1
+                            ? 'superadmin/master/admin/detail/'. esc($employee['employee_id'])
+                            : 'admin/master/employee/detail/' . esc($employee['employee_id']),
+                    ); ?>" class="btn btn-secondary btn-icon-split">
+            <span class="icon text-white">
                 <i class="fas fa-chevron-left"></i>
             </span>
-            <span class="text">Kembali</span>
+            <span class="text">Kembali ke detail</span>
         </a>
     </div>
 
@@ -18,8 +22,16 @@
         </div>
     <?php endif; ?>
 
-    <form action="<?= base_url('admin/master/employee/edit/' . $employee['employee_id']); ?>" method="POST" enctype="multipart/form-data" id="editEmployeeForm">
-
+    <form
+        action="<?= base_url(
+                    ($role_id == 1
+                        ? 'superadmin/master/admin/edit/'
+                        : 'admin/master/employee/edit/')
+                        . esc($employee['employee_id'])
+                ); ?>"
+        method="POST"
+        enctype="multipart/form-data"
+        id="editEmployeeForm">
         <div class="row">
             <div class="col-lg-4">
                 <div class="card shadow mb-4">
@@ -71,6 +83,7 @@
 
                     </div>
                 </div>
+
                 <div class="card shadow mb-4">
                     <div class="card-header py-3">
                         <h6 class="m-0 font-weight-bold text-primary">Informasi RPTRA</h6>
@@ -79,31 +92,30 @@
                         <div class="form-group">
                             <label for="rptra_name">Nama RPTRA</label>
                             <input type="text"
-                                id="rptra_name_display"
+                                id="rptra_name"
+                                name="rptra_name"
                                 class="form-control"
                                 value="<?= esc($rptra_name); ?>"
-                                disabled>
-                            <!-- tetap kirim nilainya -->
-                            <input type="hidden" name="rptra_name" value="<?= esc($rptra_name); ?>">
+                                <?= $role_id == 1 ? '' : 'disabled'; ?>>
                         </div>
                         <div class="form-group">
                             <label for="rptra_address">Alamat RPTRA</label>
-                            <textarea id="rptra_address_display"
+                            <textarea id="rptra_address"
+                                name="rptra_address"
                                 class="form-control"
                                 rows="3"
-                                disabled><?= esc($rptra_address); ?></textarea>
-                            <!-- tetap kirim nilainya -->
-                            <input type="hidden" name="rptra_address" value="<?= esc($rptra_address); ?>">
+                                <?= $role_id == 1 ? '' : 'disabled'; ?>><?= esc($rptra_address); ?></textarea>
                         </div>
                     </div>
                 </div>
+
 
             </div>
 
             <div class="col-lg-8">
                 <div class="card shadow mb-4">
                     <div class="card-header py-3">
-                        <h6 class="m-0 font-weight-bold text-primary">Data Diri Pegawai</h6>
+                        <h6 class="m-0 font-weight-bold text-primary">Data Diri <?= esc($title); ?></h6>
                     </div>
                     <div class="card-body">
                         <div class="form-group">

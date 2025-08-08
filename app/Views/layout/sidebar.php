@@ -6,7 +6,13 @@
             <i class="fas fa-user-check"></i>
         </div>
         <div class="sidebar-brand-text">
-            RPTRA <br> <span style="font-size: 0.8em;"><?= esc(session()->get('rptra_name') ?? '—'); ?></span>
+            <!-- Tampilkan nama role untuk Super Admin, else nama RPTRA -->
+            <?php if (session()->get('user_role_id') == 1): ?>
+                <?= esc(session()->get('role')); ?>
+            <?php else: ?>
+                RPTRA <br>
+                <span style="font-size: 0.8em;"><?= esc(session()->get('rptra_name') ?? '—'); ?></span>
+            <?php endif; ?>
         </div>
     </a>
 
@@ -17,7 +23,27 @@
     $role_id = $session->get('user_role_id');
 
     $menus = [
-        1 => [ // Admin menu
+        1 => [ // Super Admin menu
+            [
+                'title' => 'Dashboard',
+                'url' => 'superadmin/dashboard',
+                'icon' => 'fas fa-tachometer-alt',
+                'section' => 'Super Admin'
+            ],
+            [
+                'title' => 'Admin',
+                'url' => 'superadmin/master/admin',
+                'icon' => 'fas fa-users',
+                'section' => 'Master'
+            ],
+            [
+                'title' => 'Admin Account',
+                'url' => 'superadmin/master/admin_account',
+                'icon' => 'fas fa-user-shield',
+                'section' => 'Master'
+            ],
+        ],
+        2 => [ // Admin menu
             [
                 'title' => 'Dashboard',
                 'url' => 'admin/dashboard',
@@ -55,7 +81,7 @@
                 'section' => 'Laporan'
             ],
         ],
-        2 => [ // Employee menu
+        3 => [ // Employee menu
             [
                 'title' => 'Form Presensi',
                 'url' => 'employee/attendance',
@@ -63,7 +89,7 @@
                 'section' => 'Kehadiran'
             ],
             [
-                'title' => 'Riwayat Presensi',
+                'title' => 'Riwayat Kehadiran',
                 'url' => 'employee/attendance_history',
                 'icon' => 'fas fa-history',
                 'section' => 'Kehadiran'
@@ -129,7 +155,7 @@
     </div>
 </ul>
 
-<?php if ($role_id == 2): ?>
+<?php if ($role_id == 3): ?>
     <div class="bottom-menu bg-light d-flex justify-content-around py-2" style="display: none;">
         <a href="<?= base_url('employee/attendance'); ?>" class="text-center <?= (current_url() == base_url('employee/attendance')) ? 'active' : ''; ?>">
             <i class="fas fa-calendar-check"></i><br>
@@ -156,7 +182,7 @@
 
 <style>
     /* Bottom menu small screens */
-    <?php if ($role_id == 2): ?>@media (max-width: 500px) {
+    <?php if ($role_id == 3): ?>@media (max-width: 500px) {
         .bottom-menu {
             display: flex !important;
             position: fixed;

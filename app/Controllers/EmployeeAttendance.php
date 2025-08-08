@@ -348,10 +348,9 @@ class EmployeeAttendance extends BaseController
         }
     }
 
-
     public function attendanceHistory()
     {
-        $data['title'] = 'Riwayat Presensi';
+        $data['title'] = 'Riwayat Kehadiran';
         $data['account'] = $this->authModel->getAccount(session()->get('username'));
 
         $employee_id = $data['account']['employee_id'] ?? null;

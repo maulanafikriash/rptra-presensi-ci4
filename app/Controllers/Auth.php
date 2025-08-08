@@ -23,9 +23,15 @@ class Auth extends BaseController
             // Arahkan sesuai dengan role user
             $userRoleId = session()->get('user_role_id');
 
-            return $userRoleId == 1
-                ? redirect()->to('admin/dashboard')
-                : redirect()->to('employee/profile');
+            if ($userRoleId == 1) {
+                // Super Admin
+                return redirect()->to('superadmin/dashboard');
+            } elseif ($userRoleId == 2) {
+                // Admin biasa
+                return redirect()->to('admin/dashboard');
+            }
+
+            return redirect()->to('employee/attendance');
         }
 
         $data['title'] = 'Login Page';
@@ -75,19 +81,39 @@ class Auth extends BaseController
             // Jika user ditemukan
             if ($user) {
                 if (password_verify($password, $user->password)) {
-                    session()->set([
-                        'username'      => $user->username,
-                        'user_role_id'  => $user->user_role_id,
-                        'role'          => $user->user_role_name,
-                        'rptra_name'    => $user->rptra_name,
-                        'rptra_address' => $user->rptra_address,
-                        'logged_in'     => true,
-                    ]);
-
-                    // Redirect sesuai role user
-                    return $user->user_role_id == 1
-                        ? redirect()->to('admin/dashboard')
-                        : redirect()->to('employee/profile');
+                    // Session berdasarkan role
+                    if ($user->user_role_id == 1) {
+                        // Super Admin
+                        session()->set([
+                            'username'      => $user->username,
+                            'user_role_id'  => $user->user_role_id,
+                            'role'          => $user->user_role_name,
+                            'logged_in'     => true,
+                        ]);
+                        return redirect()->to('superadmin/dashboard');
+                    } elseif ($user->user_role_id == 2) {
+                        // Admin Biasa
+                        session()->set([
+                            'username'      => $user->username,
+                            'user_role_id'  => $user->user_role_id,
+                            'role'          => $user->user_role_name,
+                            'rptra_name'    => $user->rptra_name,
+                            'rptra_address' => $user->rptra_address,
+                            'logged_in'     => true,
+                        ]);
+                        return redirect()->to('admin/dashboard');
+                    } else {
+                        // Employee
+                        session()->set([
+                            'username'      => $user->username,
+                            'user_role_id'  => $user->user_role_id,
+                            'role'          => $user->user_role_name,
+                            'rptra_name'    => $user->rptra_name,
+                            'rptra_address' => $user->rptra_address,
+                            'logged_in'     => true,
+                        ]);
+                        return redirect()->to('employee/attendance');
+                    }
                 } else {
                     session()->setFlashdata('message', 'Password salah!');
                 }

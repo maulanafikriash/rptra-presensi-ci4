@@ -24,10 +24,17 @@
                 <div class="topbar-divider d-none d-sm-block"></div>
 
                 <!-- Nav Item - User Information -->
+                <?php $role_id = session()->get('user_role_id'); ?>
                 <li class="nav-item dropdown no-arrow">
                     <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        <span class="mr-2 d-none d-lg-inline text-gray-600 small"><?= $account['employee_name']; ?></span>
-                        <img class="img-profile rounded-circle" src="<?= base_url('img/pp/') . $account['image']; ?>">
+                        <?php if ($role_id == 1): // Super Admin 
+                        ?>
+                            <span class="mr-2 d-none d-lg-inline text-gray-600 small"><?= esc(session()->get('role')); ?></span>
+                            <img class="img-profile rounded-circle" src="https://api.dicebear.com/8.x/initials/svg?seed=<?= urlencode(session()->get('role')); ?>">
+                        <?php else: ?>
+                            <span class="mr-2 d-none d-lg-inline text-gray-600 small"><?= esc($account['employee_name']); ?></span>
+                            <img class="img-profile rounded-circle" src="<?= base_url('img/pp/') . esc($account['image']); ?>">
+                        <?php endif; ?>
                     </a>
 
                     <!-- Dropdown - User Information -->

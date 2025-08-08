@@ -18,11 +18,24 @@ class UserAccountMaster extends BaseController
 
     public function index()
     {
-        $rptraName = session()->get('rptra_name');
+        $session  = session();
+        $role_id  = $session->get('user_role_id');
+        $roleName = $role_id == 1 ? 'Admin' : 'Pegawai';
         $allUsers = $this->userAccountModel->getAllUsersWithEmployee();
-        $filtered = array_filter($allUsers, fn($u) => isset($u['rptra_name']) && $u['rptra_name'] === $rptraName);
+
+        if ($role_id == 1) {
+            // Super Admin: hanya pegawai di department 'ADM'
+            $filtered = array_filter($allUsers, fn($u) => isset($u['d_id']) && $u['d_id'] === 'ADM');
+            $title    = 'Admin Account';
+        } else {
+            $rptraName = $session->get('rptra_name');
+            $filtered  = array_filter($allUsers, fn($u) => isset($u['rptra_name']) && $u['rptra_name'] === $rptraName);
+            $title     = 'User Account';
+        }
+
         $data = [
-            'title'   => 'User Account',
+            'role_name' => $roleName,
+            'title'   => $title,
             'data'    => $filtered,
             'account' => $this->authModel->getAccount(session()->get('username'))
         ];
@@ -36,29 +49,29 @@ class UserAccountMaster extends BaseController
 
     public function add($employeeId)
     {
-        $employee = $this->userAccountModel->getEmployeeById($employeeId);
-        if (!$employee || $employee['rptra_name'] !== session()->get('rptra_name')) {
-            throw new \CodeIgniter\Exceptions\PageNotFoundException('Akses ditolak untuk pegawai ini.');
-        }
-
+        $session   = session();
+        $role_id   = $session->get('user_role_id');
+        $employee  = $this->userAccountModel->getEmployeeById($employeeId);
         $user = $this->userAccountModel->getUserByEmployeeId($employeeId);
 
         $data = [
-            'title' => 'Tambah Akun User',
-            'e_id' => $employeeId,
-            'username' => $employee['department_id'] . $employee['employee_id'],
-            'account' => $this->authModel->getAccount(session()->get('username')),
+            'title'      => 'Tambah Akun User',
+            'e_id'       => $employeeId,
+            'username'   => $employee['department_id'] . $employee['employee_id'],
+            'role_id'    => $role_id,
+            'account'    => $this->authModel->getAccount($session->get('username')),
             'validation' => \Config\Services::validation()
         ];
 
         if ($this->request->getMethod() === 'POST') {
             $rules = [
                 'u_username' => [
-                    'rules' => 'required|trim|min_length[6]',
+                    'rules' => 'required|trim|is_unique[user_account.username]|exact_length[7]',
                     'errors' => [
                         'required' => 'Username wajib diisi.',
                         'trim' => 'Username tidak boleh memiliki spasi di awal atau akhir.',
-                        'min_length' => 'Username harus memiliki minimal 6 karakter.',
+                        'is_unique'  => 'Username sudah digunakan.',
+                        'exact_length' => 'Username harus terdiri dari 7 karakter.',
                     ],
                 ],
                 'u_password' => [
@@ -76,7 +89,7 @@ class UserAccountMaster extends BaseController
                 $data['validation'] = $this->validator;
             } else {
                 $username = $this->request->getPost('u_username');
-                $roleId = ($employee['department_id'] === 'ADM') ? 1 : 2;
+                $roleId = ($employee['department_id'] === 'ADM') ? 2 : 3;
 
                 $userData = [
                     'username' => $username,
@@ -92,6 +105,10 @@ class UserAccountMaster extends BaseController
                 }
 
                 session()->setFlashdata('message', '<div class="alert alert-success" role="alert">Akun berhasil dibuat!</div>');
+                if (session()->get('user_role_id') == 1) {
+                    return redirect()->to('superadmin/master/admin_account');
+                }
+
                 return redirect()->to('admin/master/user_account');
             }
         }
@@ -105,14 +122,14 @@ class UserAccountMaster extends BaseController
 
     public function edit($username)
     {
+        $session = session();
+        $role_id = $session->get('user_role_id');
         $userRec = $this->userAccountModel->getUserByUsername($username);
-        // RPTRA yang sama
-        if (!$userRec || $userRec['rptra_name'] !== session()->get('rptra_name')) {
-            throw new \CodeIgniter\Exceptions\PageNotFoundException('Akses ditolak untuk akun ini.');
-        }
+
         $data = [
-            'title'      => 'Edit User',
+            'title'      => 'Edit User Account',
             'users'      => $userRec,
+            'role_id'    => $role_id,
             'account'    => $this->authModel->getAccount(session()->get('username')),
             'validation' => \Config\Services::validation()
         ];
@@ -129,16 +146,37 @@ class UserAccountMaster extends BaseController
                     ],
                 ],
             ];
+            if ($role_id == 1) {
+                $rules['u_username'] = [
+                    'rules'  => 'required|trim|is_unique[user_account.username]|exact_length[7]',
+                    'errors' => [
+                        'required'   => 'Username wajib diisi.',
+                        'trim' => 'Username tidak boleh memiliki spasi di awal atau akhir.',
+                        'is_unique'  => 'Username sudah digunakan.',
+                        'exact_length' => 'Username harus terdiri dari 7 karakter.',
+                    ],
+                ];
+            }
 
             if (!$this->validate($rules)) {
                 $data['validation'] = $this->validator;
             } else {
-                $this->userAccountModel->updateUser(
-                    ['password' => password_hash($this->request->getPost('password'), PASSWORD_DEFAULT)],
-                    $username
-                );
+                $updateData = [
+                    'password' => password_hash($this->request->getPost('password'), PASSWORD_DEFAULT),
+                ];
+                if ($role_id == 1) {
+                    $updateData['username'] = $this->request->getPost('u_username');
+                }
 
-                session()->setFlashdata('message', '<div class="alert alert-success" role="alert">Password berhasil diperbarui!</div>');
+                $this->userAccountModel->updateUser($updateData, $username);
+
+                session()->setFlashdata(
+                    'message',
+                    '<div class="alert alert-success" role="alert">Password' . ($role_id == 1 ? ' & Username' : '') . ' berhasil diperbarui!</div>'
+                );
+                if ($role_id == 1) {
+                    return redirect()->to('superadmin/master/admin_account');
+                }
                 return redirect()->to('admin/master/user_account');
             }
         }
@@ -156,6 +194,12 @@ class UserAccountMaster extends BaseController
         $this->userAccountModel->deleteUser($username);
 
         session()->setFlashdata('message', '<div class="alert alert-success" role="alert">Akun berhasil dihapus!</div>');
+
+        // Redirect sesuai role
+        if (session()->get('user_role_id') == 1) {
+            return redirect()->to('superadmin/master/admin_account');
+        }
+
         return redirect()->to('admin/master/user_account');
     }
 }

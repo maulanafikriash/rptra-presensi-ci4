@@ -39,22 +39,36 @@ class AuthModel extends Model
             ->update($data);
     }
 
-    public function getUserByUsername($username)
+   public function getUserByUsername($username)
     {
-        return $this->db->table('user_account')
-            ->select('
-            user_account.username,
-            user_account.password,
-            user_account.user_role_id,
-            user_role.user_role_name,
-            user_account.employee_id,
-            employee.rptra_name,
-            employee.rptra_address
-        ')
-            ->join('user_role', 'user_account.user_role_id = user_role.user_role_id')
-            ->join('employee', 'user_account.employee_id = employee.employee_id')
+        // Ambil data user dan role
+        $builder = $this->db->table('user_account')
+            ->select(
+                'user_account.username, '
+                . 'user_account.password, '
+                . 'user_account.user_role_id, '
+                . 'user_role.user_role_name'
+            )
+            ->join('user_role', 'user_account.user_role_id = user_role.user_role_id');
+
+        $builder->select('employee.employee_id');
+        $builder->join('employee', 'user_account.employee_id = employee.employee_id', 'left');
+        $builder->select('employee.rptra_name, employee.rptra_address');
+
+        $user = $builder
             ->where('user_account.username', $username)
             ->get()
             ->getRow();
+
+        if (! $user) {
+            return null;
+        }
+
+        // Jika super admin (role_id = 1), hapus RPTRA
+        if ($user->user_role_id == 1) {
+            unset($user->rptra_name, $user->rptra_address);
+        }
+
+        return $user;
     }
 }

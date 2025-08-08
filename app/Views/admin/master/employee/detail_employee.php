@@ -1,9 +1,16 @@
 <div class="container-fluid">
-
+    <?php $role_id = session()->get('user_role_id'); ?>
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800"><?= esc($title); ?></h1>
-        <a href="<?= base_url('admin/master/employee'); ?>" class="btn btn-secondary btn-md">
-            <i class="fas fa-chevron-left fa-sm text-white-50"></i> Kembali
+        <h1 class="h3 mb-0 text-gray-800">Detail <?= esc($title); ?></h1>
+        <a href="<?= base_url(
+                        $role_id == 1
+                            ? 'superadmin/master/admin'
+                            : 'admin/master/employee'
+                    ); ?>" class="btn btn-secondary btn-icon-split">
+            <span class="icon text-white">
+                <i class="fas fa-chevron-left"></i>
+            </span>
+            <span class="text">Kembali</span>
         </a>
     </div>
     <?php if (session()->getFlashdata('message')) : ?>
@@ -29,25 +36,56 @@
         <div class="col-lg-8 col-md-12 mb-4">
             <div class="card shadow">
                 <div class="card-header py-3 d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-sm-between">
-                    <h6 class="m-0 font-weight-bold text-primary mb-2 mb-sm-0">Biodata Pegawai</h6>
-                    <div class="action-buttons">
-                        <a href="<?= base_url('admin/master/employee/edit/' . $employee['employee_id']); ?>" class="btn btn-primary btn-circle btn-md" title="Edit Data">
-                            <i class="fas fa-edit"></i>
-                        </a>
+                    <h6 class="m-0 font-weight-bold text-primary mb-2 mb-sm-0">Biodata <?= esc($title); ?></h6>
 
+                    <div class="action-buttons">
+                        <!-- Edit Button -->
+                        <?php if ($role_id == 1): ?>
+                            <a href="<?= base_url('superadmin/master/admin/edit/' . $employee['employee_id']); ?>"
+                                class="btn btn-primary btn-circle btn-md"
+                                title="Edit Data">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                        <?php else: ?>
+                            <a href="<?= base_url('admin/master/employee/edit/' . $employee['employee_id']); ?>"
+                                class="btn btn-primary btn-circle btn-md"
+                                title="Edit Data">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                        <?php endif; ?>
+
+                        <!-- Work Schedule & Attendance (only non-ADM) -->
                         <?php if (esc($employee['department_id']) != 'ADM'): ?>
-                            <a href="<?= base_url('admin/master/employee/work_schedule/') . esc($employee['employee_id']); ?>" class="btn btn-info btn-circle btn-md" title="Jadwal Kerja">
+                            <a href="<?= base_url('admin/master/employee/work_schedule/' . esc($employee['employee_id'])); ?>"
+                                class="btn btn-info btn-circle btn-md"
+                                title="Jadwal Kerja">
                                 <i class="fas fa-calendar-alt"></i>
                             </a>
-                            <a href="<?= base_url('admin/master/employee/attendance/') . esc($employee['employee_id']); ?>" class="btn btn-success btn-circle btn-md" title="Riwayat Kehadiran">
+                            <a href="<?= base_url('admin/master/employee/attendance/' . esc($employee['employee_id'])); ?>"
+                                class="btn btn-success btn-circle btn-md"
+                                title="Riwayat Kehadiran">
                                 <i class="fas fa-calendar-check"></i>
                             </a>
                         <?php endif; ?>
 
-                        <a href="<?= base_url('admin/report/print_biodata/pdf/') . esc($employee['employee_id']); ?>" class="btn btn-danger btn-circle btn-md" target="_blank" title="Cetak Biodata (PDF)">
-                            <i class="fas fa-file-pdf"></i>
-                        </a>
+                        <!-- Cetak Biodata PDF -->
+                        <?php if ($role_id == 1): ?>
+                            <a href="<?= base_url('superadmin/report/print_biodata/pdf/' . esc($employee['employee_id'])); ?>"
+                                class="btn btn-danger btn-circle btn-md"
+                                target="_blank"
+                                title="Cetak Biodata (PDF)">
+                                <i class="fas fa-file-pdf"></i>
+                            </a>
+                        <?php else: ?>
+                            <a href="<?= base_url('admin/report/print_biodata/pdf/' . esc($employee['employee_id'])); ?>"
+                                class="btn btn-danger btn-circle btn-md"
+                                target="_blank"
+                                title="Cetak Biodata (PDF)">
+                                <i class="fas fa-file-pdf"></i>
+                            </a>
+                        <?php endif; ?>
                     </div>
+
                 </div>
                 <div class="card-body">
                     <?php

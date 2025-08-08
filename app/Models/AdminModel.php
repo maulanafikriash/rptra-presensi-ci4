@@ -46,6 +46,25 @@ class AdminModel extends Model
         ];
     }
 
+    public function getDataForSuperAdminDashboard(): array
+    {
+        $c_employee = $this->db
+            ->table('employee')
+            ->where('department_id', 'ADM')
+            ->countAllResults();
+
+        $c_users = $this->db
+            ->table('user_account ua')
+            ->join('employee e', 'ua.employee_id = e.employee_id')
+            ->where('e.department_id', 'ADM')
+            ->countAllResults();
+
+        return [
+            'c_employee' => $c_employee,
+            'c_users'    => $c_users,
+        ];
+    }
+
     public function getDepartment()
     {
         // Mengambil data jumlah karyawan per departemen dengan LEFT JOIN
