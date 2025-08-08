@@ -17,7 +17,6 @@ class EmployeeMaster extends BaseController
     protected $workScheduleModel;
     protected $db;
 
-
     public function __construct()
     {
         $this->employeeModel = new EmployeeModel();
@@ -30,13 +29,27 @@ class EmployeeMaster extends BaseController
 
     public function index()
     {
-        $rptraName = session()->get('rptra_name');
-        $data = [
-            'title' => 'Pegawai',
-            'employee' => $this->employeeModel
+        $session    = session();
+        $role_id    = $session->get('user_role_id');
+        $rptraName  = $session->get('rptra_name');
+
+        // Jika Super Admin, tampilkan hanya pegawai di department ADM
+        if ($role_id == 1) {
+            $employeeList = $this->employeeModel
+                ->where('department_id', 'ADM')
+                ->findAll();
+        } else {
+            $employeeList = $this->employeeModel
                 ->where('rptra_name', $rptraName)
-                ->findAll(),
-            'account' => $this->authModel->getAccount(session()->get('username')),
+                ->findAll();
+        }
+
+        $title = $role_id == 1 ? 'Admin' : 'Pegawai';
+
+        $data = [
+            'title'    => $title,
+            'employee' => $employeeList,
+            'account'  => $this->authModel->getAccount($session->get('username')),
         ];
 
         echo view('layout/table_header', $data);
@@ -48,11 +61,20 @@ class EmployeeMaster extends BaseController
 
     public function add()
     {
-        $rptraName = session()->get('rptra_name');
-        $rptraAddress = session()->get('rptra_address');
+        $session      = session();
+        $role_id      = $session->get('user_role_id');
+        $rptraName    = $role_id == 1 ? null : $session->get('rptra_name');
+        $rptraAddress = $role_id == 1 ? null : $session->get('rptra_address');
+
+        $departments = $role_id == 1
+            ? [['department_id' => 'ADM', 'department_name' => 'Administrator']]
+            : $this->employeeModel->getDepartments();
+
+        $title = $role_id == 1 ? 'Admin' : 'Pegawai';
+
         $data = [
-            'title' => 'Tambah Pegawai',
-            'department' => $this->employeeModel->getDepartments(),
+            'title' => $title,
+            'department' => $departments,
             'account' => $this->authModel->getAccount(session()->get('username')),
             'validation' => \Config\Services::validation(),
             'rptra_name' => $rptraName,
@@ -137,16 +159,12 @@ class EmployeeMaster extends BaseController
                     ],
                 ],
                 'rptra_name' => [
-                    'rules' => 'required',
-                    'errors' => [
-                        'required' => 'Nama RPTRA wajib diisi.',
-                    ],
+                    'rules'  => $role_id == 1 ? 'required' : 'permit_empty',
+                    'errors' => ['required' => 'Nama RPTRA wajib diisi.'],
                 ],
                 'rptra_address' => [
-                    'rules' => 'required',
-                    'errors' => [
-                        'required' => 'Alamat RPTRA wajib diisi.',
-                    ],
+                    'rules'  => $role_id == 1 ? 'required' : 'permit_empty',
+                    'errors' => ['required' => 'Alamat RPTRA wajib diisi.'],
                 ],
                 'image' => [
                     'rules' => 'permit_empty|uploaded[image]|max_size[image,3072]|is_image[image]|mime_in[image,image/jpg,image/jpeg,image/png]',
@@ -174,8 +192,8 @@ class EmployeeMaster extends BaseController
                 $education = $this->request->getPost('education');
                 $employeeAddress = $this->request->getPost('employee_address');
                 $telephone = $this->request->getPost('telephone');
-                $rptraName = session()->get('rptra_name');
-                $rptraAddress = session()->get('rptra_address');
+                $rptraName = $this->request->getPost('rptra_name');
+                $rptraAddress = $this->request->getPost('rptra_address');
 
 
                 $file = $this->request->getFile('image');
@@ -205,12 +223,20 @@ class EmployeeMaster extends BaseController
                 ];
 
                 if ($this->employeeModel->insert($employeeData)) {
-                    session()->setFlashdata('message', '<div class="alert alert-success" role="alert">Pegawai baru berhasil ditambahkan!</div>');
+                    session()->setFlashdata('message', '<div class="alert alert-success" role="alert">'
+                        . ($role_id == 1 ? 'Admin baru berhasil ditambahkan!' : 'Pegawai baru berhasil ditambahkan!')
+                        . '</div>');
                 } else {
-                    session()->setFlashdata('message', '<div class="alert alert-danger" role="alert">Gagal menyimpan pegawai baru ke database!</div>');
+                    session()->setFlashdata('message', '<div class="alert alert-danger" role="alert">'
+                        . ($role_id == 1 ? 'Gagal menyimpan admin baru!' : 'Gagal menyimpan pegawai baru!')
+                        . '</div>');
                 }
 
-                return redirect()->to('admin/master/employee');
+                if ($role_id == 1) {
+                    return redirect()->to('superadmin/master/admin');
+                } else {
+                    return redirect()->to('admin/master/employee');
+                }
             }
         }
 
@@ -231,16 +257,27 @@ class EmployeeMaster extends BaseController
 
         $departmentSelected = array_column($this->employeeModel->getDepartments(), 'department_id');
         $selectedDepartment = in_array($employee['department_id'], $departmentSelected) ? $employee['department_id'] : null;
+        $role_id = session()->get('user_role_id');
+        $title = $role_id == 1 ? 'Admin' : 'Pegawai';
+
+        if ($role_id == 1) {
+            $rptraName    = $employee['rptra_name'];
+            $rptraAddress = $employee['rptra_address'];
+        } else {
+            $rptraName    = session()->get('rptra_name');
+            $rptraAddress = session()->get('rptra_address');
+        }
 
         $data = [
-            'title' => 'Edit Data Pegawai', // Judul bisa dibuat lebih deskriptif
+            'title' => $title,
             'employee' => $employee,
             'department' => $this->employeeModel->getDepartments(),
             'selectedDepartment' => $selectedDepartment, // Kirim ke view
             'account' => $this->authModel->getAccount(session()->get('username')),
             'validation' => \Config\Services::validation(),
-            'rptra_name' => session()->get('rptra_name'),
-            'rptra_address' => session()->get('rptra_address'),
+            'rptra_name'         => $rptraName,
+            'rptra_address'      => $rptraAddress,
+
         ];
 
         if ($this->request->getMethod() === 'POST') {
@@ -393,13 +430,21 @@ class EmployeeMaster extends BaseController
                     'education' => $this->request->getPost('education'),
                     'employee_address' => $this->request->getPost('employee_address'),
                     'telephone' => $this->request->getPost('telephone'),
-                    'rptra_name'    => session()->get('rptra_name'),
-                    'rptra_address' => session()->get('rptra_address'),
+                    'rptra_name'    =>  $this->request->getPost('rptra_name'),
+                    'rptra_address' =>  $this->request->getPost('rptra_address'),
                     'image' => $imageName
                 ]);
 
-                session()->setFlashdata('message', '<div class="alert alert-success" role="alert">Data pegawai berhasil diperbarui!</div>');
-                return redirect()->to('/admin/master/employee/detail/' . $id);
+                // Pesan sukses sesuai role
+                $msg = $role_id == 1
+                    ? 'Data admin berhasil diperbarui!'
+                    : 'Data pegawai berhasil diperbarui!';
+                session()->setFlashdata('message', "<div class=\"alert alert-success\" role=\"alert\">{$msg}</div>");
+                if ($role_id == 1) {
+                    return redirect()->to('superadmin/master/admin/detail/' . $id);
+                }
+
+                return redirect()->to('admin/master/employee/detail/' . $id);
             }
         }
 
@@ -417,8 +462,11 @@ class EmployeeMaster extends BaseController
             throw new \CodeIgniter\Exceptions\PageNotFoundException("Pegawai tidak ditemukan");
         }
 
+        $role_id = session()->get('user_role_id');
+        $title = $role_id == 1 ? 'Admin' : 'Pegawai';
+
         $data = [
-            'title' => 'Detail Pegawai',
+            'title' => $title,
             'employee' => $employee,
             'employeeId' => $id,
             'department_current' => [
@@ -788,8 +836,21 @@ class EmployeeMaster extends BaseController
 
     public function delete($id)
     {
+        $role_id = session()->get('user_role_id');
+
+        // Hapus data
         $this->employeeModel->deleteEmployeeWithRelations($id);
-        session()->setFlashdata('message', '<div class="alert alert-success" role="alert">Berhasil menghapus data pegawai!</div>');
-        return redirect()->to('admin/master/employee');
+
+        // Pesan sesuai role
+        $msg = $role_id == 1
+            ? 'Berhasil menghapus data admin!'
+            : 'Berhasil menghapus data pegawai!';
+        session()->setFlashdata('message', "<div class=\"alert alert-success\" role=\"alert\">{$msg}</div>");
+
+        // Redirect sesuai role
+        $redirectPath = $role_id == 1
+            ? 'superadmin/master/admin'
+            : 'admin/master/employee';
+        return redirect()->to($redirectPath);
     }
 }

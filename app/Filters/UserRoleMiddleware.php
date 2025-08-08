@@ -18,6 +18,20 @@ class UserRoleMiddleware implements FilterInterface
             return redirect()->to('auth/login');
         }
 
+        $superAdminPaths = [
+            'superadmin/dashboard',
+            'superadmin/master/admin',
+            'superadmin/master/admin/add',
+            'superadmin/master/admin/edit/.*',
+            'superadmin/master/admin/detail/.*',
+            'superadmin/master/employee/delete/.*',
+            'superadmin/master/admin_account',
+            'superadmin/master/admin_account/add/.*',
+            'superadmin/master/admin_account/edit/.*',
+            'superadmin/master/admin_account/delete/.*',
+            'superadmin/report/print_biodata/pdf/.*',
+        ];
+
         // Define regex patterns for accessible views
         $adminPaths = [
             'admin/dashboard',
@@ -32,10 +46,10 @@ class UserRoleMiddleware implements FilterInterface
             'admin/master/employee/delete/.*',
             'admin/master/employee/attendance/.*',
             'admin/master/employee/attendance',
-            'admin/master/employee/attendance/edit/.*',   
-            'admin/master/employee/work_schedule/.*', 
-            'admin/master/employee/work_schedule/add', 
-            'admin/master/employee/work_schedule/edit/.*', 
+            'admin/master/employee/attendance/edit/.*',
+            'admin/master/employee/work_schedule/.*',
+            'admin/master/employee/work_schedule/add',
+            'admin/master/employee/work_schedule/edit/.*',
             'admin/master/shift',
             'admin/master/shift/add',
             'admin/master/shift/edit/.*',
@@ -69,8 +83,17 @@ class UserRoleMiddleware implements FilterInterface
             'auth/blocked',
         ];
 
-        // Check admin paths
+
         if ($userRoleId == 1) {
+            foreach ($superAdminPaths as $pattern) {
+                if (preg_match("#^{$pattern}$#", $currentPath)) {
+                    return;
+                }
+            }
+        }
+
+        // Check admin paths
+        if ($userRoleId == 2) {
             foreach ($adminPaths as $pattern) {
                 if (preg_match("#^{$pattern}$#", $currentPath)) {
                     return;
@@ -79,7 +102,7 @@ class UserRoleMiddleware implements FilterInterface
         }
 
         // Check employee paths
-        if ($userRoleId == 2) {
+        if ($userRoleId == 3) {
             foreach ($employeePaths as $pattern) {
                 if (preg_match("#^{$pattern}$#", $currentPath)) {
                     return;

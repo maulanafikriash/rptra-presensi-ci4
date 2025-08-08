@@ -8,7 +8,7 @@
                             <img src="<?= base_url('../img/logo/logo-rptra.png'); ?>" alt="Company Logo">
                         </div>
                         <h4 class="font-weight-bold">Sistem Presensi Pegawai</h4>
-                        <p class="font-weight-bold">RPTRA Cibubur Berseri</p>
+                        <p class="font-weight-bold">RPTRA Kecamatan Ciracas Jakarta Timur</p>
                     </div>
                     <div class="p-4">
                         <?php if (session()->getFlashdata('success')) : ?>

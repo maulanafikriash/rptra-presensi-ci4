@@ -22,6 +22,7 @@
     <link href="<?= base_url('../css/sb-admin-2.min.css'); ?>" rel="stylesheet">
     <link href="<?= base_url('../css/time-topbar.css'); ?>" rel="stylesheet">
     <link href="<?= base_url('../css/custom.css'); ?>" rel="stylesheet">
+    <link href="<?= base_url('../css/content.css'); ?>" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 </head>

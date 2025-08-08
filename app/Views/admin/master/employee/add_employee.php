@@ -2,10 +2,15 @@
 <div class="container-fluid">
 
     <!-- Page Heading -->
-    <h1 class="h3 mb-4 text-gray-800"><?= esc($title); ?></h1>
+    <?php $role_id = session()->get('user_role_id'); ?>
+    <h1 class="h3 mb-4 text-gray-800">Tambah <?= esc($title); ?></h1>
     <div class="row">
         <div class="col-lg-3">
-            <a href="<?= base_url('admin/master/employee'); ?>" class="btn btn-secondary btn-icon-split mb-4">
+            <a href="<?= base_url(
+                            $role_id == 1
+                                ? 'superadmin/master/admin'
+                                : 'admin/master/employee'
+                        ); ?>" class="btn btn-secondary btn-icon-split mb-4">
                 <span class="icon text-white">
                     <i class="fas fa-chevron-left"></i>
                 </span>
@@ -19,14 +24,14 @@
     <div class="col-lg-12 p-0">
         <form action="" method="POST" enctype="multipart/form-data">
             <div class="card">
-                <h5 class="card-header">Pegawai Master Data</h5>
+                <h5 class="card-header"><?= esc($title); ?> Master Data</h5>
                 <div class="card-body">
-                    <h5 class="card-title">Tambah Pegawai Baru</h5>
-                    <p class="card-text">Form untuk menambahkan pegawai baru di sistem</p>
+                    <h5 class="card-title">Tambah <?= esc($title); ?> Baru</h5>
+                    <p class="card-text">Form untuk menambahkan <?= esc($title); ?> baru di sistem</p>
                     <div class="row pr-3">
                         <div class="col-lg-6" style="padding-right: 25px;">
                             <div class="form-group row">
-                                <label for="employee_name" class="col-form-label col-lg-4">Nama Pegawai</label>
+                                <label for="employee_name" class="col-form-label col-lg-4">Nama <?= esc($title); ?></label>
                                 <div class="col p-0">
                                     <input type="text" class="form-control " name="employee_name" id="employee_name" value="<?= set_value('employee_name'); ?>" autofocus>
                                     <?php if (isset($validation) && $validation->hasError('employee_name')) : ?>
@@ -34,14 +39,28 @@
                                     <?php endif; ?>
                                 </div>
                             </div>
+
                             <div class="form-group row">
                                 <label for="department_id" class="col-form-label col-lg-4">Department</label>
                                 <div class="col p-0">
                                     <select class="form-control" name="department_id" id="department_id">
                                         <?php foreach ($department as $dpt) : ?>
-                                            <option value="<?= esc($dpt['department_id']); ?>" <?= set_select('department_id', $dpt['department_id'], $dpt['department_id'] === 'PLA'); ?>>
-                                                <?= esc($dpt['department_id'] . ' - ' . $dpt['department_name']); ?>
-                                            </option>
+                                            <?php
+                                            if (
+                                                ($role_id == 1   && $dpt['department_id'] === 'ADM')
+                                                ||
+                                                ($role_id !== 1   && $dpt['department_id'] !== 'ADM')
+                                            ):
+                                            ?>
+                                                <option value="<?= esc($dpt['department_id']); ?>"
+                                                    <?= set_select(
+                                                        'department_id',
+                                                        $dpt['department_id'],
+                                                        isset($selectedDepartment) && $selectedDepartment === $dpt['department_id']
+                                                    ); ?>>
+                                                    <?= esc($dpt['department_id'] . ' - ' . $dpt['department_name']); ?>
+                                                </option>
+                                            <?php endif; ?>
                                         <?php endforeach; ?>
                                     </select>
                                     <?php if (isset($validation) && $validation->hasError('department_id')) : ?>
@@ -155,24 +174,29 @@
                             <div class="form-group row">
                                 <label for="rptra_name" class="col-form-label col-lg-4">Nama RPTRA</label>
                                 <div class="col p-0">
-                                    <input type="text" class="form-control col-lg" name="rptra_name" id="rptra_name" value="<?= esc($rptra_name ?? '-'); ?>" readonly>
-                                    <?php if (isset($validation) && $validation->hasError('rptra_name')) : ?>
+                                    <input type="text"
+                                        class="form-control"
+                                        name="rptra_name"
+                                        id="rptra_name"
+                                        value="<?= set_value('rptra_name', $rptra_name); ?>"
+                                        <?= $role_id == 1 ? '' : 'readonly'; ?>>
+                                    <?php if (isset($validation) && $validation->hasError('rptra_name')): ?>
                                         <small class="text-danger"><?= esc($validation->getError('rptra_name')); ?></small>
                                     <?php endif; ?>
                                 </div>
                             </div>
+
                             <div class="form-group row">
                                 <label for="rptra_address" class="col-form-label col-lg-4">Alamat RPTRA</label>
                                 <div class="col p-0">
-                                    <textarea
-                                        class="form-control col-lg"
+                                    <textarea class="form-control"
+                                        name="rptra_address"
                                         id="rptra_address"
                                         rows="4"
-                                        readonly><?= esc($rptra_address); ?></textarea>
-                                    <input
-                                        type="hidden"
-                                        name="rptra_address"
-                                        value="<?= esc($rptra_address); ?>">
+                                        <?= $role_id == 1 ? '' : 'readonly'; ?>><?= set_value('rptra_address', $rptra_address); ?></textarea>
+                                    <?php if (isset($validation) && $validation->hasError('rptra_address')): ?>
+                                        <small class="text-danger"><?= esc($validation->getError('rptra_address')); ?></small>
+                                    <?php endif; ?>
                                 </div>
                             </div>
 
